@@ -1,0 +1,94 @@
+/* Verb Tenses Dojo — page styles (shell in assets/css/resource.css) */
+.dojo-hero{display:grid;grid-template-columns:1.25fr 1fr;gap:22px;margin-bottom:26px}
+.rank{padding:28px;display:flex;flex-direction:column;gap:16px}
+.rank .r1{display:flex;gap:18px;align-items:center}
+.rank small{font:600 11.5px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--stone)}
+.rank h3{font-size:28px;margin-top:6px}
+.rank p{margin:0;color:var(--stone);font-size:15px}
+.rank .actions{display:flex;gap:10px;flex-wrap:wrap}
+.belt-path{padding:24px 26px}
+.belt-path h3{font-size:20px;margin-bottom:12px}
+.bp{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line-2)}
+.bp:first-of-type{border-top:0}
+.bp i{width:34px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.bp b{font-size:15px}
+.bp span.d{display:block;font-size:13px;color:var(--stone)}
+.bp .st{font-size:12.5px;font-weight:600;color:var(--stone-2)}
+.bp .st.ok{color:var(--ok)}
+.bp .st.next{color:var(--shu)}
+.areas{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.area{display:flex;flex-direction:column;gap:8px;padding:24px;text-decoration:none;min-height:190px}
+.area .n{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--sumi);display:grid;place-items:center;font:700 16px/1 var(--serif);margin-bottom:6px}
+.area h3{font-size:22px}
+.area p{margin:0;color:var(--stone);font-size:14.5px;flex:1}
+.area .c{font-size:13px;font-weight:600;color:var(--app-2)}
+.area.exam{background:var(--app);border-color:var(--app);color:#fff}
+.area.exam .n{border-color:#fff}
+.area.exam p{color:#cfe2da}
+.area.exam .c{color:#fff}
+.tools-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:26px;padding:18px 22px;border-radius:var(--r-lg);border:1px dashed var(--line);font-size:14.5px;color:var(--stone)}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;color:var(--sumi-2)}
+.switch input{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .2s;margin:0}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.switch input:checked{background:var(--app)}
+.switch input:checked::after{transform:translateX(18px)}
+.review-card{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:18px 22px;margin-bottom:22px;border-radius:var(--r-lg);background:var(--kincha-bg);border:1px solid #ecd7ad}
+.review-card p{margin:0;font-weight:500}
+
+/* area pages */
+.group-title{display:flex;align-items:baseline;gap:14px;margin:34px 0 14px}
+.group-title:first-of-type{margin-top:0}
+.group-title h3{font-size:24px}
+.group-title span{font-size:14px;color:var(--stone)}
+.topics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.topic{display:flex;flex-direction:column;gap:8px;padding:22px;text-decoration:none}
+.topic h4{font-size:19px;line-height:1.25}
+.topic p{margin:0;color:var(--stone);font-size:14px;flex:1}
+.topic .meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--stone)}
+.belt-range{display:inline-flex;gap:3px}
+.belt-range i{width:16px;height:6px;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.topic .best{font-weight:600;color:var(--ok)}
+
+/* topic page */
+.back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--stone);text-decoration:none;margin-bottom:14px}
+.back:hover{color:var(--shu)}
+.back svg{width:16px;height:16px}
+.topic-page{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:start}
+.topic-page h2{font-size:clamp(28px,4vw,40px)}
+.topic-page .intro{font-size:17.5px;color:var(--sumi-2);margin:14px 0 20px;line-height:1.65}
+.form{display:inline-block;padding:10px 14px;border-radius:12px;background:var(--app-bg);color:var(--app);font:600 14.5px/1.4 var(--sans);margin-bottom:22px}
+.form b{font-weight:700;margin-right:6px}
+.uses{display:grid;gap:10px}
+.use{padding:14px 18px;border-radius:14px;background:var(--paper);border:1px solid var(--line)}
+.use b{display:block;font-size:14.5px;margin-bottom:2px}
+.use span{font:500 17px/1.4 var(--serif);color:var(--sumi-2)}
+.train{padding:26px;position:sticky;top:150px}
+.train h3{font-size:22px;margin-bottom:4px}
+.train > p{margin:0 0 18px;color:var(--stone);font-size:14.5px}
+.train label.l{display:block;font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin:16px 0 8px}
+.train .start{width:100%;margin-top:22px}
+.train .stats{display:flex;justify-content:space-between;margin-top:18px;padding-top:16px;border-top:1px solid var(--line-2);font-size:14px;color:var(--stone)}
+.train .stats b{display:block;font:700 22px/1.2 var(--serif);color:var(--sumi)}
+.locked-note{font-size:13px;color:var(--stone-2);margin-top:8px}
+
+/* exam */
+.exam-setup{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:start}
+.exam-setup .card{padding:30px}
+.exam-setup label.l{display:block;font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin:20px 0 10px}
+.exam-setup label.l:first-child{margin-top:0}
+.rule{font-size:15px;color:var(--sumi-2)}
+.hist{width:100%;border-collapse:collapse;font-size:14.5px}
+.hist td{padding:10px 4px;border-bottom:1px solid var(--line-2)}
+.hist tr:last-child td{border:0}
+
+@media (max-width:1000px){
+  .dojo-hero{grid-template-columns:1fr}
+  .areas,.topics{grid-template-columns:repeat(2,1fr)}
+  .topic-page,.exam-setup{grid-template-columns:1fr}
+  .train{position:static}
+}
+@media (max-width:640px){
+  .areas,.topics{grid-template-columns:1fr}
+  .area{min-height:0}
+  .rank{padding:22px}
+}
