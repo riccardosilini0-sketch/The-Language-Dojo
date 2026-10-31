@@ -93,6 +93,7 @@ h1,h2,h3,h4{margin:0;font-family:var(--serif);font-weight:700;letter-spacing:-.0
 .dropdown{position:absolute;top:calc(100% + 6px);left:0;min-width:250px;background:var(--paper);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:8px;display:grid;gap:2px;opacity:0;visibility:hidden;transform:translateY(6px);transition:opacity .18s ease, transform .18s ease, visibility .18s;z-index:120}
 .dropdown::before{content:"";position:absolute;left:0;right:0;top:-10px;height:10px}
 .nav-item.has-menu:hover .dropdown,.nav-item.has-menu:focus-within .dropdown,.nav-item.open .dropdown{opacity:1;visibility:visible;transform:none}
+.nav-item.has-menu:last-of-type .dropdown{left:auto;right:0}
 .dropdown a,.dropdown .dd-off{display:block;text-decoration:none;padding:10px 12px;border-radius:10px;color:var(--sumi)}
 .dropdown a:hover{background:var(--washi)}
 .dropdown b{display:block;font-weight:600;font-size:14.5px}
@@ -171,3 +172,6 @@ h1,h2,h3,h4{margin:0;font-family:var(--serif);font-weight:700;letter-spacing:-.0
   .section-head{margin-bottom:30px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1;transform:none}}
+
+/* resource badge */
+.app-badge .badge-mark{width:78%;height:78%;color:#fff}

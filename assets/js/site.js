@@ -1,5 +1,5 @@
 /* =====================================================================
-   The Language Dojo — shared site shell
+   Language Dojo — shared site shell
    Renders the header and footer on every page and provides small
    helpers (icons, logo, toast, dialog). Each page sets:
      <body data-root="../" data-page="english">
@@ -22,7 +22,7 @@
     return `<svg class="${cls}" viewBox="0 0 100 100" ${label ? `role="img" aria-label="${esc(label)}"` : 'aria-hidden="true"'}>${(window.DOJO_MARK_SVG || "").replace(/ldBrush/g, id)}</svg>`;
   }
   function lockup(href) {
-    return `<a class="lockup" href="${href}" aria-label="The Language Dojo — home">${mark()}<span><span class="name">The Language Dojo</span><span class="tagline">Learn. Train. Master.</span></span></a>`;
+    return `<a class="lockup" href="${href}" aria-label="Language Dojo — home">${mark()}<span><span class="name">Language Dojo</span><span class="tagline">Learn. Train. Master.</span></span></a>`;
   }
 
   /* icons (stroke icons, 24px grid) */
@@ -60,15 +60,16 @@
   ];
   const navItems = [
     { k: "home", label: "Home", href: "index.html" },
-    { k: "languages", label: "Languages", href: "index.html#languages", menu: C.languages.map(l => l.status === "available" ? [l.name, l.native && l.native !== l.name ? l.native : "Available", l.url] : [l.name, "Coming soon", null]) },
-    ...liveLangs.map(l => ({ k: l.id, label: l.name, href: l.url, menu: langMenu(l) })),
-    { k: "about", label: "About", href: "index.html#method", menu: [["Our method", "Practice, form and improvement", "index.html#method"], ["Training areas", "Skills you can train", "index.html#training"], ["News", "What's new in the dojo", "index.html#news"]] }
+    { k: "about", label: "About", href: "index.html#about", menu: [["The concept", "Practice, form and improvement", "index.html#about"], ["For students and teachers", "How to use Language Dojo", "index.html#teachers"]] },
+    { k: "languages", label: "Languages", href: "index.html#languages", menu: liveLangs.map(l => [l.name, l.native && l.native !== l.name ? l.native : "", l.url]) }
   ];
+  // language pages and their resources highlight "Languages"
+  const ACTIVE = ["home", "about"].includes(PAGE) ? PAGE : "languages";
   const header = document.getElementById("site-header");
   if (header) {
     header.className = "site-header";
     const item = n => {
-      const active = n.k === PAGE ? ' active" aria-current="page' : "";
+      const active = n.k === ACTIVE ? ' active" aria-current="page' : "";
       if (!n.menu) return `<div class="nav-item"><a class="nl${active}" href="${url(n.href)}">${n.label}</a></div>`;
       return `<div class="nav-item has-menu"><a class="nl${active}" href="${url(n.href)}">${n.label}</a><button class="sub-toggle" type="button" aria-label="Show ${n.label} menu" aria-expanded="false">${caret}</button>
         <div class="dropdown">${n.menu.map(([t, sub, h]) => h ? `<a href="${url(h)}"><b>${esc(t)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</a>` : `<span class="dd-off"><b>${esc(t)}</b><span>${esc(sub)}</span></span>`).join("")}</div></div>`;
@@ -77,7 +78,6 @@
       <button class="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">${icon("menu")}</button>
       <nav class="site-nav" id="site-nav" aria-label="Main">
         ${navItems.map(item).join("")}
-        ${firstAvailable ? `<a class="btn primary sm" href="${url(firstAvailable.url)}">Start training</a>` : ""}
       </nav></div>`;
     const btn = header.querySelector(".menu-btn"), nav = header.querySelector(".site-nav");
     btn.addEventListener("click", () => { const o = nav.classList.toggle("open"); btn.setAttribute("aria-expanded", o); btn.innerHTML = icon(o ? "close" : "menu"); });
@@ -100,13 +100,17 @@
     footer.innerHTML = `<div class="wrap">
       <div class="top">
         <div>${lockup(url("index.html"))}<p>A training space for language learners. Short, focused practice that builds real skills over time.</p></div>
-        <div><h4>Languages</h4><ul>${C.languages.map(l => l.status === "available" ? `<li><a href="${url(l.url)}">${esc(l.name)}</a></li>` : `<li class="soon">${esc(l.name)} · soon</li>`).join("")}</ul></div>
-        <div><h4>Resources</h4><ul>${C.resources.filter(r => r.status === "available").map(r => `<li><a href="${url(r.url)}">${esc(r.title)}</a></li>`).join("")}<li class="soon">More coming soon</li></ul></div>
-        <div><h4>The Language Dojo</h4><ul><li><a href="${url("index.html#method")}">Our method</a></li><li><a href="${url("index.html#training")}">Training areas</a></li><li><a href="${url("index.html#news")}">News</a></li></ul></div>
+        <div><h4>Languages</h4><ul>${liveLangs.map(l => `<li><a href="${url(l.url)}">${esc(l.name)}</a></li>`).join("")}</ul></div>
+        <div><h4>Resources</h4><ul>${C.resources.filter(r => r.status === "available").map(r => `<li><a href="${url(r.url)}">${esc(r.title)}</a></li>`).join("")}</ul></div>
+        <div><h4>Language Dojo</h4><ul><li><a href="${url("index.html#about")}">The concept</a></li><li><a href="${url("index.html#teachers")}">For students and teachers</a></li></ul></div>
       </div>
-      <div class="bottom"><span>© ${year} The Language Dojo · Created by Riccardo Silini Nedrotti. All rights reserved.</span><span>Learn. Train. Master.</span></div>
+      <div class="bottom"><span>© ${year} Language Dojo · Created by Riccardo Silini Nedrotti. All rights reserved.</span><span>Learn. Train. Master.</span></div>
       <div class="credits">Stroke-order data: <a href="https://kanjivg.tagaini.net" rel="noopener">KanjiVG</a> by Ulrich Apel, CC BY-SA 3.0.</div></div>`;
   }
+
+  /* ---------- resource badge: the brush mark in white on the resource colour ---------- */
+  const badge = document.getElementById("appBadge");
+  if (badge) badge.innerHTML = mark("badge-mark");
 
   /* ---------- toast & dialog ---------- */
   function toast(msg) {

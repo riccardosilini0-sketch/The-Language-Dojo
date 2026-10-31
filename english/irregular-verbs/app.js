@@ -62,22 +62,7 @@
   const tricky = () => VERBS.filter(v => statusOf(v) === "practise");
   const learnt = () => VERBS.filter(v => statusOf(v) === "known");
 
-  /* ---------- ranks (dojo belts) ---------- */
-  const BELTS = [
-    { name: "White belt", at: 0, color: "#f4efe4", stroke: "#cfc6b6" },
-    { name: "Yellow belt", at: 15, color: "#e3b93c" },
-    { name: "Orange belt", at: 30, color: "#dc7f2f" },
-    { name: "Green belt", at: 50, color: "#4f8f5c" },
-    { name: "Blue belt", at: 70, color: "#3a5f9e" },
-    { name: "Brown belt", at: 90, color: "#7a5132" },
-    { name: "Black belt", at: VERBS.length, color: "#1d1b18" }
-  ];
-  const beltIndex = n => BELTS.reduce((acc, b, j) => (n >= b.at ? j : acc), 0);
-  const beltSVG = b => { const s = b.stroke || "rgba(0,0,0,.18)"; return `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M6 25h52v12H6z" fill="${b.color}" stroke="${s}" stroke-width="1.4"/><path d="M27 41l-6 16 7-3 4 5 1-18M37 41l6 16-7-3-4 5-1-18" fill="${b.color}" stroke="${s}" stroke-width="1.4" stroke-linejoin="round"/><rect x="25" y="21" width="14" height="20" rx="2" fill="${b.color}" stroke="${s}" stroke-width="1.4"/></svg>`; };
-  function beltWatch(fn) {
-    const before = beltIndex(learnt().length); fn(); const after = beltIndex(learnt().length);
-    if (after > before) setTimeout(() => dialog({ title: `${BELTS[after].name} earned`, text: `You have learnt ${learnt().length} verbs. Keep training to reach the next rank.`, ok: "Continue", cancel: "" }), 450);
-  }
+  const beltWatch = fn => fn(); // (no ranks: progress is tracked per verb only)
   function setStatus(v, s) { beltWatch(() => { const r = rec(v); r.s = s; r.st = 0; r.t = Date.now(); Store.save(); }); refreshCount(); }
   function recordAnswer(v, ok) {
     beltWatch(() => {
@@ -121,13 +106,14 @@
   document.addEventListener("click", e => { const b = e.target.closest("[data-say]"); if (!b) return; e.preventDefault(); e.stopPropagation(); play(b.dataset.say.split("|"), b); }, true);
 
   /* ---------- router (#overview, #list, #cards, #practice, #progress) ---------- */
-  const TABS = [["overview", "Overview", ICON.overview], ["list", "Verb list", ICON.list], ["cards", "Flashcards", ICON.cards], ["practice", "Practice", ICON.practice], ["progress", "Progress", ICON.progress]];
-  $("#tabs").innerHTML = TABS.map(([k, l, ic]) => `<a class="tab" href="#${k}" data-tab="${k}">${ic}${l}${k === "progress" ? '<span class="n" id="trickyN"></span>' : ""}</a>`).join("");
+  const TABS = [["overview", "Overview", ICON.overview], ["list", "Verb Lists", ICON.list], ["cards", "Flashcards", ICON.cards], ["practice", "Practice and Progress", ICON.practice]];
+  $("#tabs").innerHTML = TABS.map(([k, l, ic]) => `<a class="tab" href="#${k}" data-tab="${k}">${ic}${l}${k === "practice" ? '<span class="n" id="trickyN"></span>' : ""}</a>`).join("");
   function refreshCount() { const n = tricky().length; const el = $("#trickyN"); if (el) { el.textContent = n ? String(n) : ""; el.title = n ? `${n} tricky verbs` : ""; } }
   const views = {}; let current = null, pending = null;
   function go(name, params) { pending = params || null; if (location.hash === "#" + name) route(); else location.hash = name; }
   function route() {
     let name = location.hash.replace(/^#\/?/, "").split(/[?&]/)[0];
+    const toProgress = name === "progress"; if (toProgress) name = "practice";
     if (!views[name]) name = "overview";
     stopAudio();
     $$(".view").forEach(s => s.hidden = s.id !== "view-" + name);
@@ -135,6 +121,7 @@
     const prev = current; current = name;
     const v = views[name]; if (v.init && !v.ready) { v.init(); v.ready = true; }
     const p = pending; pending = null; v.show(p);
+    if (toProgress) { const pb = $("#progressBox"); if (pb) setTimeout(() => pb.scrollIntoView({ block: "start" }), 50); }
     if (prev && prev !== name) { const top = $(".tabs").getBoundingClientRect().top + window.scrollY - (window.innerWidth <= 820 ? 66 : 76); if (window.scrollY > top) window.scrollTo(0, top); }
   }
   window.addEventListener("hashchange", route);
@@ -143,27 +130,20 @@
   /* ================= OVERVIEW ================= */
   views.overview = {
     show() {
-      const n = learnt().length, bi = beltIndex(n), b = BELTS[bi], nb = BELTS[bi + 1], t = tricky().length;
+      const n = learnt().length, t = tricky().length;
       const day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
       const v = VERBS[(day * 37) % VERBS.length];
-      const steps = [
-        ["list", "Learn the list", `Read and listen to all ${VERBS.length} verbs. Each form has its own recording.`],
-        ["cards", "Train with flashcards", "See the base form, say the other two, flip the card to check."],
-        ["practice", "Test yourself", "Five practice modes with instant feedback on every answer."],
-        ["progress", "Review your tricky verbs", "Mistakes are saved so you can train exactly what you need."]
-      ];
+      const steps = [["list", ICON.list, "Verb Lists", `All ${VERBS.length} verbs with audio`], ["cards", ICON.cards, "Flashcards", "Flip, check, repeat"], ["practice", ICON.practice, "Practice and Progress", "Five exercise types"]];
       $("#view-overview").innerHTML = `
         <div class="ov">
-          <div class="card steps">${steps.map((s, i) => `<a class="step" href="#${s[0]}"><span class="num">${i + 1}</span><div><h3>${s[1]}</h3><p>${s[2]}</p></div><span class="go">${ICON.arrow}</span></a>`).join("")}</div>
+          <div class="card steps">${steps.map(s => `<a class="step" href="#${s[0]}"><span class="num">${s[1]}</span><div><h3>${s[2]}</h3><p>${s[3]}</p></div><span class="go">${ICON.arrow}</span></a>`).join("")}</div>
           <div class="side">
             <a class="card rank" href="#progress" style="text-decoration:none">
-              <div class="row1"><span class="belt-ic">${beltSVG(b)}</span><div><small>Your rank</small><h3>${b.name}</h3></div></div>
-              <p><b style="color:var(--sumi)">${n}</b> of ${VERBS.length} verbs learnt${nb ? ` · ${nb.at - n} more for the ${nb.name}` : ""}${t ? ` · ${t} to review` : ""}</p>
+              <div><small>Your progress</small><h3>${n} of ${VERBS.length} verbs learnt</h3></div>
+              ${t ? `<p>${t} to review</p>` : ""}
               <div class="bar"><span style="width:${n / VERBS.length * 100}%;background:var(--ok)"></span><span style="width:${t / VERBS.length * 100}%;background:var(--kincha)"></span></div>
             </a>
             <div class="card votd"><small>Verb of the day</small><div class="forms">${esc(v.base)} <i>·</i> ${esc(v.past)} <i>·</i> ${esc(v.pp)} ${spkAll(v)}</div><div class="m">${esc(v.it)}</div></div>
-            <a class="btn primary lg" href="#cards" style="justify-content:center">Start training ${ICON.arrow}</a>
-          </div>
         </div>`;
     }
   };
@@ -174,10 +154,12 @@
     init() {
       const root = $("#view-list");
       root.innerHTML = `
-        <div class="vhead"><h2>Verb list</h2><p>All ${VERBS.length} verbs with their three forms and Italian translation. Tap a speaker to listen.</p></div>
+        <div class="vhead"><h2>Verb Lists</h2></div>
         <div class="tools">
           <label class="search">${ICON.search}<input id="vq" type="search" placeholder="Search in English or Italian" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search verbs"></label>
           <div class="seg" id="vf" role="group" aria-label="Show"></div>
+          <label class="sort-m"><span class="sr-only">Sort</span><select id="vsort" class="sortsel" aria-label="Sort verbs">
+            <option value="base:1">Base form A–Z</option><option value="base:-1">Base form Z–A</option><option value="past:1">Past simple A–Z</option><option value="pp:1">Past participle A–Z</option><option value="it:1">Italian A–Z</option></select></label>
         </div>
         <div class="count" id="vcount"></div>
         <div class="card" style="overflow:hidden"><table class="vtable"><thead><tr>
@@ -187,6 +169,7 @@
           <th data-k="it"><button type="button">Italian <span class="ar"></span></button></th>
         </tr></thead><tbody id="vbody"></tbody></table></div>`;
       $("#vq").addEventListener("input", e => { vl.q = e.target.value; this.render(); });
+      $("#vsort").addEventListener("change", e => { const [k, d] = e.target.value.split(":"); vl.key = k; vl.dir = +d; this.render(); });
       $("#vf").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { vl.filter = b.dataset.f; this.render(); } });
       $$(".vtable th button", root).forEach(b => b.addEventListener("click", () => { const k = b.parentElement.dataset.k; if (vl.key === k) vl.dir *= -1; else { vl.key = k; vl.dir = 1; } this.render(); }));
     },
@@ -198,6 +181,7 @@
       const rows = VERBS.filter(v => (vl.filter === "all" || statusOf(v) === vl.filter) && (!q || deaccent(norm([v.base, v.past, v.pp, v.it].join(" "))).includes(q)))
         .sort((a, b) => val(a, vl.key).localeCompare(val(b, vl.key), "en") * vl.dir || a.base.localeCompare(b.base));
       $$(".vtable th").forEach(th => { const on = th.dataset.k === vl.key; th.querySelector(".ar").textContent = on ? (vl.dir === 1 ? "A–Z" : "Z–A") : ""; th.setAttribute("aria-sort", on ? (vl.dir === 1 ? "ascending" : "descending") : "none"); });
+      const vs = $("#vsort"); if (vs) { const v = `${vl.key}:${vl.dir}`; if ([...vs.options].some(o => o.value === v)) vs.value = v; }
       $("#vcount").textContent = rows.length === VERBS.length ? `${VERBS.length} verbs` : `${rows.length} of ${VERBS.length} verbs`;
       const cell = f => v => `<td class="c-${f}" data-label="${LABEL[f]}"><div class="vcell">${f === "base" ? `<span class="sdot ${statusOf(v)}" title="${statusOf(v) === "known" ? "Learnt" : statusOf(v) === "practise" ? "To review" : ""}"></span>` : ""}<span class="w">${esc(v[f])}${v.ipa && v.ipa[f] ? `<span class="ipa">${esc(v.ipa[f])}</span>` : ""}</span>${spkForm(v, f, "sm")}</div></td>`;
       $("#vbody").innerHTML = rows.length ? rows.map(v => `<tr>${cell("base")(v)}${cell("past")(v)}${cell("pp")(v)}<td class="c-it" data-label="Italian">${esc(v.it)}</td></tr>`).join("")
@@ -253,7 +237,7 @@
     },
     render() {
       const root = $("#view-cards"), nt = tricky().length;
-      const head = `<div class="vhead" style="text-align:center"><h2>Flashcards</h2><p>Read the base form, say the other two forms aloud, then flip the card.</p></div>
+      const head = `<div class="vhead" style="text-align:center"><h2>Flashcards</h2></div>
         <div class="fc-head"><div class="seg"><button type="button" data-fc="deck" data-d="all" class="${fc.deck === "all" ? "on" : ""}">All verbs</button><button type="button" data-fc="deck" data-d="practise" class="${fc.deck === "practise" ? "on" : ""}">Tricky verbs (${nt})</button></div>
         <button class="icon-btn" type="button" data-fc="shuffle" title="Shuffle" aria-label="Shuffle cards">${ICON.shuffle}</button></div>`;
       if (!fc.order.length) {
@@ -417,12 +401,15 @@
       const root = $("#view-practice");
       if (qz.phase === "menu") {
         const L = Store.data.len, nt = tricky().length; if (!nt && qz.src === "practise") qz.src = "all";
-        root.innerHTML = `<div class="vhead"><h2>Practice</h2><p>Choose an exercise. Every answer is checked straight away.</p></div>
+        root.innerHTML = `<div class="vhead"><h2>Practice</h2></div>
           <div class="pset">
             <div>Questions <span class="seg">${[10, 20].map(n => `<button type="button" data-q="len" data-n="${n}" class="${L === n ? "on" : ""}">${n}</button>`).join("")}</span></div>
             <div>Verbs <span class="seg"><button type="button" data-q="src" data-s="all" class="${qz.src !== "practise" ? "on" : ""}">All verbs</button><button type="button" data-q="src" data-s="practise" class="${qz.src === "practise" ? "on" : ""}" ${nt ? "" : "disabled"}>Tricky verbs (${nt})</button></span></div>
           </div>
-          <div class="modes">${Object.entries(MODES).map(([k, m]) => `<button type="button" class="mode ${k === "mix" ? "feat" : ""}" data-q="start" data-mode="${k}"><span class="letter">${m.letter}</span><span><span class="kind">${m.kind}</span><b>${m.name}</b><p>${m.desc}</p><span class="ex">${m.ex}</span></span></button>`).join("")}</div>`;
+          <div class="modes">${Object.entries(MODES).map(([k, m]) => `<button type="button" class="mode ${k === "mix" ? "feat" : ""}" data-q="start" data-mode="${k}"><span><span class="kind">${m.kind}</span><b>${m.name}</b><p>${m.desc}</p><span class="ex">${m.ex}</span></span></button>`).join("")}</div>
+          <div id="progressBox"></div>`;
+        if (!progress.ready) { progress.init(); progress.ready = true; }
+        progress.show();
         return;
       }
       if (qz.phase === "done") {
@@ -443,14 +430,14 @@
       const slot = (f, given) => `<div class="slot"><small>${LABEL[f]}</small>${given ? `<div class="given">${esc(v[f])} ${spkForm(v, f, "sm")}</div>` : `<input type="text" data-f="${f}" ${inp} aria-label="${LABEL[f]}" placeholder="Type here">`}</div>`;
       let body;
       if (q.type === "mc") body = `<p class="q-ask">What is the <b>${LABEL[q.target].toLowerCase()}</b> of this verb?</p><div class="q-big">${esc(v.base)} ${spkForm(v, "base", "lg")}</div>
-        <div class="opts">${q.options.map((o, i) => `<button type="button" class="opt" data-q="opt" data-i="${i}"><span class="k">${i + 1}</span>${esc(o)}</button>`).join("")}</div>`;
+        <div class="opts">${q.options.map((o, i) => `<button type="button" class="opt" data-q="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>`;
       else if (q.type === "gap") body = `<p class="q-ask">Write the <b>missing form</b>.</p><div class="slots">${FORMS.map(f => slot(f, f !== q.missing)).join("")}</div>`;
       else if (q.type === "three") body = `<p class="q-ask">Here is the <b>${LABEL[q.given].toLowerCase()}</b>. Write the other two forms.</p><div class="slots">${FORMS.map(f => slot(f, f === q.given)).join("")}</div>`;
       else body = `<p class="q-ask">Write the <b>three English forms</b> of this verb.</p><div class="q-big it">${esc(v.it)}</div><div class="slots" style="margin-top:0">${FORMS.map(f => slot(f, false)).join("")}</div>`;
       root.innerHTML = `<div class="q">
         <div class="q-top"><span class="sc">${qz.i + 1} / ${n}</span><div class="bar"><span style="width:${qz.i / n * 100}%;background:var(--shu)"></span></div><span class="sc">Score <b id="qscore">${qz.score}</b></span></div>
         <div class="card q-card">
-          <span class="q-kind">${m.letter} · ${m.name}</span>
+          <span class="q-kind">${m.name}</span>
           ${body}
           <div id="qfb" aria-live="polite"></div>
           <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-q="menu">Quit</button>${q.type === "mc" ? "" : `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" data-q="skip">I don't know</button><button class="btn ink lg" type="button" data-q="check">${ICON.check} Check</button></div>`}</div>
@@ -460,31 +447,21 @@
   };
 
   /* ================= PROGRESS ================= */
-  views.progress = {
+  const progress = {
     init() {
-      $("#view-progress").addEventListener("click", e => {
+      $("#view-practice").addEventListener("click", e => {
         if (e.target.closest("[data-reset]")) dialog({ title: "Reset your progress?", text: "This deletes your learnt verbs, tricky verbs and practice results on this device.", ok: "Reset", danger: true })
-          .then(y => { if (y) { Store.reset(); fc.order = []; fc.done = false; refreshCount(); this.show(); toast("Progress reset"); } });
+          .then(y => { if (y) { Store.reset(); fc.order = []; fc.done = false; refreshCount(); progress.show(); toast("Progress reset"); } });
       });
     },
     show() {
-      const n = learnt().length, t = tricky(), bi = beltIndex(n), b = BELTS[bi], nb = BELTS[bi + 1], Q = Store.data.quiz;
+      const n = learnt().length, t = tricky(), Q = Store.data.quiz;
       const acc = Q.answered ? Math.round(Q.correct / Q.answered * 100) + "%" : "–";
       t.sort((a, c) => rec(a).st - rec(c).st || rec(c).w - rec(a).w);
-      $("#view-progress").innerHTML = `
-        <div class="vhead"><h2>Your progress</h2><p>Saved automatically on this device. Come back any time and carry on.</p></div>
+      const box = $("#progressBox"); if (!box) return;
+      box.innerHTML = `
+        <div class="vhead" style="margin-top:44px"><h2>Your progress</h2></div>
         ${Store.ok ? "" : `<div class="card" style="padding:16px 20px;margin-bottom:18px;background:var(--kincha-bg);border-color:#ecd7ad">This browser is blocking storage (private mode?). Progress will be lost when you close the page.</div>`}
-        <div class="card rank-hero">
-          <span class="belt-ic">${beltSVG(b)}</span>
-          <div style="width:100%">
-            <span style="font:600 11.5px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--stone)">Your rank</span>
-            <h3>${b.name}</h3>
-            <p>You have learnt <b style="color:var(--sumi)">${n} of ${VERBS.length}</b> verbs. ${nb ? `Learn ${nb.at - n} more to earn the ${nb.name}.` : "You have mastered every verb on the list."}</p>
-            <div class="bar" style="height:12px"><span style="width:${n / VERBS.length * 100}%;background:var(--ok)"></span><span style="width:${t.length / VERBS.length * 100}%;background:var(--kincha)"></span></div>
-            <div class="belts">${BELTS.slice(1).map((x, i) => `<span class="${i + 1 <= bi ? "got" : ""}" title="${x.name} · ${x.at} verbs" style="background:${x.color}"></span>`).join("")}</div>
-            <div class="belt-names"><span>Yellow · 15</span><span>Black · ${VERBS.length}</span></div>
-          </div>
-        </div>
         <div class="stats">
           <div class="card stat"><small>Total verbs</small><b>${VERBS.length}</b></div>
           <div class="card stat"><small>Learnt</small><b style="color:var(--ok)">${n}</b></div>

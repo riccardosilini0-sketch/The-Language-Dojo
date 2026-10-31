@@ -1,4 +1,4 @@
-# The Language Dojo — Learn. Train. Master.
+# Language Dojo — Learn. Train. Master.
 
 A static website (HTML, CSS, JavaScript). No server, database or account needed.
 
@@ -49,5 +49,5 @@ english/irregular-verbs/        First learning app
 
 Progress is saved in each student's browser (localStorage), on that device only.
 
-© 2026 The Language Dojo · Created by Riccardo Silini Nedrotti. All rights reserved.
+© 2026 Language Dojo · Created by Riccardo Silini Nedrotti. All rights reserved.
 Stroke-order data: KanjiVG (https://kanjivg.tagaini.net) by Ulrich Apel, CC BY-SA 3.0.

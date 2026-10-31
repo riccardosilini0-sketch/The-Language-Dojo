@@ -37,12 +37,12 @@
   /* ---------------- storage ---------------- */
   const Store = {
     key: "language-dojo:japanese", data: null,
-    fresh: () => ({ earned: 1, teacher: false, items: {}, exams: [], answered: 0, correct: 0 }),
+    fresh: () => ({ items: {}, answered: 0, correct: 0 }),
     load() { let d = null; try { d = JSON.parse(localStorage.getItem(this.key) || "null"); } catch (e) {} this.data = Object.assign(this.fresh(), d && typeof d === "object" ? d : {}); },
     save() { try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) {} },
     reset() { this.data = this.fresh(); this.save(); }
   };
-  const unlocked = () => 6; // all content is always open; belts track rank only
+  const unlocked = () => 6; // all content is always open; belts only label difficulty
   const stat = k => Store.data.items[k] || [0, 0, 0];
   const known = k => stat(k)[0] > 0;
   function record(key, ok) { const s = Store.data.items[key] || [0, 0, 0]; ok ? s[0]++ : s[1]++; s[2] = ok ? 1 : -1; Store.data.items[key] = s; Store.data.answered++; if (ok) Store.data.correct++; Store.save(); }
@@ -144,7 +144,6 @@
   /* ---------------- DOJO overview ---------------- */
   const BELT_INFO = { 1: "Vowels and the basic hiragana.", 2: "Complete hiragana and the first katakana.", 3: "Complete katakana and the first 18 kanji.", 4: "Kana consolidation and the first 27 kanji.", 5: "All 50 kanji and their main readings.", 6: "Mixed practice: words and sentences that combine everything." };
   function renderDojo() {
-    const e = Store.data.earned, nb = e < 6 ? B.get(e + 1) : null;
     const due = [...HIRA, ...KATA, ...KANJI].filter(i => stat(i.key)[2] === -1).length;
     view().innerHTML = `
       ${!TTS.voice && TTS.ok ? `<div class="notice-jp">Pronunciation uses your device's Japanese voice. If you hear no sound or the wrong accent, add a Japanese voice in your device's speech settings.</div>` : ""}
@@ -154,18 +153,15 @@
         <a class="card card-link jd-area" href="#kanji" data-bg="字"><span class="big" lang="ja" style="font-family:var(--jp-serif)">字</span><h3>Kanji <span lang="ja">漢字</span></h3><p>Your first ${KANJI.length} kanji: meaning, stroke order, readings, words and sentences.</p><div class="bar"><span style="width:${pct(KANJI)}%;background:var(--ok)"></span></div><span class="c">${KANJI.filter(i => known(i.key)).length} of ${KANJI.length} kanji practised</span></a>
       </div>
       <div class="jd-row">
-        <div class="card rank">
-          <div class="r1"><span class="belt-ic">${B.svg(e)}</span><div><small>Your rank</small><h3>${B.get(e).name}</h3></div></div>
-          <p>${nb ? `Everything is open: practise any characters you like. To be promoted, pass the ${nb.name} test (20 questions, 80% or more). ${BELT_INFO[nb.level]}` : "You have reached the highest rank. Keep practising with mixed reviews."}</p>
-          <div class="actions">${nb ? `<button class="btn primary" type="button" data-act="exam" data-level="${nb.level}">Take the ${nb.short.toLowerCase()} belt test ${ICON.arrow}</button>` : ""}<button class="btn" type="button" data-act="mixed">Mixed review</button>${due ? `<button class="btn" type="button" data-act="due">Review ${due} mistake${due > 1 ? "s" : ""}</button>` : ""}</div>
+        <div class="card" style="padding:24px 26px"><h3 style="font-size:20px;margin-bottom:12px">Practise</h3>
+          <div class="actions" style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn primary" type="button" data-act="mixed">Mixed review ${ICON.arrow}</button>${due ? `<button class="btn" type="button" data-act="due">Review ${due} mistake${due > 1 ? "s" : ""}</button>` : ""}</div>
         </div>
-        <div class="card" style="padding:24px 26px"><h3 style="font-size:20px;margin-bottom:10px">The belt path</h3>
-          ${B.list.map(b => `<div class="bp"><i style="background:${b.color}"></i><div><b>${b.name}</b><span class="d">${BELT_INFO[b.level]}</span></div><span class="st ${b.level <= e ? "ok" : b.level === e + 1 ? "next" : ""}">${b.level <= e ? "Earned" : b.level === e + 1 ? "Next" : ""}</span></div>`).join("")}
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${B.list.filter(b => b.level <= unlocked()).map(b => `<button class="btn soft sm" type="button" data-act="exam" data-level="${b.level}">${b.short} test</button>`).join("")}</div>
+        <div class="card" style="padding:24px 26px"><h3 style="font-size:20px;margin-bottom:10px">Tests by difficulty</h3>
+          ${B.list.map(b => `<button class="bp bp-btn" type="button" data-act="exam" data-level="${b.level}"><i style="background:${b.color}"></i><div><b>${b.name}</b><span class="d">${BELT_INFO[b.level]}</span></div><span class="st">20 questions</span></button>`).join("")}
         </div>
       </div>
       <div class="tools-row">
-        <span>All characters and tests are always open. Your rank grows as you pass the belt tests.</span>
+        <span>Progress is saved on this device.</span>
         <button class="btn soft sm" type="button" data-act="reset">${ICON.restart} Reset progress</button>
       </div>`;
   }
@@ -370,7 +366,7 @@
   function renderQ() {
     const s = session, q = s.qs[s.i];
     let body = "";
-    if (q.kind === "choice") body = `<p class="q-ask">${q.ask}</p><div class="qprompt">${q.prompt}</div><div class="opts ${q.cls || ""}">${q.options.map((o, i) => `<button type="button" class="opt" data-i="${i}"><span class="k">${"ABCD"[i]}</span><span lang="ja">${esc(o.label)}</span></button>`).join("")}</div>`;
+    if (q.kind === "choice") body = `<p class="q-ask">${q.ask}</p><div class="qprompt">${q.prompt}</div><div class="opts ${q.cls || ""}">${q.options.map((o, i) => `<button type="button" class="opt" data-i="${i}"><span lang="ja">${esc(o.label)}</span></button>`).join("")}</div>`;
     if (q.kind === "write") body = `<p class="q-ask">Write the ${q.name} character for this sound, then check.</p><div class="qprompt"><div class="rom">${esc(q.rom)}</div></div>
       <div class="pad-wrap"><div><div class="drawpad"><div class="gl"></div><canvas id="pad" width="520" height="520"></canvas></div><div class="pad-ctrl"><button class="btn soft sm" type="button" data-act="clear">Clear</button><button class="btn ink sm" type="button" data-act="reveal">Show the answer</button></div></div><div id="padAns"></div></div>`;
     if (q.kind === "strokes") body = `<p class="q-ask">Tap the strokes of <b>${esc(q.mean)}</b> in the correct order.</p><div class="sc-box" id="sc">${scSVG(q.ch)}<div class="sc-status" id="scStatus">Stroke 1 of ${(STROKES[q.ch] || []).length}</div></div>`;
@@ -431,18 +427,14 @@
   function next() { const s = session; if (!s || !s.answered) return; if (s.i < s.qs.length - 1) { s.i++; s.answered = false; renderQ(); } else finish(); }
   function finish() {
     const s = session, n = s.results.length, ok = s.results.filter(r => r.ok).length, p = Math.round(ok / n * 100);
-    let promo = false;
-    if (s.exam) { const e = Store.data.earned; promo = s.exam === e + 1 && n >= 20 && p >= 80 && e < 6; if (promo) Store.data.earned = s.exam; Store.data.exams.unshift({ d: Date.now(), level: s.exam, n, s: ok, promo }); Store.data.exams = Store.data.exams.slice(0, 30); Store.save(); }
     const wrong = s.results.filter(r => !r.ok);
     view().innerHTML = `<div class="q"><div class="card results"><div class="score">${ok}<span> / ${n}</span></div>
-      <h3>${p === 100 ? "A flawless session." : p >= 80 ? "Excellent work." : p >= 60 ? "Good progress." : "Keep training."}</h3><p class="meta">${esc(s.title)} · ${p}% correct</p>
+      <p class="meta">${esc(s.title)} · ${p}% correct</p>
       <div class="bar" style="max-width:360px;margin:18px auto 0;height:10px"><span style="width:${p}%;background:${p >= 80 ? "var(--ok)" : p >= 60 ? "var(--kincha)" : "var(--shu)"}"></span></div>
       <div class="nums"><span style="background:var(--ok-bg);color:var(--ok)">${ok} correct</span><span style="background:var(--bad-bg);color:var(--bad)">${n - ok} wrong</span></div>
       <div class="actions"><button class="btn ink" type="button" data-act="repeat">${ICON.restart} Repeat</button>${wrong.length ? `<button class="btn primary" type="button" data-act="retry">Retry my mistakes</button>` : ""}<a class="btn soft" href="${s.back}">Back</a></div>
       ${wrong.length ? `<div class="review"><h4>Review your mistakes</h4>${wrong.map(r => { const k = r.q.key.slice(2); const it = r.q.key.startsWith("j:") ? kanjiOf(k) : null; return `<div class="rv"><div class="s"><span lang="ja" style="font-size:26px">${esc(k)}</span> ${it ? `— ${esc(it.mean)} · <span lang="ja">${esc(it.words[0][0])}（${esc(it.words[0][1])}）</span>` : `— ${esc(([...HIRA, ...KATA, ...WORDS].find(x => x.ch === k) || {}).rom || "")}`}</div></div>`; }).join("")}</div>` : ""}
     </div></div>`;
-    if (promo) setTimeout(() => dialog({ title: `${B.get(Store.data.earned).name} earned`, text: `You passed with ${p}%. Congratulations on your new rank!`, ok: "Continue", cancel: "" }), 300);
-    else if (s.exam && s.exam === Store.data.earned + 1) setTimeout(() => toast("You need 80% to earn the belt. Keep training and try again."), 400);
   }
 
   /* ---------------- global events ---------------- */
@@ -464,7 +456,7 @@
     else if (a === "fc-ok" || a === "fc-no") { const ok = a === "fc-ok"; result(ok, ""); session.answered = true; next(); }
     else if (a === "repeat") startSession(Object.assign({}, session, { qs: session.redo ? session.redo() : session.qs }));
     else if (a === "retry") startSession({ title: "Your mistakes", qs: session.results.filter(r => !r.ok).map(r => Object.assign({}, r.q, { revealed: false })), back: session.back });
-    else if (a === "exam") { const L = +b.dataset.level; const make = () => beltQuestions(L, 20); startSession({ title: `${B.get(L).name} test`, qs: make(), exam: L, back: "#dojo", redo: make }); }
+    else if (a === "exam") { const L = +b.dataset.level; const make = () => beltQuestions(L, 20); startSession({ title: `Test · ${B.get(L).name}`, qs: make(), exam: L, back: "#dojo", redo: make }); }
     else if (a === "mixed") startSession({ title: "Mixed review", qs: mixedReview(), back: "#dojo", redo: mixedReview });
     else if (a === "due") startSession({ title: "Review", qs: dueQuestions(), back: "#dojo", redo: dueQuestions });
     else if (a === "reset") dialog({ title: "Reset your progress?", text: "This deletes your belts and practice history for the Japanese Dojo on this device.", ok: "Reset", danger: true }).then(y => { if (y) { Store.reset(); renderDojo(); toast("Progress reset"); } });

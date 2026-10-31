@@ -5,7 +5,8 @@
 .app-hero .wrap{position:relative}
 .app-title{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:space-between}
 .app-title .t{display:flex;align-items:center;gap:18px}
-.app-badge{width:64px;height:64px;border-radius:18px;background:var(--app);color:#fff;display:grid;place-items:center;font:700 16px/1 var(--serif);position:relative;flex:none;letter-spacing:.02em}
+.app-badge{width:64px;height:64px;border-radius:18px;background:var(--app);color:#fff;display:grid;place-items:center;position:relative;flex:none}
+.app-badge .badge-mark{width:78%;height:78%;color:#fff}
 .app-badge small{position:absolute;bottom:7px;font:600 8px/1 var(--sans);letter-spacing:.14em;color:#a9b6d3}
 .app-title h1{font-size:clamp(30px,4.4vw,44px)}
 .app-title p{margin:4px 0 0;color:var(--stone)}
@@ -274,3 +275,10 @@ td.c-it{color:var(--stone);font-size:15px}
   .tricky{padding:24px 20px}
   .tricky-acts{grid-template-columns:1fr}
 }
+
+/* sort control (shown on small screens, where column headers are hidden) */
+.sort-m{display:none}
+.sortsel{height:44px;border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:0 14px;font-size:15px}
+@media (max-width:720px){ .sort-m{display:block;width:100%} .sortsel{width:100%} }
+.step .num svg{width:20px;height:20px}
+.rank h3{font-size:22px}

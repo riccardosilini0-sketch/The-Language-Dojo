@@ -1,10 +1,8 @@
 /* Language Dojo — homepage */
 .hero{padding:70px 0 90px;position:relative;overflow:hidden}
 .hero .wrap{display:grid;grid-template-columns:1.08fr .92fr;gap:40px;align-items:center}
-.hero h1{margin:22px 0 10px}
-.brand-title{font-family:var(--serif);font-weight:800;letter-spacing:-.03em;line-height:.95}
-.brand-title .the{display:block;font-size:clamp(26px,3.2vw,40px);font-weight:500;font-style:italic;color:var(--shu);letter-spacing:0;margin-bottom:6px}
-.brand-title .nm{display:block;font-size:clamp(52px,8.4vw,104px)}
+.hero h1{margin:0 0 14px}
+.brand-title{font-family:var(--serif);font-weight:800;letter-spacing:-.03em;line-height:.98;font-size:clamp(54px,8.6vw,108px)}
 .motto{font:700 clamp(22px,2.6vw,30px)/1.2 var(--serif);margin:0 0 22px;color:var(--sumi-2);letter-spacing:-.01em}
 .motto em{font-style:normal;color:var(--shu)}
 .hero .lead{max-width:520px;margin:0}
@@ -37,15 +35,17 @@
 .principles{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid rgba(255,255,255,.12)}
 .principle{padding:34px 32px 6px 0}
 .principle + .principle{padding-left:32px;border-left:1px solid rgba(255,255,255,.12)}
-.principle .num{font:600 13px/1 var(--sans);letter-spacing:.14em;color:#8f887d}
+.principle .num{font:700 22px/1 "Shippori Mincho",serif;letter-spacing:.06em;color:#8f887d}
 .principle h3{font-size:34px;color:#fff;margin:18px 0 2px}
 .principle .romaji{color:#ef7066;font-size:17px}
 .principle p{color:#bdb5a8;margin:14px 0 0;font-size:16px}
 
 /* languages */
-.langs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px}
-.lang{display:flex;flex-direction:column;padding:26px;min-height:250px;position:relative}
-.lang .code{width:58px;height:58px;border-radius:50%;border:1.5px solid var(--sumi);display:grid;place-items:center;font:700 20px/1 var(--serif);margin-bottom:22px}
+.langs{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;max-width:900px}
+.lang{display:flex;flex-direction:column;padding:28px;min-height:230px;position:relative;text-decoration:none}
+.lang .native{font:500 18px/1.3 "Shippori Mincho",serif;color:var(--stone);margin-top:4px}
+.lang .link-arrow{margin-top:auto;padding-top:20px}
+.lang .code{width:64px;height:64px;border-radius:50%;background:var(--sumi);color:var(--paper);display:grid;place-items:center;font:700 20px/1 var(--serif);margin-bottom:22px}
 .lang h3{font-size:26px}
 .lang p{color:var(--stone);margin:8px 0 18px;font-size:15px;flex:1}
 .lang .foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -127,8 +127,9 @@ a.skill:hover{background:#fffaf2}
 
 /* for students & teachers */
 .perks{display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
-.perk svg{width:28px;height:28px;color:var(--shu);margin-bottom:16px}
-.perk h3{font-size:21px;margin-bottom:6px}
+.perk{padding:24px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--paper)}
+.perk svg{width:28px;height:28px;color:var(--shu);margin-bottom:14px}
+.perk h3{font-size:20px}
 .perk p{margin:0;color:var(--stone);font-size:15px}
 
 /* closing call to action */
