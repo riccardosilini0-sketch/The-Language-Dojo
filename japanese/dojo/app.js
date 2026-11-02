@@ -121,7 +121,7 @@
   }
 
   /* ---------------- router ---------------- */
-  const TABS = [["dojo", "Dojo", ""], ["hiragana", "Hiragana", "ひらがな"], ["katakana", "Katakana", "カタカナ"], ["kanji", "Kanji", "漢字"]];
+  const TABS = [["dojo", "Overview", ""], ["hiragana", "Hiragana", "ひらがな"], ["katakana", "Katakana", "カタカナ"], ["kanji", "Kanji", "漢字"]];
   $("#tabs").innerHTML = TABS.map(([k, l, j]) => `<a class="tab" href="#${k}" data-tab="${k}">${l}${j ? ` <span lang="ja" style="font-weight:500">${j}</span>` : ""}</a>`).join("");
   let session = null;
   const view = () => $("#view");

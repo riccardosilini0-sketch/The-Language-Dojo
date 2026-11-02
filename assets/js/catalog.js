@@ -11,8 +11,7 @@
 window.DOJO_CATALOG = {
   languages: [
     { id: "english", name: "English", native: "English", code: "EN", status: "available", url: "english/index.html" },
-    { id: "japanese", name: "Japanese", native: "日本語", code: "日本", status: "available", url: "japanese/index.html",
-      menu: [["Japanese Dojo", "Overview", "japanese/index.html"], ["Hiragana · ひらがな", "", "japanese/index.html#hiragana"], ["Katakana · カタカナ", "", "japanese/index.html#katakana"], ["Kanji · 漢字", "", "japanese/index.html#kanji"]] }
+    { id: "japanese", name: "Japanese", native: "日本語", code: "日本", status: "available", url: "japanese/index.html" }
   ],
 
   // training areas: shown inside each language space when that language has resources for them
@@ -43,7 +42,7 @@ window.DOJO_CATALOG = {
       items: ["Vowels", "Diphthongs", "Consonants", "Word Stress", "Revision"] },
     { id: "japanese-dojo", lang: "japanese", skill: "writing", status: "available",
       title: "Japanese Dojo", accent: "#8c2f39", art: ["あ", "ア", "字"], artJa: true,
-      url: "japanese/index.html",
+      url: "japanese/dojo/index.html",
       items: ["Hiragana", "Katakana", "First 50 kanji"] }
   ]
 };
