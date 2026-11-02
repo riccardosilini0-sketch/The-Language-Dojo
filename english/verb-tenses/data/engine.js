@@ -34,7 +34,7 @@ window.TenseDojo = {
     build: "Write the sentence", order: "Word order", judge: "Right or wrong?", dialogue: "Dialogue", halves: "Match the halves"
   },
   /* Lowest CEFR level at which each topic is normally taught (1 = A1 … 6 = C2).
-     An exercise is never labelled below the level of its tense: belt = max(written belt, FLOOR). */
+     An exercise is never labelled below the level of its tense, nor above its CEIL. */
   FLOOR: {
     "present-simple": 1, "present-continuous": 1, "past-simple": 1, "be-going-to": 1,
     "present-perfect-simple": 2, "past-continuous": 2, "future-simple": 2, "present-continuous-future": 2, "present-simple-future": 2,
@@ -46,8 +46,15 @@ window.TenseDojo = {
     "all-present": 2, "all-past": 3, "all-future": 3, "present-past-mixed": 2,
     "challenge-intermediate": 3, "challenge-upper": 4, "challenge-advanced": 5
   },
+  /* Highest CEFR level for each tense (beyond it the tense has nothing new to teach). */
+  CEIL: {
+    "present-simple": 4, "present-continuous": 4, "past-simple": 4, "be-going-to": 3, "used-to": 3,
+    "present-continuous-future": 3, "present-simple-future": 4, "past-continuous": 4, "future-simple": 4,
+    "present-perfect-simple": 5, "present-perfect-continuous": 5, "past-perfect-simple": 5, "future-continuous": 5,
+    "past-perfect-continuous": 6, "future-perfect-simple": 6, "future-perfect-continuous": 6
+  },
   parse(topicId, r, i) {
-    const q = { id: topicId + "-" + i, topic: topicId, belt: Math.min(6, Math.max(r[1], this.FLOOR[topicId] || 1)) };
+    const q = { id: topicId + "-" + i, topic: topicId, belt: Math.min(this.CEIL[topicId] || 6, Math.max(r[1], this.FLOOR[topicId] || 1)) };
     switch (r[0]) {
       case "g": return Object.assign(q, { type: "gap", text: r[2], answers: r[3], expl: r[4] });
       case "m": return Object.assign(q, { type: "mc", text: r[2], answers: r[3], expl: r[4] });
