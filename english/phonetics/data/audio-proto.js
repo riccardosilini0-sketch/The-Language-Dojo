@@ -18,7 +18,7 @@ window.PHON_AUDIO_PROTO = {
     "page": "https://commons.wikimedia.org/wiki/File:Close_front_unrounded_vowel.ogg",
     "licence": "CC BY-SA 3.0",
     "licence_url": "http://creativecommons.org/licenses/by-sa/3.0/",
-    "author": "No machine-readable author provided. Denelson83 assumed (based on copyright claims)."
+    "author": "Denelson83"
    }
   },
   {
@@ -37,7 +37,7 @@ window.PHON_AUDIO_PROTO = {
     "page": "https://commons.wikimedia.org/wiki/File:Near-close_near-front_unrounded_vowel.ogg",
     "licence": "CC BY-SA 3.0",
     "licence_url": "http://creativecommons.org/licenses/by-sa/3.0/",
-    "author": "No machine-readable author provided. Denelson83 assumed (based on copyright claims)."
+    "author": "Denelson83"
    }
   },
   {
@@ -57,7 +57,7 @@ window.PHON_AUDIO_PROTO = {
     "page": "https://commons.wikimedia.org/wiki/File:Near-open_front_unrounded_vowel.ogg",
     "licence": "CC BY-SA 3.0",
     "licence_url": "http://creativecommons.org/licenses/by-sa/3.0/",
-    "author": "No machine-readable author provided. Denelson83 assumed (based on copyright claims)."
+    "author": "Denelson83"
    }
   },
   {
@@ -76,7 +76,7 @@ window.PHON_AUDIO_PROTO = {
     "page": "https://commons.wikimedia.org/wiki/File:Open_back_rounded_vowel.ogg",
     "licence": "CC BY-SA 3.0",
     "licence_url": "http://creativecommons.org/licenses/by-sa/3.0/",
-    "author": "No machine-readable author provided. Denelson83 assumed (based on copyright claims)."
+    "author": "Denelson83"
    }
   },
   {
@@ -96,7 +96,7 @@ window.PHON_AUDIO_PROTO = {
     "page": "https://commons.wikimedia.org/wiki/File:Mid-central_vowel.ogg",
     "licence": "CC BY-SA 3.0",
     "licence_url": "http://creativecommons.org/licenses/by-sa/3.0/",
-    "author": "No machine-readable author provided. Denelson83 assumed (based on copyright claims)."
+    "author": "Denelson83"
    }
   },
   {

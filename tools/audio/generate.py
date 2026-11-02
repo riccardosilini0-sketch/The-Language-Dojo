@@ -82,7 +82,7 @@ def commons_file(names):
         ii = page["imageinfo"][0]; md = ii.get("extmetadata", {})
         strip = lambda s: re.sub(r"<[^>]+>", "", (md.get(s) or {}).get("value", "")).strip()
         return {"name": name, "url": ii["url"], "page": ii.get("descriptionurl", ""),
-                "licence": strip("LicenseShortName"), "licence_url": strip("LicenseUrl"), "author": strip("Artist") or "Wikimedia Commons contributor"}
+                "licence": strip("LicenseShortName"), "licence_url": strip("LicenseUrl"), "author": re.sub(r"^No machine-readable author provided\. (\S+) assumed.*$", r"\1", strip("Artist")) or "Wikimedia Commons contributor"}
     return None
 
 
