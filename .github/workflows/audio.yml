@@ -1,0 +1,35 @@
+name: Audio
+
+# Generates the audio prototype for Sounds of English and commits the MP3 files.
+# Runs when tools/audio/ changes, or by hand (Actions → Audio → Run workflow).
+# The ElevenLabs key comes from the repository secret ELEVENLABS_API_KEY and never appears in the site.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["tools/audio/**"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: audio
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Generate audio
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+        run: python3 tools/audio/generate.py
+      - name: Commit audio
+        run: |
+          git config user.name "Language Dojo audio bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add english/phonetics/audio/proto english/phonetics/data/audio-proto.js
+          git diff --cached --quiet || (git commit -m "Audio prototype: regenerate files" && git pull --rebase origin main && git push)

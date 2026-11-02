@@ -1,0 +1,27 @@
+{
+  "_about": "Audio prototype for Sounds of English. Edit this file and push: the GitHub Action 'Audio' regenerates english/phonetics/audio/proto/.",
+  "phonemes": [
+    { "id": "ii", "ipa": "iː", "kind": "vowel", "keyword": "sea", "files": ["Close front unrounded vowel.ogg"], "match": "close to SSBE /iː/ (the recording may be shorter than an English long vowel)" },
+    { "id": "i", "ipa": "ɪ", "kind": "vowel", "keyword": "sit", "files": ["Near-close near-front unrounded vowel.ogg"], "match": "close to SSBE /ɪ/" },
+    { "id": "ae", "ipa": "æ", "kind": "vowel", "keyword": "cat", "files": ["Near-open front unrounded vowel.ogg", "Open front unrounded vowel.ogg"], "match": "cardinal [æ]; modern SSBE /æ/ is more open, close to [a]" },
+    { "id": "o", "ipa": "ɒ", "kind": "vowel", "keyword": "not", "files": ["Open back rounded vowel.ogg"], "match": "close to SSBE /ɒ/" },
+    { "id": "schwa", "ipa": "ə", "kind": "vowel", "keyword": "about", "files": ["Mid-central vowel.ogg", "Mid central vowel.ogg"], "match": "close to SSBE /ə/ (in English it is always short and unstressed)" },
+    { "id": "th", "ipa": "θ", "kind": "consonant", "keyword": "thin", "files": ["Voiceless dental fricative.ogg"], "match": "same sound as English /θ/" },
+    { "id": "dh", "ipa": "ð", "kind": "consonant", "keyword": "this", "files": ["Voiced dental fricative.ogg"], "match": "same sound as English /ð/" },
+    { "id": "zh", "ipa": "ʒ", "kind": "consonant", "keyword": "vision", "files": ["Voiced palato-alveolar sibilant.ogg", "Voiced postalveolar fricative.ogg"], "match": "same sound as English /ʒ/" },
+    { "id": "ng", "ipa": "ŋ", "kind": "consonant", "keyword": "sing", "files": ["Velar nasal.ogg"], "match": "same sound as English /ŋ/" },
+    { "id": "h", "ipa": "h", "kind": "consonant", "keyword": "how", "files": ["Voiceless glottal fricative.ogg"], "match": "same sound as English /h/" }
+  ],
+  "words": [
+    { "id": "water", "text": "water", "bre": "/ˈwɔːtə/", "ga": "[ˈwɑɾɚ]", "accents": ["bre", "ga"] },
+    { "id": "bird", "text": "bird", "bre": "/bɜːd/", "ga": "[bɝd]", "accents": ["bre", "ga"] },
+    { "id": "car", "text": "car", "bre": "/kɑː/", "ga": "[kɑr]", "accents": ["bre", "ga"] },
+    { "id": "tune", "text": "tune", "bre": "/tjuːn/", "ga": "[tun]", "accents": ["bre", "ga"] },
+    { "id": "go", "text": "go", "bre": "/ɡəʊ/", "ga": "[ɡoʊ]", "accents": ["bre", "ga"] }
+  ],
+  "pairs": [
+    { "id": "ship-sheep", "a": { "text": "ship", "bre": "/ʃɪp/" }, "b": { "text": "sheep", "bre": "/ʃiːp/" }, "contrast": "/ɪ/ – /iː/" },
+    { "id": "bad-bed", "a": { "text": "bad", "bre": "/bæd/" }, "b": { "text": "bed", "bre": "/bed/" }, "contrast": "/æ/ – /e/" },
+    { "id": "thin-tin", "a": { "text": "thin", "bre": "/θɪn/" }, "b": { "text": "tin", "bre": "/tɪn/" }, "contrast": "/θ/ – /t/" }
+  ]
+}
