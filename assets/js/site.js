@@ -144,6 +144,12 @@
   // The site no longer saves anything: remove progress stored by earlier versions.
   try { Object.keys(localStorage).filter(k => k.startsWith("language-dojo:")).forEach(k => localStorage.removeItem(k)); } catch (e) {}
   if (document.querySelector(".app-hero") && "scrollRestoration" in history) history.scrollRestoration = "manual";
+  // A link to the page you are already on (e.g. "Back" at the end of a practice session, which
+  // runs without changing the address) would do nothing: re-run the app's router instead.
+  document.addEventListener("click", e => {
+    const a = e.target.closest("a[href^='#']"); if (!a || e.defaultPrevented || !document.querySelector(".app-hero")) return;
+    if (a.getAttribute("href") === (location.hash || "#") ) { e.preventDefault(); window.dispatchEvent(new HashChangeEvent("hashchange")); }
+  });
   function toView(force) {
     const view = document.getElementById("view") || [...document.querySelectorAll(".view")].find(v => !v.hidden); if (!view) return;
     const header = document.getElementById("site-header"), tabs = document.querySelector(".tabs");
