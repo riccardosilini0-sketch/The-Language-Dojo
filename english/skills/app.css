@@ -169,3 +169,25 @@
   .md-row{grid-template-columns:1fr;gap:8px}
   .cg{white-space:normal}
 }
+
+/* authentic video */
+.video-box{display:grid;gap:10px}
+.vframe{position:relative;aspect-ratio:16/9;border-radius:16px;overflow:hidden;background:#111;box-shadow:var(--shadow)}
+.vframe iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vmeta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--stone)}
+.vmeta > span{display:inline-flex;align-items:center;gap:6px}
+.vmeta svg{width:16px;height:16px}
+.vmeta .btn svg{width:14px;height:14px}
+.vcredit{margin:0;font-size:12.5px;line-height:1.5;color:var(--stone)}
+.vcredit a{color:var(--app)}
+#trLink{justify-self:start}
+.tchip{display:inline-block;font:600 11.5px/1 var(--sans);color:var(--app);background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px 7px;margin-left:4px;vertical-align:1px}
+.tf{display:flex;gap:8px;flex-wrap:wrap}
+.tfb{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--line);background:var(--paper);border-radius:10px;padding:8px 14px;font-weight:600;font-size:14.5px}
+.tfb svg{width:15px;height:15px}
+.tfb:hover:not([disabled]){border-color:var(--sumi)}
+.tfb.on{background:var(--app);border-color:var(--app);color:#fff}
+.tfb.right{background:var(--ok);border-color:var(--ok);color:#fff}
+.tfb.wrong{background:var(--bad);border-color:var(--bad);color:#fff}
+/* on wide screens the video stays in view while you answer (a card under the header, nothing floats over text) */
+@media (min-width:981px){ .split.lis > .pane:first-child{position:sticky;top:96px} }

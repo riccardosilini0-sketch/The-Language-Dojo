@@ -64,7 +64,7 @@ for (const f of ["core", "reading", "use", "writing", "listening"]) {
 }
 sctx.window.Skills.tasks.forEach(t => {
   let parts = null;
-  if (t.skill === "listening") parts = t.script.map(([sp, line]) => [t.speakers[sp], line]);
+  if (t.skill === "listening" && t.script) parts = t.script.map(([sp, line]) => [t.speakers[sp], line]);
   else if (t.skill === "reading" && t.voice) {
     if (t.text) parts = t.text.map(p => [t.voice, p.replace(/\s*\[\d+\]\s*/g, " ")]);
     if (t.sections) parts = t.sections.flatMap(([l, name, text]) => [[t.voice, `${l}. ${name}.`], [t.voice, text]]);

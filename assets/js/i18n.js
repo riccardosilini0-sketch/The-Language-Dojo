@@ -298,6 +298,16 @@ window.DOJO_I18N = {
       "Work and lifestyle": "Lavoro e stile di vita", "Mixed grammar": "Grammatica mista", "Advanced grammar": "Grammatica avanzata",
       "Travel and hospitality": "Viaggi e ospitalità", "Cities and opportunities": "Città e opportunità", "Education": "Istruzione",
       "Family and free time": "Famiglia e tempo libero", "Nature and work": "Natura e lavoro", "Health and science": "Salute e scienza",
+      "True or false": "Vero o falso", "Matching": "Abbinamento", "Note completion": "Completamento di appunti", "True": "Vero", "False": "Falso",
+      "Watch the video and choose the best answer for each question.": "Guarda il video e scegli la risposta migliore per ogni domanda.",
+      "Watch the video and decide whether each statement is true or false.": "Guarda il video e decidi se ogni affermazione è vera o falsa.",
+      "Watch the video and do the matching task.": "Guarda il video e svolgi l'abbinamento.",
+      "Watch the video and complete the notes with a word or a short phrase.": "Guarda il video e completa gli appunti con una parola o una breve espressione.",
+      "You can watch it as many times as you need.": "Puoi guardarlo tutte le volte che ti serve.",
+      "Segment": "Segmento", "Restart the segment": "Riavvia il segmento", "Official transcript ↗": "Trascrizione ufficiale ↗",
+      "Authentic videos – talks, interviews and more – with questions at every level.": "Video autentici (conferenze, interviste e altro) con domande per ogni livello.",
+      "Match each habit with the description Julian gives. There is one description you do not need.": "Abbina ogni abitudine alla descrizione che ne dà Julian. C'è una descrizione che non ti serve.",
+      "Habits and challenges": "Abitudini e sfide", "Communication": "Comunicazione",
       "There is nothing to copy yet.": "Non c'è ancora niente da copiare.", "Text copied.": "Testo copiato.", "Answer {0}": "Risposta {0}",
 
       /* ---------- Writing System (Japanese) ---------- */
