@@ -17,6 +17,7 @@ on:
       - "english/phonetics/data/exercises.js"
       - "english/irregular-verbs/verbs-data.js"
       - "english/skills/data/reading.js"
+      - "english/skills/data/reading-2.js"
       - "english/skills/data/listening.js"
 
 permissions:

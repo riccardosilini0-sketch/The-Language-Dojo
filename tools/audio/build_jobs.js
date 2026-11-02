@@ -57,7 +57,7 @@ vctx.window.VERB_DATA.forEach(r => {
 /* ---------- Skill Development: one recording per task (several voices in one track) ---------- */
 const sctx = { window: {} }; vm.createContext(sctx);
 vm.runInContext("var window = this.window;", sctx);
-for (const f of ["core", "reading", "use", "writing", "listening"]) {
+for (const f of ["core", "reading", "reading-2", "use", "use-2", "writing", "writing-2", "listening"]) {
   let src = read(`english/skills/data/${f}.js`);
   if (f === "core") src = src.replace("window.Skills =", "window.Skills = this.Skills =");
   vm.runInContext(src.replace(/^Skills\./m, "window.Skills."), sctx);

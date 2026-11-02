@@ -308,6 +308,13 @@ window.DOJO_I18N = {
       "Authentic videos – talks, interviews and more – with questions at every level.": "Video autentici (conferenze, interviste e altro) con domande per ogni livello.",
       "Match each habit with the description Julian gives. There is one description you do not need.": "Abbina ogni abitudine alla descrizione che ne dà Julian. C'è una descrizione che non ti serve.",
       "Habits and challenges": "Abitudini e sfide", "Communication": "Comunicazione",
+      "Article": "Articolo", "Story": "Racconto", "Review": "Recensione", "Formal email": "Email formale", "Report": "Relazione",
+      "Free time": "Tempo libero", "Travel stories": "Racconti di viaggio", "Psychology and entertainment": "Psicologia e intrattenimento",
+      "Business and work": "Impresa e lavoro", "Culture and the mind": "Cultura e mente", "Cities and design": "Città e progettazione",
+      "Travel": "Viaggi", "Food": "Cibo", "Lifestyle and travel": "Stile di vita e viaggi", "Science": "Scienza", "Science and language": "Scienza e linguaggio",
+      "Education and psychology": "Istruzione e psicologia", "Stories": "Racconti", "Entertainment": "Intrattenimento", "Work and volunteering": "Lavoro e volontariato",
+      "Society": "Società", "Everyday life": "Vita quotidiana", "Lifestyle": "Stile di vita", "Society and communication": "Società e comunicazione",
+      "Match each rule with the advice or example Celeste gives. There is one piece of advice you do not need.": "Abbina ogni regola al consiglio o all'esempio che dà Celeste. C'è un consiglio che non ti serve.",
       "There is nothing to copy yet.": "Non c'è ancora niente da copiare.", "Text copied.": "Testo copiato.", "Answer {0}": "Risposta {0}",
 
       /* ---------- Writing System (Japanese) ---------- */

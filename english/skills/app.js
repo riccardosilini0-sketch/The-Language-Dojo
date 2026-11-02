@@ -162,7 +162,7 @@
   const why = (text, ok, time) => `<div class="why ${ok ? "good" : "bad"}"><b>${ok ? "Correct." : "Not quite."}</b> <span translate="no">${esc(text)}</span>${time ? ` <span class="tchip" translate="no">${esc(time)}</span>` : ""}</div>`;
   const showTranscript = () => { const a = $("#trLink"); if (a) a.hidden = false; };
 
-  /* ----- multiple choice (reading and listening) ----- */
+  /* ----- multiple choice (reading and listening); options appear in a random order ----- */
   function buildChoice(t, box) {
     const listening = t.type === "lmc" || t.type === "vmc";
     const left = t.video ? videoPane(t) : listening
@@ -170,7 +170,7 @@
       : `${player(t.id, "Listen to the text")}<article class="passage" translate="no">${t.text.map(p => `<p>${esc(p)}</p>`).join("")}</article>`;
     box.innerHTML = `<div class="split${listening ? " lis" : ""}"><div class="pane">${left}</div><div class="pane qs">${t.questions.map(([q, opts], i) => `
       <div class="qitem" data-q="${i}"><p class="qq" translate="no"><span class="qn">${i + 1}</span>${esc(q)}</p>
-      <div class="ch" translate="no">${opts.map((o, j) => `<button type="button" class="chb" data-o="${j}"><span class="k">${"ABCD"[j]}</span><span>${esc(o)}</span></button>`).join("")}</div><div class="exp"></div></div>`).join("")}</div></div>`;
+      <div class="ch" translate="no">${shuffle(opts.map((o, j) => j)).map((j, pos) => `<button type="button" class="chb" data-o="${j}"><span class="k">${"ABCD"[pos]}</span><span>${esc(opts[j])}</span></button>`).join("")}</div><div class="exp"></div></div>`).join("")}</div></div>`;
     const sel = {};
     box.addEventListener("click", e => {
       const b = e.target.closest(".chb"); if (!b || cur.checked) return;
