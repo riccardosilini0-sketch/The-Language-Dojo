@@ -348,7 +348,7 @@
     else if (a === "undo" || a === "clear") { const st = session.st, q = session.qs[session.i]; const back = a === "undo" ? [st.built.pop()] : st.built.splice(0); back.forEach(i => { if (i != null) $(`.tile[data-t="${i}"]`).disabled = false; }); drawBuilt(q); }
     else if (a === "skip") { const q = session.qs[session.i]; answer(q.type === "judge" ? "" : ""); }
     else if (a === "next") next();
-    else if (a === "quit") dialog({ title: "Leave this session?", text: "Your answers so far are saved.", ok: "Leave", cancel: "Keep going" }).then(y => { if (y) route(); });
+    else if (a === "quit") dialog({ title: "Leave this session?", text: "Your answers in this session will not be counted.", ok: "Leave", cancel: "Keep going" }).then(y => { if (y) route(); });
     else if (a === "repeat") startSession(Object.assign({}, session, { qs: session.redo ? session.redo() : shuffle(session.qs) }));
     else if (a === "retry") { const w = session.results.filter(r => !r.ok).map(r => QUESTIONS.find(q => q.id === r.q.id)); startSession({ title: "Your mistakes", qs: shuffle(w), back: session.back }); }
     else if (a === "review") { const make = () => shuffle(missed()).slice(0, 20); startSession({ title: "Review", qs: make(), back: "#dojo", redo: make }); }

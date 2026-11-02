@@ -13,6 +13,65 @@
   const C = window.DOJO_CATALOG || { languages: [], skills: [], resources: [], news: [] };
   let markCount = 0;
 
+  /* ---------- interface language (metalanguage) ----------
+     English by default; the choice is remembered on this device. Only the interface
+     is translated (assets/js/i18n.js): content in the target language never changes.
+     ?lang=it or ?lang=en in the address also sets the language. */
+  const LANG_KEY = "language-dojo-lang", LANGS = ["en", "it"];
+  let LANG = "en";
+  try {
+    const q = new URLSearchParams(location.search).get("lang");
+    if (LANGS.includes(q)) localStorage.setItem(LANG_KEY, q);
+    if (LANGS.includes(localStorage.getItem(LANG_KEY))) LANG = localStorage.getItem(LANG_KEY);
+  } catch (e) {}
+  const DICT = LANG !== "en" && window.DOJO_I18N ? window.DOJO_I18N[LANG] : null;
+  const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  // translate one interface string; returns null when there is no translation
+  function T(s) {
+    if (!DICT || !s) return null;
+    const E = DICT.exact;
+    if (has(E, s)) return E[s];
+    const vals = [];
+    const tpl = s.replace(/“([^”]*)”|\d+/g, (m, q) => { vals.push(q !== undefined ? q : m); return q !== undefined ? `“{${vals.length - 1}}”` : `{${vals.length - 1}}`; });
+    if (vals.length && has(E, tpl)) return E[tpl].replace(/\{(\d+)\}/g, (m, i) => vals[+i]);
+    for (const p in DICT.prefixes || {}) if (s.startsWith(p) && s.length > p.length) return DICT.prefixes[p] + s.slice(p.length);
+    for (const [re, rep] of DICT.patterns || []) {
+      const m = s.match(re); if (!m) continue;
+      const r = typeof rep === "function" ? rep(...m, T) : s.replace(re, rep);
+      if (r) return r;
+    }
+    if (s.includes(" · ")) { let any = false; const out = s.split(" · ").map(p => { const t = T(p); if (t) any = true; return t || p; }); if (any) return out.join(" · "); }
+    if (s.includes(", ")) { const out = s.split(", ").map(T); if (out.every(Boolean)) return out.join(", "); }
+    return null;
+  }
+  const t = s => T(s) || s;
+  // content in the target language is never translated (exercise sentences, answers, verb forms…)
+  const SKIP = "script,style,textarea,[lang=ja],[translate=no],.sentence,.tiles,.built,.halves,.dlg,.q-prompt,.q-source,.q-context,.ans,.rv .s,.vtable tbody,.flashcard .word,.forms,.q-big,.given,.tchips,.extable td"
+    + (/\/phonetics\//.test(location.pathname) ? "" : ",.opts:not(.judge)");
+  const ATTRS = ["placeholder", "aria-label", "title", "alt"];
+  const OUT = DICT ? new Set(Object.values(DICT.exact)) : null;
+  function trText(n) {
+    const p = n.parentElement; if (!p || p.closest(SKIP)) return;
+    const v = n.nodeValue, k = v.replace(/\s+/g, " ").trim();
+    if (!/[A-Za-z]/.test(k) || OUT.has(k)) return;
+    const r = T(k);
+    if (r != null && r !== k) n.nodeValue = v.match(/^\s*/)[0] + r + v.match(/\s*$/)[0];
+  }
+  function translate(root) {
+    if (!DICT || !root) return;
+    if (root.nodeType === 3) return trText(root);
+    if (root.nodeType !== 1 || root.closest("script,style")) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT); let n;
+    while ((n = w.nextNode())) trText(n);
+    [root, ...root.querySelectorAll("[placeholder],[aria-label],[title],[alt]")].forEach(el => ATTRS.forEach(a => trAttr(el, a)));
+  }
+  function trAttr(el, a) {
+    const v = el.getAttribute(a); if (!v || !/[A-Za-z]/.test(v) || OUT.has(v)) return;
+    const r = T(v.replace(/\s+/g, " ").trim()); if (r != null && r !== v) el.setAttribute(a, r);
+  }
+  function setLang(l) { try { localStorage.setItem(LANG_KEY, l); } catch (e) {} location.reload(); }
+  if (DICT) document.documentElement.lang = LANG;
+
   const url = p => ROOT + p;
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -75,10 +134,14 @@
         <div class="dropdown">${n.menu.map(([t, sub, h]) => h ? `<a href="${url(h)}"><b>${esc(t)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</a>` : `<span class="dd-off"><b>${esc(t)}</b><span>${esc(sub)}</span></span>`).join("")}</div></div>`;
     };
     header.innerHTML = `<div class="wrap">${lockup(url("index.html"))}
-      <button class="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">${icon("menu")}</button>
+      <div class="hd-tools">
       <nav class="site-nav" id="site-nav" aria-label="Main">
         ${navItems.map(item).join("")}
-      </nav></div>`;
+      </nav>
+      <div class="lang-switch" role="group" aria-label="Interface language">${LANGS.map(l => `<button type="button" data-ui-lang="${l}" aria-pressed="${l === LANG}" lang="${l}">${l.toUpperCase()}</button>`).join("")}</div>
+      <button class="menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">${icon("menu")}</button>
+      </div></div>`;
+    header.querySelector(".lang-switch").addEventListener("click", e => { const b = e.target.closest("[data-ui-lang]"); if (b && b.dataset.uiLang !== LANG) setLang(b.dataset.uiLang); });
     const btn = header.querySelector(".menu-btn"), nav = header.querySelector(".site-nav");
     btn.addEventListener("click", () => { const o = nav.classList.toggle("open"); btn.setAttribute("aria-expanded", o); btn.innerHTML = icon(o ? "close" : "menu"); });
     nav.addEventListener("click", e => {
@@ -157,6 +220,12 @@
     const target = Math.max(0, view.getBoundingClientRect().top + window.scrollY - offset);
     if (force || window.scrollY > target) window.scrollTo({ top: target, behavior: "instant" });
   }
-  window.Dojo = { ROOT, url, esc, mark, icon, status, STATUS, catalog: C, toast, dialog, reveal, toView };
+  window.Dojo = { ROOT, url, esc, mark, icon, status, STATUS, catalog: C, toast, dialog, reveal, toView, lang: LANG, t };
+  // translate the page now, and everything the apps draw later
+  if (DICT) {
+    translate(document.body); translate(document.querySelector("title"));
+    new MutationObserver(ms => ms.forEach(m => m.type === "characterData" ? trText(m.target) : m.type === "attributes" ? trAttr(m.target, m.attributeName) : m.addedNodes.forEach(translate)))
+      .observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+  }
   document.addEventListener("DOMContentLoaded", reveal);
 })();

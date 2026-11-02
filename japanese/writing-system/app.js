@@ -29,7 +29,8 @@
     return out;
   }
   const HIRA = kanaItems("hiragana"), KATA = kanaItems("katakana");
-  const WORDS = KANA.katakana.words.map(w => ({ key: "w:" + w[0], ch: w[0], rom: w[1], en: w[2], it: w[3], belt: 3 }));
+  // loanword meaning in the interface language
+  const WORDS = KANA.katakana.words.map(w => ({ key: "w:" + w[0], ch: w[0], rom: w[1], en: window.Dojo.lang === "it" ? w[3] : w[2], it: w[3], belt: 3 }));
   const GROUP_BELT = Object.fromEntries(KJ.groups.map(g => [g.id, g.belt]));
   const KANJI = KJ.list.map((k, i) => Object.assign({ key: "j:" + k.k, n: i + 1, belt: GROUP_BELT[k.g], strokes: (STROKES[k.k] || []).length }, k));
   const kanjiOf = c => KANJI.find(k => k.k === c);
@@ -186,7 +187,7 @@
       <div class="card launch" id="launch"></div>
       ${sectHTML}
       <div class="card special"><h3 style="font-size:22px;margin-bottom:12px">${sp.title}</h3>${sp.points.map(([t, ws]) => `<h4>${t}</h4><div class="wl">${ws.map(w => `<div class="w"><div><div class="j" lang="ja">${esc(w[0])}</div><div class="t">${esc(w[1])} · ${esc(w[2])}</div></div>${spk(w[0])}</div>`).join("")}</div>`).join("")}</div>
-      ${!isH ? `<div class="sect-head"><h3>Loanwords</h3><span>Words borrowed from other languages</span></div><div class="wl">${WORDS.map(w => `<div class="w"><div><div class="j" lang="ja">${esc(w.ch)}</div><div class="t"><b>${esc(w.rom)}</b>${esc(w.en)} · ${esc(w.it)}</div></div>${spk(w.ch)}</div>`).join("")}</div>` : ""}`;
+      ${!isH ? `<div class="sect-head"><h3>Loanwords</h3><span>Words borrowed from other languages</span></div><div class="wl">${WORDS.map(w => `<div class="w"><div><div class="j" lang="ja">${esc(w.ch)}</div><div class="t"><b>${esc(w.rom)}</b>${esc(w.en)}</div></div>${spk(w.ch)}</div>`).join("")}</div>` : ""}`;
     const drawLaunch = () => {
       const modes = [["romaji", "Choose the rōmaji"], ["char", "Recognise the character"], ["listen", "Listen and match"], ["write", "Write the character"], ["flash", "Flashcards"]];
       if (!isH) modes.push(["words", "Read loanwords"]);
@@ -224,7 +225,7 @@
   }
   function wordQ(w) {
     const ds = shuffle(WORDS.filter(x => x !== w)).slice(0, 3);
-    return { kind: "choice", key: w.key, prompt: `<div class="word" lang="ja">${esc(w.ch)}</div>`, ask: "What does this loanword mean?", options: shuffle([opt(`${w.rom} · ${w.en}`, true), ...ds.map(d => opt(`${d.rom} · ${d.en}`, false))]), explain: `<span class="jp">${esc(w.ch)}</span> = <b>${esc(w.rom)}</b>: ${esc(w.en)} · ${esc(w.it)}.`, say: w.ch };
+    return { kind: "choice", key: w.key, prompt: `<div class="word" lang="ja">${esc(w.ch)}</div>`, ask: "What does this loanword mean?", options: shuffle([opt(`${w.rom} · ${w.en}`, true), ...ds.map(d => opt(`${d.rom} · ${d.en}`, false))]), explain: `<span class="jp">${esc(w.ch)}</span> = <b>${esc(w.rom)}</b>: ${esc(w.en)}.`, say: w.ch };
   }
   const readingsText = k => `On'yomi: ${k.on.map(r => r[0] + " (" + r[1] + ")").join(", ") || "—"} · Kun'yomi: ${k.kun.map(r => r[0] + " (" + r[1] + ")").join(", ") || "—"}`;
   function kanjiQ(mode, k, pool) {
@@ -298,7 +299,7 @@
         <div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">${B.chip(k.belt)}<span style="font-size:14px;color:var(--stone)">Kanji ${k.n} of ${KANJI.length} · ${g.title} <span lang="ja">${g.jp}</span></span></div>
           <h2 style="margin-top:8px">${esc(k.mean)}</h2>
-          <div class="kfacts"><span><b>${k.strokes}</b> strokes</span>${k.parts ? `<span>Parts: <b lang="ja">${esc(k.parts)}</b></span>` : ""}</div>
+          <div class="kfacts"><span><b>${k.strokes}</b> ${k.strokes === 1 ? "stroke" : "strokes"}</span>${k.parts ? `<span>Parts: <b lang="ja">${esc(k.parts)}</b></span>` : ""}</div>
           <div class="readings"><div class="rbox on"><h4>On'yomi <span>音読み</span></h4>${rd(k.on)}</div><div class="rbox"><h4>Kun'yomi <span>訓読み</span></h4>${rd(k.kun)}</div></div>
           <h3 class="h4t">Vocabulary</h3>
           <div class="vocab">${k.words.map(w => `<div class="vrow"><span class="j" lang="ja">${esc(w[0])}</span><span class="t"><span class="kana" lang="ja">${esc(w[1])}</span> · <span class="ro">${esc(w[2])}</span><span class="it">${esc(w[3])}</span></span>${spk(w[1])}</div>`).join("")}</div>
@@ -445,7 +446,7 @@
     const b = e.target.closest("[data-act]"); if (!b) return;
     const a = b.dataset.act;
     if (a === "next") next();
-    else if (a === "quit") dialog({ title: "Leave this session?", text: "Your answers so far are saved.", ok: "Leave", cancel: "Keep going" }).then(y => { if (y) route(); });
+    else if (a === "quit") dialog({ title: "Leave this session?", text: "Your answers in this session will not be counted.", ok: "Leave", cancel: "Keep going" }).then(y => { if (y) route(); });
     else if (a === "clear") $("#pad")._clear();
     else if (a === "reveal") revealWrite();
     else if (a === "self-ok" || a === "self-no") { const ok = a === "self-ok"; result(ok, ok ? "self-checked" : "not yet"); feedback(ok, ok ? "" : "Watch the stroke order again and try once more later."); }

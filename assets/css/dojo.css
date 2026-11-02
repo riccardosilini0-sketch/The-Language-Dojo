@@ -175,3 +175,11 @@ h1,h2,h3,h4{margin:0;font-family:var(--serif);font-weight:700;letter-spacing:-.0
 
 /* resource badge */
 .app-badge .badge-mark{width:78%;height:78%;color:#fff}
+
+/* header tools: main menu, interface language, mobile menu button */
+.hd-tools{display:flex;align-items:center;gap:10px}
+.lang-switch{display:flex;border:1px solid var(--line);border-radius:999px;background:var(--paper);padding:3px;flex:none}
+.lang-switch button{border:0;background:none;font-size:12.5px;font-weight:600;letter-spacing:.04em;color:var(--stone);padding:5px 10px;border-radius:999px;line-height:1.2}
+.lang-switch button[aria-pressed="true"]{background:var(--sumi);color:var(--paper)}
+.lang-switch button:not([aria-pressed="true"]):hover{color:var(--sumi)}
+@media (max-width:860px){.lang-switch button{padding:6px 10px}}

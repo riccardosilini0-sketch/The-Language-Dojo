@@ -1,6 +1,7 @@
 /* Writing System — kanji data. Add more kanji or groups here; the interface adapts automatically.
    Readings are shown in hiragana with Hepburn rōmaji; okurigana in brackets: ひと(つ).
    words: [kanji, reading, rōmaji, Italian] · ex: [sentence, full reading, Italian]
+   The English meanings are in data/kanji-en.js (used with the English interface).
    Stroke counts and stroke order come from KanjiVG (data/strokes.js). */
 window.DOJO_KANJI = {
   groups: [

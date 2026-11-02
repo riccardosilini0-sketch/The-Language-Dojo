@@ -89,4 +89,7 @@
       ]
     }
   };
+  // example glosses are written "English · Italian": keep the one of the interface language
+  const IT = (window.Dojo || {}).lang === "it";
+  ["hiragana", "katakana"].forEach(k => window.DOJO_KANA[k].special.points.forEach(p => p[1].forEach(w => { const g = w[2].split(" · "); w[2] = IT && g[1] ? g[1] : g[0]; })));
 })();
