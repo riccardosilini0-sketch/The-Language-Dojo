@@ -22,7 +22,7 @@ english/phonetics/              Sounds of English — phonetics & phonology (dat
   data/tenses.js                Area 1: the 15 individual tenses
   data/contrasts.js             Area 2: tense contrasts
   data/mixed.js                 Areas 3 and 4: complete groups and challenges
-japanese/                       Japanese Dojo
+japanese/writing-system/        Writing System (hiragana, katakana, kanji)
   index.html, app.css, app.js   Interface (dojo, hiragana, katakana, kanji, practice, tests)
   data/kana.js                  Hiragana and katakana tables, loanwords
   data/kanji.js                 The kanji (meanings, readings, words, sentences) - add more here

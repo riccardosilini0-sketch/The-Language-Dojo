@@ -1,5 +1,5 @@
 /* =====================================================================
-   Japanese Dojo — interface
+   Writing System — interface
    Content: data/kana.js, data/kanji.js, data/strokes.js (KanjiVG).
    Nothing is saved: every visit starts fresh.
    ===================================================================== */
@@ -456,7 +456,7 @@
     else if (a === "exam") { const L = +b.dataset.level; const make = () => beltQuestions(L, 20); startSession({ title: `Test · ${B.get(L).name}`, qs: make(), exam: L, back: "#dojo", redo: make }); }
     else if (a === "mixed") startSession({ title: "Mixed review", qs: mixedReview(), back: "#dojo", redo: mixedReview });
     else if (a === "due") startSession({ title: "Review", qs: dueQuestions(), back: "#dojo", redo: dueQuestions });
-    else if (a === "reset") dialog({ title: "Reset your progress?", text: "This deletes your belts and practice history for the Japanese Dojo on this device.", ok: "Reset", danger: true }).then(y => { if (y) { Store.reset(); renderDojo(); toast("Progress reset"); } });
+    else if (a === "reset") dialog({ title: "Reset your progress?", text: "This deletes your belts and practice history for the Writing System on this device.", ok: "Reset", danger: true }).then(y => { if (y) { Store.reset(); renderDojo(); toast("Progress reset"); } });
   });
   function flipCard() {
     const s = session, q = s.qs[s.i]; const c = $("#fc3"); if (!c) return; c.classList.add("on"); if (q.say) TTS.say(q.say);

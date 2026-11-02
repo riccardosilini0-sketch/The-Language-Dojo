@@ -41,8 +41,8 @@ window.DOJO_CATALOG = {
       url: "english/phonetics/index.html",
       items: ["Vowels", "Diphthongs", "Consonants", "Word Stress", "Revision"] },
     { id: "japanese-dojo", lang: "japanese", skill: "writing", status: "available",
-      title: "Japanese Dojo", accent: "#8c2f39", art: ["あ", "ア", "字"], artJa: true,
-      url: "japanese/dojo/index.html",
+      title: "Writing System", accent: "#8c2f39", art: ["あ", "ア", "字"], artJa: true,
+      url: "japanese/writing-system/index.html",
       items: ["Hiragana", "Katakana", "First 50 kanji"] }
   ]
 };

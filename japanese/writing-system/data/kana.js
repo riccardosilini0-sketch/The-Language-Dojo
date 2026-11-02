@@ -1,4 +1,4 @@
-/* Japanese Dojo — kana data (Hepburn romanisation).
+/* Writing System — kana data (Hepburn romanisation).
    Katakana are generated from hiragana (same sounds, Unicode offset 0x60), plus katakana-only extended sounds.
    belt: practice level for each group (1 White … 6 Black). */
 (function () {
