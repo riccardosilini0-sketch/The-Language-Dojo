@@ -2,6 +2,7 @@
    ["p", text] · ["list", [items]] · ["table", [head], [[row]...]] · ["cards", [[title, text]...]]
    ["note", text] · ["ga", [[word, BrE, GA]...], note] · ["img", file, caption] · ["chart", kind]
    ["pairs", title, [[a, b]...]] · ["stress", [[word, [syllables], stressedIndex]...]]
+   ["sentences", [head], [[…, sentence]...]]: a table whose last column is played as audio
    chart kinds: phonemes · vowels · vowels-short-long · diphthongs · consonants
    Text is plain; /…/ and […] are shown in the IPA font automatically. */
 Phon.addLessons([
@@ -90,7 +91,7 @@ Phon.addLessons([
   ] },
   { id: "l-c-letters", unit: "consonants", group: "spelling", title: "The letters h, c, j and y", blocks: [
     ["cards", [["h", "Unlike Italian, English usually pronounces the letter h at the beginning of words: how, have, holiday. A few common exceptions: hour, honest, honour, heir."], ["c", "/k/ before a, o, u or a consonant (campaign, continue, practical); /s/ before e, i, y (decide, centre, exercises); ch is usually /tʃ/ (changes, children, choose)."], ["j and y", "/dʒ/: j (just), g before e, i, y (gem, giant), dge (judge). /j/: y (yes, yet), and the hidden /j/ in u, ew: university /ˌjuːnɪˈvɜːsəti/, few /fjuː/."]]],
-    ["table", ["", "Sentence"], [["/h/", "Annie and Ben are hugging."], ["/h/", "How old are you?"], ["/h/", "He’s on holiday at the moment."], ["silent", "She’s got an honest face."], ["/dʒ/", "I’ve just had some good news."], ["/j/", "I haven’t finished yet."]]],
+    ["sentences", ["", "Sentence"], [["/h/", "Annie and Ben are hugging."], ["/h/", "How old are you?"], ["/h/", "He’s on holiday at the moment."], ["silent", "She’s got an honest face."], ["/dʒ/", "I’ve just had some good news."], ["/j/", "I haven’t finished yet."]]],
     ["note", "ch can also be /k/ (school, character) or /ʃ/ (machine). IPA /j/ is the first sound of yet – not the sound of the letter j."]
   ] },
   { id: "l-c-silent", unit: "consonants", group: "spelling", title: "Silent letters and gh", blocks: [
@@ -102,7 +103,7 @@ Phon.addLessons([
   ] },
   { id: "l-c-homophones", unit: "consonants", group: "spelling", title: "Homophones", blocks: [
     ["p", "Homophones are words with different spellings and meanings but exactly the same pronunciation: hear – here are both /hɪə/."],
-    ["table", ["Transcription", "Sentence"], [["/hɪə/", "I hear you’ll be here tomorrow."], ["/njuː/", "He knew it was a new car."], ["/siː/", "I can see the sea from my hotel window."], ["/eɪt/", "We ate at about eight o’clock."], ["/nəʊ/", "No, sorry. I don’t know."]]],
+    ["sentences", ["Transcription", "Sentence"], [["/hɪə/", "I hear you’ll be here tomorrow."], ["/njuː/", "He knew it was a new car."], ["/siː/", "I can see the sea from my hotel window."], ["/eɪt/", "We ate at about eight o’clock."], ["/nəʊ/", "No, sorry. I don’t know."]]],
     ["note", "Homophones can depend on the accent: in SSBE (non-rhotic) sauce and source are both /sɔːs/; in GA they differ."]
   ] },
 

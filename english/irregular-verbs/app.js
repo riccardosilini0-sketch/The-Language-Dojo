@@ -88,7 +88,7 @@
       if (i >= keys.length) { done(); return; }
       const k = keys[i++];
       if (AUDIO[k]) {
-        player.src = "data:audio/mpeg;base64," + AUDIO[k];
+        player.src = /\.mp3$/.test(AUDIO[k]) ? "audio/" + AUDIO[k] : "data:audio/mpeg;base64," + AUDIO[k];
         player.onended = () => setTimeout(next, 300);
         player.onerror = () => fallback(k, next);
         const p = player.play(); if (p && p.catch) p.catch(() => fallback(k, next));

@@ -58,18 +58,26 @@
   const slash = s => `<span class="ipa">/${esc(s)}/</span>`;
   const AUDIO = window.PHON_AUDIO || {};
   let audioEl = null;
-  function say(word) {
-    const w = String(word || "").trim(); if (!w) return;
-    const f = AUDIO[w.toLowerCase()] || AUDIO[w];
-    if (f) { try { if (audioEl) audioEl.pause(); audioEl = new Audio("audio/" + f); audioEl.play().catch(() => tts(w)); return; } catch (e) {} }
-    tts(w);
+  // Pre-recorded MP3s (Azure neural voices, see tools/audio). "ga:word" = American voice.
+  // Several keys separated by | are played one after another. The browser voice is only a last resort.
+  let sayToken = 0;
+  function say(spec) {
+    const keys = String(spec || "").split("|").map(k => k.trim()).filter(Boolean); if (!keys.length) return;
+    const my = ++sayToken; if (audioEl) audioEl.pause(); if ("speechSynthesis" in window) speechSynthesis.cancel();
+    const next = i => {
+      if (my !== sayToken || i >= keys.length) return;
+      const k = keys[i], f = AUDIO[k.toLowerCase()];
+      const go = () => setTimeout(() => next(i + 1), 350);
+      if (f) { audioEl = new Audio("audio/" + f); audioEl.onended = go; audioEl.play().catch(() => tts(k, go)); }
+      else tts(k, go);
+    };
+    next(0);
   }
-  function tts(w) {
-    if (!("speechSynthesis" in window)) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(w); u.lang = "en-GB"; u.rate = .85;
-    const v = speechSynthesis.getVoices().find(v => /en[-_]GB/i.test(v.lang)); if (v) u.voice = v;
-    speechSynthesis.speak(u);
+  function tts(k, done) {
+    if (!("speechSynthesis" in window)) return done && done();
+    const ga = k.startsWith("ga:"), u = new SpeechSynthesisUtterance(k.replace(/^ga:/, "")); u.lang = ga ? "en-US" : "en-GB"; u.rate = .85;
+    const v = speechSynthesis.getVoices().find(v => (ga ? /en[-_]US/i : /en[-_]GB/i).test(v.lang)); if (v) u.voice = v;
+    u.onend = done; speechSynthesis.speak(u);
   }
   const spk = w => `<button class="spk" type="button" data-say="${esc(w)}" aria-label="Listen: ${esc(w)}">${ICON.sound}</button>`;
 
@@ -242,6 +250,7 @@
       case "cards": return `<div class="lcards">${b[1].map(([t, x]) => `<div class="card lcard"><h4>${ipaText(t)}</h4><p>${ipaText(x)}</p></div>`).join("")}</div>`;
       case "table": return `<div class="ltable-wrap"><table class="ltable"><thead><tr>${b[1].map(h => `<th>${ipaText(h)}</th>`).join("")}</tr></thead><tbody>${b[2].map(r => `<tr>${r.map(c => `<td>${ipaText(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
       case "ga": return gaPanel(b[1], b[2]);
+      case "sentences": return `<div class="ltable-wrap"><table class="ltable"><thead><tr>${b[1].map(h => `<th>${ipaText(h)}</th>`).join("")}<th></th></tr></thead><tbody>${b[2].map(r => `<tr>${r.map(c => `<td>${ipaText(c)}</td>`).join("")}<td class="sp-cell">${spk(r[r.length - 1])}</td></tr>`).join("")}</tbody></table></div>`;
       case "img": return `<figure class="lfig"><img src="img/${b[1]}.webp" alt="${esc(b[2])}" loading="lazy"><figcaption>${ipaText(b[2])}</figcaption></figure>`;
       case "imgs": return `<div class="lfigs">${b[1].map(([f, c]) => `<figure class="lfig sm"><img src="img/${f}.webp" alt="${esc(c)}" loading="lazy"><figcaption>${ipaText(c)}</figcaption></figure>`).join("")}</div>`;
       case "chart": return b[1] === "phonemes" ? phonemeChart() : b[1] === "consonants" ? consonantChart() : b[1] === "diphthongs" ? `<div class="chart-box">${diphChart()}</div>` :
@@ -250,7 +259,9 @@
     }
     return "";
   }
-  const gaPanel = (rows, note) => `<div class="ga"><div class="ga-h">British–American contrast</div><table><thead><tr><th></th><th>BrE (SSBE)</th><th>GA</th></tr></thead><tbody>${rows.map(r => `<tr><td>${esc(r[0])}</td><td>${ipaText(r[1])}</td><td>${ipaText(r[2])}</td></tr>`).join("")}</tbody></table>${note ? `<p>${ipaText(note)}</p>` : ""}</div>`;
+    const gaWords = cell => cell.replace(/\(.*?\)/g, "").split(/[,–-]/).map(x => x.trim()).filter(w => /^[a-z]+$/i.test(w));
+  const accBtn = (keys, label, cls) => keys.length ? `<button class="accb ${cls}" type="button" data-say="${esc(keys.join("|"))}" aria-label="Listen: ${label}">${ICON.sound}<span>${label}</span></button>` : "";
+  const gaPanel = (rows, note) => `<div class="ga"><div class="ga-h">British–American contrast</div><table><thead><tr><th></th><th>BrE (SSBE)</th><th>GA</th></tr></thead><tbody>${rows.map(r => { const ws = gaWords(r[0]); return `<tr><td>${esc(r[0])}</td><td>${ipaText(r[1])} ${accBtn(ws, "BrE", "bre")}</td><td>${ipaText(r[2])} ${accBtn(ws.map(w => "ga:" + w), "GA", "gaa")}</td></tr>`; }).join("")}</tbody></table>${note ? `<p>${ipaText(note)}</p>` : ""}</div>`;
 
   /* ---------------- router ---------------- */
   $("#tabs").innerHTML = [["home", "Overview"], ...UNITS.filter(u => u.n).map(u => [u.id, u.short])].map(([k, l]) => `<a class="tab" href="#${k}" data-tab="${k}">${l}</a>`).join("");
@@ -340,7 +351,7 @@
     view().innerHTML = `<a class="back" href="#${u.id}">${ICON.back} ${u.title}</a>
       <article class="scard">
         <header class="sc-head">
-          <div class="sc-sym"><span class="ipa">${esc(s.ipa)}</span><button class="spk lg" type="button" data-say="${esc(s.keyword)}" aria-label="Listen: ${esc(s.keyword)}">${ICON.sound}</button></div>
+          <div class="sc-sym" data-say="${esc(s.keyword)}" role="button" tabindex="0" title="Listen: ${esc(s.keyword)}"><span class="ipa">${esc(s.ipa)}</span><button class="spk lg" type="button" data-say="${esc(s.keyword)}" aria-label="Listen: ${esc(s.keyword)}">${ICON.sound}</button></div>
           <div><span class="un">${K === "consonant" ? "Consonant" : K === "diphthong" ? "Diphthong" : (s.length === "short" ? "Short vowel" : "Long vowel")}</span><h2>${slash(s.ipa)} <span class="kw">as in ${esc(s.keyword)}</span></h2><p class="sc-intro">${ipaText(s.intro)}</p></div>
         </header>
         <nav class="sc-nav" aria-label="Sections">${[["sc1", "Description"], ["sc2", "Examples"], ["sc3", "Comparison"], ["sc4", "Common mistakes"], ["practice", "Practice"]].map(([a, t]) => `<a href="#${s.id}" data-jump="${a}">${t}</a>`).join("")}</nav>
