@@ -130,8 +130,7 @@
     session = null; if (TTS.ok) speechSynthesis.cancel();
     const tab = h.startsWith("k-") ? "kanji" : (["dojo", "hiragana", "katakana", "kanji"].includes(h) ? h : "dojo");
     $$(".tab").forEach(a => { const on = a.dataset.tab === tab; a.classList.toggle("active", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
-    const top = $(".tabs").getBoundingClientRect().top + window.scrollY - (window.innerWidth <= 820 ? 66 : 76);
-    if (window.scrollY > top) window.scrollTo(0, top);
+    window.Dojo.toView();
     if (h.startsWith("k-")) { const k = KANJI.find(x => hex(x.k) === h.slice(2)); return k ? renderKanjiCard(k) : renderKanjiList(); }
     if (tab === "hiragana" || tab === "katakana") return renderKana(tab);
     if (tab === "kanji") return renderKanjiList();
@@ -364,6 +363,7 @@
   }
   function head(s) { const ok = s.results.filter(r => r.ok).length, n = s.qs.length; return `<div class="q-top"><span class="sc">${s.i + 1} / ${n}</span><div class="bar"><span style="width:${s.i / n * 100}%;background:var(--shu)"></span></div><span class="sc"><b style="color:var(--ok)">${ok}</b> ✓ · <b style="color:var(--bad)">${s.results.length - ok}</b> ✗</span></div>`; }
   function renderQ() {
+    window.Dojo.toView();
     const s = session, q = s.qs[s.i];
     let body = "";
     if (q.kind === "choice") body = `<p class="q-ask">${q.ask}</p><div class="qprompt">${q.prompt}</div><div class="opts ${q.cls || ""}">${q.options.map((o, i) => `<button type="button" class="opt" data-i="${i}"><span lang="ja">${esc(o.label)}</span></button>`).join("")}</div>`;
@@ -426,6 +426,7 @@
   }
   function next() { const s = session; if (!s || !s.answered) return; if (s.i < s.qs.length - 1) { s.i++; s.answered = false; renderQ(); } else finish(); }
   function finish() {
+    window.Dojo.toView();
     const s = session, n = s.results.length, ok = s.results.filter(r => r.ok).length, p = Math.round(ok / n * 100);
     const wrong = s.results.filter(r => !r.ok);
     view().innerHTML = `<div class="q"><div class="card results"><div class="score">${ok}<span> / ${n}</span></div>

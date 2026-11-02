@@ -138,6 +138,17 @@
     els.forEach(e => io.observe(e));
   }
 
-  window.Dojo = { ROOT, url, esc, mark, icon, status, STATUS, catalog: C, toast, dialog, reveal };
+  /* In-page navigation of the learning apps (#routes): the app re-renders the view itself, so the
+     browser must not restore old scroll positions, and after a route change the page scrolls back to
+     the top of the view (just under the sticky header and tabs) when the reader was further down. */
+  if (document.querySelector(".app-hero") && "scrollRestoration" in history) history.scrollRestoration = "manual";
+  function toView(force) {
+    const view = document.getElementById("view") || [...document.querySelectorAll(".view")].find(v => !v.hidden); if (!view) return;
+    const header = document.getElementById("site-header"), tabs = document.querySelector(".tabs");
+    const offset = (header ? header.getBoundingClientRect().height : 0) + (tabs ? tabs.getBoundingClientRect().height : 0);
+    const target = Math.max(0, view.getBoundingClientRect().top + window.scrollY - offset);
+    if (force || window.scrollY > target) window.scrollTo({ top: target, behavior: "instant" });
+  }
+  window.Dojo = { ROOT, url, esc, mark, icon, status, STATUS, catalog: C, toast, dialog, reveal, toView };
   document.addEventListener("DOMContentLoaded", reveal);
 })();

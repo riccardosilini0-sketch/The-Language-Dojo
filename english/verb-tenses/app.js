@@ -90,8 +90,7 @@
     let tab = h.startsWith("t-") ? (byId[h.slice(2)] || {}).area : h;
     if (!["dojo", "tenses", "contrasts", "mixed", "challenges", "exam"].includes(tab)) tab = "dojo";
     $$(".tab").forEach(a => { const on = a.dataset.tab === tab; a.classList.toggle("active", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
-    const top = $(".tabs").getBoundingClientRect().top + window.scrollY - (window.innerWidth <= 820 ? 66 : 76);
-    if (window.scrollY > top) window.scrollTo(0, top);
+    window.Dojo.toView();
     if (h.startsWith("t-") && byId[h.slice(2)]) return renderTopic(byId[h.slice(2)]);
     if (tab === "exam") return renderExam();
     if (tab === "dojo") return renderDojo();
@@ -210,6 +209,7 @@
   }
   const isWritten = q => ["gap", "comp", "trans", "ita", "context"].includes(q.type);
   function renderQuestion() {
+    window.Dojo.toView();
     const s = session, q = s.qs[s.i], n = s.qs.length, ok = s.results.filter(r => r.ok).length;
     const size = Math.max(10, Math.max(...q.answers.map(a => String(a).length)) + 2);
     const input = `<input type="text" id="gapIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer" size="${size}">`;
@@ -265,6 +265,7 @@
   }
   function next() { const s = session; if (!s || !s.answered) return; if (s.i < s.qs.length - 1) { s.i++; s.answered = false; s.seg = undefined; renderQuestion(); } else finish(); }
   function finish() {
+    window.Dojo.toView();
     const s = session, n = s.results.length, ok = s.results.filter(r => r.ok).length, pct = Math.round(ok / n * 100);
     const wrong = s.results.filter(r => !r.ok);
     view().innerHTML = `<div class="q"><div class="card results">

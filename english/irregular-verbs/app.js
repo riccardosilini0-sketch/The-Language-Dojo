@@ -122,7 +122,7 @@
     const v = views[name]; if (v.init && !v.ready) { v.init(); v.ready = true; }
     const p = pending; pending = null; v.show(p);
     if (toProgress) { const pb = $("#progressBox"); if (pb) setTimeout(() => pb.scrollIntoView({ block: "start" }), 50); }
-    if (prev && prev !== name) { const top = $(".tabs").getBoundingClientRect().top + window.scrollY - (window.innerWidth <= 820 ? 66 : 76); if (window.scrollY > top) window.scrollTo(0, top); }
+    if (prev && prev !== name) window.Dojo.toView();
   }
   window.addEventListener("hashchange", route);
   document.addEventListener("click", e => { const a = e.target.closest("[data-go]"); if (!a) return; e.preventDefault(); go(a.dataset.go, a.dataset.params ? JSON.parse(a.dataset.params) : null); });
@@ -399,6 +399,7 @@
     },
     render() {
       const root = $("#view-practice");
+      if (qz.phase !== "menu") window.Dojo.toView();
       if (qz.phase === "menu") {
         const L = Store.data.len, nt = tricky().length; if (!nt && qz.src === "practise") qz.src = "all";
         root.innerHTML = `<div class="vhead"><h2>Practice</h2></div>

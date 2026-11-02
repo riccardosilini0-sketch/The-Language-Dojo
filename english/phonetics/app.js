@@ -273,8 +273,7 @@
     const unit = unitById[h] ? h : unitOfTopic(h) || (h.startsWith("test-") ? h.slice(5) : "") || "home";
     const tab = unit === "intro" ? "home" : unit;
     $$(".tab").forEach(a => { const on = a.dataset.tab === tab; a.classList.toggle("active", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
-    const top = $(".tabs").getBoundingClientRect().top + window.scrollY - (window.innerWidth <= 820 ? 66 : 76);
-    if (window.scrollY > top) window.scrollTo(0, top);
+    window.Dojo.toView();
     if (h !== "home") { Store.data.last = h; Store.data.seen[h] = 1; Store.save(); }
     if (byId[h]) return renderSound(byId[h]);
     if (lessonById[h]) return renderLesson(lessonById[h]);
@@ -433,7 +432,7 @@
         <div id="fb" aria-live="polite"></div>
         <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-act="quit">Quit</button>${needCheck ? `<button class="btn ink lg" type="button" data-act="check">${ICON.check} Check</button>` : ""}</div>
       </div></div>`;
-    const vt = view().getBoundingClientRect().top; if (vt < 60) window.scrollTo(0, Math.max(0, window.scrollY + vt - 150));
+    window.Dojo.toView();
     if (q.type === "listen") setTimeout(() => say(q.word), 250);
     const inp = $("#wIn") || $("#tIn") || $(".gin");
     if (inp && matchMedia("(hover:hover)").matches) inp.focus({ preventScroll: true });
@@ -505,6 +504,7 @@
   }
   function next() { const s = session; if (!s || !s.answered) return; if (s.i < s.qs.length - 1) { s.i++; s.answered = false; renderQ(); } else finish(); }
   function finish() {
+    window.Dojo.toView();
     const s = session, n = s.results.length, ok = s.results.filter(r => r.ok).length, pct = Math.round(ok / n * 100);
     if (s.key) { Store.data.best[s.key] = Math.max(Store.data.best[s.key] || 0, pct); Store.save(); }
     const wrong = s.results.filter(r => !r.ok);
