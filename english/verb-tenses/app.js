@@ -31,7 +31,9 @@
     { id: "challenges", title: "Challenges", groups: [["challenges", ""]] },
     { id: "exam", title: "Test" }
   ];
-  const BELT_LEVEL = { 1: "Basic", 2: "Elementary–intermediate", 3: "Intermediate", 4: "Intermediate–advanced", 5: "Advanced", 6: "Expert" };
+  // Belts follow the Common European Framework of Reference (CEFR)
+  const CEFR = { 1: "A1", 2: "A2", 3: "B1", 4: "B2", 5: "C1", 6: "C2" };
+  const BELT_LEVEL = { 1: "A1 · Beginner", 2: "A2 · Elementary", 3: "B1 · Intermediate", 4: "B2 · Upper intermediate", 5: "C1 · Advanced", 6: "C2 · Proficiency" };
 
   /* ---------------- storage: per-exercise results only ---------------- */
   const Store = {
@@ -107,7 +109,7 @@
       ${miss ? `<div class="review-card"><p><b>${miss}</b> exercise${miss > 1 ? "s" : ""} to review</p><button class="btn ink sm" type="button" data-act="review">Review ${ICON.arrow}</button></div>` : ""}
       <div class="areas">${AREAS.map(a => `<a class="card card-link area ${a.id === "exam" ? "exam" : ""}" href="#${a.id}"><h3>${a.title}</h3><span class="c">${a.id === "exam" ? "10, 20 or 30 questions" : `${count(a.id)} exercises`}</span></a>`).join("")}</div>
       <div class="card belt-legend">
-        <h3>Difficulty levels</h3>
+        <h3>Levels (CEFR)</h3>
         <div class="legend-grid">${B.list.map(b => `<div class="lg"><i style="background:${b.color}"></i><b>${b.name}</b><span>${BELT_LEVEL[b.level]}</span></div>`).join("")}</div>
       </div>
       <div class="tools-row"><span>Results are saved on this device.</span><button class="btn soft sm" type="button" data-act="reset">${ICON.restart} Reset</button></div>`;
@@ -141,7 +143,7 @@
       const n = pool().length, len = Math.min(n, tp.n);
       $("#trainBox").innerHTML = `
         <label class="l">Level</label>
-        <div class="belt-pick">${[["all", "All levels", ""], ...levels.map(l => [String(l), B.get(l).name, l])].map(([k, label, l]) => `<button type="button" data-belt="${k}" class="${tp.belt === k ? "on" : ""}">${l ? chipBelt(l) : ""}<span>${label}</span><small>${k === "all" ? t.q.length : t.q.filter(q => q.belt === +k).length}</small></button>`).join("")}</div>
+        <div class="belt-pick">${[["all", "All levels", ""], ...levels.map(l => [String(l), B.get(l).name, l])].map(([k, label, l]) => `<button type="button" data-belt="${k}" class="${tp.belt === k ? "on" : ""}">${l ? chipBelt(l) : ""}<span>${label}${l ? ` · ${CEFR[l]}` : ""}</span><small>${k === "all" ? t.q.length : t.q.filter(q => q.belt === +k).length}</small></button>`).join("")}</div>
         <label class="l">Exercise type</label>
         <div class="seg types">${[["all", "All types"], ...types().map(k => [k, TYPES[k]])].map(([k, l]) => `<button type="button" data-type="${k}" class="${tp.type === k ? "on" : ""}">${l}</button>`).join("")}</div>
         <label class="l">Questions</label>
@@ -185,7 +187,7 @@
         <label class="l">Questions</label>
         <div class="seg">${[10, 20, 30].map(n => `<button type="button" data-n="${n}" class="${ex.n === n ? "on" : ""}">${n}</button>`).join("")}</div>
         <label class="l">Level</label>
-        <div class="belt-pick">${[["all", "All levels", ""], ...B.list.map(b => [String(b.level), b.name, b.level])].map(([k, label, l]) => `<button type="button" data-level="${k}" class="${String(ex.level) === k ? "on" : ""}">${l ? chipBelt(l) : ""}<span>${label}</span></button>`).join("")}</div>
+        <div class="belt-pick">${[["all", "All levels", ""], ...B.list.map(b => [String(b.level), b.name, b.level])].map(([k, label, l]) => `<button type="button" data-level="${k}" class="${String(ex.level) === k ? "on" : ""}">${l ? chipBelt(l) : ""}<span>${label}${l ? ` · ${CEFR[l]}` : ""}</span></button>`).join("")}</div>
         <label class="l">From</label>
         <div class="seg">${[["all", "Everything"], ...AREAS.filter(a => a.id !== "exam").map(a => [a.id, a.title])].map(([k, l]) => `<button type="button" data-scope="${k}" class="${ex.scope === k ? "on" : ""}">${l}</button>`).join("")}</div>
         <button class="btn primary lg" type="button" data-act="exam" style="margin-top:24px">Start the test ${ICON.arrow}</button>`;
@@ -195,7 +197,7 @@
     $("#examBox").addEventListener("click", e => {
       const b = e.target.closest("button"); if (!b || b.disabled) return;
       if (b.dataset.n) ex.n = +b.dataset.n; else if (b.dataset.level) ex.level = b.dataset.level; else if (b.dataset.scope) ex.scope = b.dataset.scope;
-      else if (b.dataset.act === "exam") return startSession({ title: ex.level === "all" ? "Test" : `Test · ${B.get(+ex.level).name}`, qs: examPool(), back: "#exam", redo: examPool });
+      else if (b.dataset.act === "exam") return startSession({ title: ex.level === "all" ? "Test" : `Test · ${B.get(+ex.level).name} (${CEFR[+ex.level]})`, qs: examPool(), back: "#exam", redo: examPool });
       draw();
     });
   }
@@ -223,7 +225,7 @@
     view().innerHTML = `<div class="q">
       <div class="q-top"><span class="sc">${s.i + 1} / ${n}</span><div class="bar"><span style="width:${s.i / n * 100}%;background:var(--shu)"></span></div><span class="sc"><b style="color:var(--ok)">${ok}</b> ✓ · <b style="color:var(--bad)">${s.results.length - ok}</b> ✗</span></div>
       <div class="card q-card">
-        <div class="q-meta"><span class="q-kind">${esc(s.title)} · ${TYPES[q.type]}</span>${B.chip(q.belt)}</div>
+        <div class="q-meta"><span class="q-kind">${esc(s.title)} · ${TYPES[q.type]}</span>${B.chip(q.belt, `${B.get(q.belt).name} · ${CEFR[q.belt]}`)}</div>
         ${body}
         <div id="fb" aria-live="polite"></div>
         <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-act="quit">Quit</button>${isWritten(q) || q.type === "error" ? `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" data-act="skip">I don't know</button><button class="btn ink lg" type="button" data-act="check">${ICON.check} Check</button></div>` : ""}</div>
