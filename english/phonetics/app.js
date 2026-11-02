@@ -534,7 +534,7 @@
   /* ---------------- events ---------------- */
   view().addEventListener("click", e => {
     const sp = e.target.closest("[data-say]"); if (sp) { say(sp.dataset.say); if (!sp.classList.contains("opt")) return; }
-    const jump = e.target.closest("[data-jump]"); if (jump) { e.preventDefault(); const el = document.getElementById(jump.dataset.jump); if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 150, behavior: "smooth" }); return; }
+    const jump = e.target.closest("[data-jump]"); if (jump) { e.preventDefault(); const el = document.getElementById(jump.dataset.jump); if (el) { const h = document.getElementById("site-header"); window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - (h ? h.getBoundingClientRect().height : 0) - 16, behavior: "smooth" }); } return; }
     if (session && !session.answered) {
       const q = session.qs[session.i];
       const opt = e.target.closest(".opt"); if (opt) return choose(+opt.dataset.i);

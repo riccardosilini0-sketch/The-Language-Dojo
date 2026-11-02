@@ -120,7 +120,8 @@
   const navItems = [
     { k: "home", label: "Home", href: "index.html" },
     { k: "about", label: "About", href: "index.html#about", menu: [["The concept", "Practice, form and improvement", "index.html#about"], ["For students and teachers", "How to use Language Dojo", "index.html#teachers"]] },
-    { k: "languages", label: "Languages", href: "index.html#languages", menu: liveLangs.map(l => [l.name, l.native && l.native !== l.name ? l.native : "", l.url]) }
+    // each language, with its topics underneath: choose the language or go straight to a topic
+    { k: "languages", label: "Languages", href: "index.html#languages", groups: liveLangs.map(l => ({ l, items: C.resources.filter(r => r.lang === l.id && r.status === "available") })) }
   ];
   // language pages and their resources highlight "Languages"
   const ACTIVE = ["home", "about"].includes(PAGE) ? PAGE : "languages";
@@ -129,6 +130,9 @@
     header.className = "site-header";
     const item = n => {
       const active = n.k === ACTIVE ? ' active" aria-current="page' : "";
+      if (n.groups) return `<div class="nav-item has-menu"><a class="nl${active}" href="${url(n.href)}">${n.label}</a><button class="sub-toggle" type="button" aria-label="Show ${n.label} menu" aria-expanded="false">${caret}</button>
+        <div class="dropdown mega">${n.groups.map(({ l, items }) => `<div class="dd-group"><a class="dd-lang" href="${url(l.url)}"><b>${esc(l.name)}</b>${l.native && l.native !== l.name ? `<span lang="ja">${esc(l.native)}</span>` : ""}</a>
+          <div class="dd-topics">${items.map(r => `<a href="${url(r.url)}"><b>${esc(r.title)}</b>${r.topic ? `<span>${esc(r.topic)}</span>` : ""}</a>`).join("")}</div></div>`).join("")}</div></div>`;
       if (!n.menu) return `<div class="nav-item"><a class="nl${active}" href="${url(n.href)}">${n.label}</a></div>`;
       return `<div class="nav-item has-menu"><a class="nl${active}" href="${url(n.href)}">${n.label}</a><button class="sub-toggle" type="button" aria-label="Show ${n.label} menu" aria-expanded="false">${caret}</button>
         <div class="dropdown">${n.menu.map(([t, sub, h]) => h ? `<a href="${url(h)}"><b>${esc(t)}</b>${sub ? `<span>${esc(sub)}</span>` : ""}</a>` : `<span class="dd-off"><b>${esc(t)}</b><span>${esc(sub)}</span></span>`).join("")}</div></div>`;

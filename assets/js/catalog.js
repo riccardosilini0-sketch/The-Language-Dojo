@@ -27,21 +27,23 @@ window.DOJO_CATALOG = {
   ],
 
   // art: short lines shown on resource cards · accent: card colour
+  // topic: the subject, shown under the title in the Languages menu and on the homepage
+  // (the order here is the order on the site)
   resources: [
-    { id: "irregular-verbs", lang: "english", skill: "verbs", status: "available",
-      title: "Irregular Verbs", accent: "#2b3a55", art: ["go", "went", "gone"],
-      url: "english/irregular-verbs/index.html",
-      items: ["Verb list with audio", "Flashcards", "Practice"] },
-    { id: "verb-tenses", lang: "english", skill: "grammar", status: "available",
-      title: "Verb Tenses", accent: "#2f5d50", art: ["was", "has been", "will"],
-      url: "english/verb-tenses/index.html",
-      items: ["Tenses", "Contrasts", "Mixed Groups", "Challenges", "Test"] },
     { id: "phonetics", lang: "english", skill: "pronunciation", status: "available",
-      title: "Sounds of English", accent: "#4a3f6b", art: ["/iː/", "/θ/", "/ə/"],
+      title: "Sounds of English", topic: "Phonetics and phonology", accent: "#4a3f6b", art: ["/iː/", "/θ/", "/ə/"],
       url: "english/phonetics/index.html",
       items: ["Vowels", "Diphthongs", "Consonants", "Word Stress", "Revision"] },
+    { id: "verb-tenses", lang: "english", skill: "grammar", status: "available",
+      title: "Verb Tenses", topic: "Grammar", accent: "#2f5d50", art: ["was", "has been", "will"],
+      url: "english/verb-tenses/index.html",
+      items: ["Tenses", "Contrasts", "Mixed Groups", "Challenges", "Test"] },
+    { id: "irregular-verbs", lang: "english", skill: "verbs", status: "available",
+      title: "Irregular Verbs", topic: "Verbs", accent: "#2b3a55", art: ["go", "went", "gone"],
+      url: "english/irregular-verbs/index.html",
+      items: ["Verb list with audio", "Flashcards", "Practice"] },
     { id: "japanese-dojo", lang: "japanese", skill: "writing", status: "available",
-      title: "Writing System", accent: "#8c2f39", art: ["あ", "ア", "字"], artJa: true,
+      title: "Writing System", topic: "Hiragana, katakana and kanji", accent: "#8c2f39", art: ["あ", "ア", "字"], artJa: true,
       url: "japanese/writing-system/index.html",
       items: ["Hiragana", "Katakana", "First 50 kanji"] }
   ]

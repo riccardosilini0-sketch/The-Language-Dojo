@@ -136,7 +136,8 @@
 .sc-head h2 .ipa{font-size:1.05em}
 .kw{font:500 .55em/1 var(--sans);color:var(--stone);margin-left:6px}
 .sc-intro{margin:0;font-size:16.5px;color:var(--sumi-2);line-height:1.6}
-.sc-nav{position:sticky;top:132px;z-index:20;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:8px 0;background:var(--washi);margin-bottom:6px}
+/* section links of a sound card: part of the page (not sticky — a floating strip overlapped the text while scrolling) */
+.sc-nav{display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;margin-bottom:6px}
 .sc-nav a{flex:none;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:13.5px;font-weight:600;color:var(--sumi-2);text-decoration:none}
 .sc-nav a:hover{border-color:var(--app);color:var(--app)}
 .sc-sec{padding:22px 0;border-top:1px solid var(--line)}
@@ -245,7 +246,6 @@ input.wrong,textarea.wrong{border-color:var(--bad)!important;background:var(--ba
 .rv .s .ipa{font-size:1.08em}
 
 @media (max-width:900px){ .units{grid-template-columns:1fr 1fr} .sc-desc{grid-template-columns:1fr} .chart-box.sm{max-width:480px} }
-@media (max-width:820px){ .sc-nav{top:122px} }
 @media (max-width:720px){
   .units,.lesson-list,.pchart,.chart-pair{grid-template-columns:1fr}
   .sc-head{flex-direction:column;gap:14px}

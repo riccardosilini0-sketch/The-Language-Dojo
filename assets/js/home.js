@@ -5,19 +5,24 @@
   const $ = s => document.querySelector(s);
 
   $("#heroMark").outerHTML = mark("big-mark");
-  $("#methodMark").outerHTML = mark("bg-mark");
 
-  // languages: each opens its own space
-  $("#langGrid").innerHTML = C.languages.filter(l => l.status === "available").map(l => `
-    <a class="card card-link lang reveal" href="${url(l.url)}">
-      <span class="code" ${/[^\x00-\x7F]/.test(l.code) ? 'lang="ja"' : ""}>${esc(l.code)}</span>
-      <h3>${esc(l.name)}</h3>
-      ${l.native && l.native !== l.name ? `<span class="native" lang="ja">${esc(l.native)}</span>` : ""}
+  // languages: each opens its own space and lists what you can train there
+  $("#langGrid").innerHTML = C.languages.filter(l => l.status === "available").map(l => {
+    const res = C.resources.filter(r => r.lang === l.id && r.status === "available");
+    const ja = /[^\x00-\x7F]/.test(l.code);
+    return `
+    <a class="card card-link lang lang-${esc(l.id)} reveal" href="${url(l.url)}">
+      <div class="lang-top">
+        <span class="code" ${ja ? 'lang="ja"' : ""}>${esc(l.code)}</span>
+        <div><h3>${esc(l.name)}</h3>${l.native && l.native !== l.name ? `<span class="native" lang="ja">${esc(l.native)}</span>` : ""}</div>
+      </div>
+      <ul class="lang-res">${res.map(r => `<li><b>${esc(r.title)}</b><span>${esc(r.topic || "")}</span></li>`).join("")}</ul>
       <span class="link-arrow">Enter ${icon("arrow")}</span>
-    </a>`).join("");
+    </a>`;
+  }).join("");
 
   // for students and teachers
-  const perks = [["free", "Free to use"], ["save", "No account needed"], ["device", "Phone, tablet and computer"], ["sound", "Native-quality audio"]];
+  const perks = [["free", "Free to use"], ["save", "No account needed"], ["device", "Phone, tablet and computer"], ["sound", "Audio for listening and pronunciation"]];
   $("#perks").innerHTML = perks.map(p => `<div class="perk reveal">${icon(p[0])}<h3>${p[1]}</h3></div>`).join("");
 
   window.Dojo.reveal();

@@ -62,7 +62,7 @@
 .use{padding:14px 18px;border-radius:14px;background:var(--paper);border:1px solid var(--line)}
 .use b{display:block;font-size:14.5px;margin-bottom:2px}
 .use span{font:500 17px/1.4 var(--serif);color:var(--sumi-2)}
-.train{padding:26px;position:sticky;top:150px}
+.train{padding:26px;position:sticky;top:96px}
 .train h3{font-size:22px;margin-bottom:4px}
 .train > p{margin:0 0 18px;color:var(--stone);font-size:14.5px}
 .train label.l{display:block;font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin:16px 0 8px}
