@@ -2,7 +2,8 @@
    Run by the GitHub Action before generate.py (node tools/audio/build_jobs.js), so the audio
    always follows the content files. Each job: {set, key, text, accent, ipa?}
    set "phonetics" → english/phonetics/audio + data/audio.js
-   set "verbs"     → english/irregular-verbs/audio + audio-data.js */
+   set "verbs"     → english/irregular-verbs/audio + audio-data.js
+   set "skills"    → english/skills/audio + data/audio.js: {set, key, parts: [[voice, text]…], rate} = one track */
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.resolve(__dirname, "../..");
 const read = f => fs.readFileSync(path.join(ROOT, f), "utf8");
@@ -53,6 +54,24 @@ vctx.window.VERB_DATA.forEach(r => {
   ["base", "past", "pp"].forEach(f => add("verbs", sayKey(v, f)));
 });
 
+/* ---------- Skill Development: one recording per task (several voices in one track) ---------- */
+const sctx = { window: {} }; vm.createContext(sctx);
+vm.runInContext("var window = this.window;", sctx);
+for (const f of ["core", "reading", "use", "writing", "listening"]) {
+  let src = read(`english/skills/data/${f}.js`);
+  if (f === "core") src = src.replace("window.Skills =", "window.Skills = this.Skills =");
+  vm.runInContext(src.replace(/^Skills\./m, "window.Skills."), sctx);
+}
+sctx.window.Skills.tasks.forEach(t => {
+  let parts = null;
+  if (t.skill === "listening") parts = t.script.map(([sp, line]) => [t.speakers[sp], line]);
+  else if (t.skill === "reading" && t.voice) {
+    if (t.text) parts = t.text.map(p => [t.voice, p.replace(/\s*\[\d+\]\s*/g, " ")]);
+    if (t.sections) parts = t.sections.flatMap(([l, name, text]) => [[t.voice, `${l}. ${name}.`], [t.voice, text]]);
+  }
+  if (parts) jobs.set("skills|" + t.id, { set: "skills", key: t.id, parts, rate: t.skill === "listening" ? (t.level <= 3 ? "-6%" : "0%") : "-4%" });
+});
+
 const list = [...jobs.values()];
 fs.writeFileSync(path.join(__dirname, "jobs.json"), JSON.stringify(list, null, 0));
-console.log(`jobs: ${list.length} (phonetics ${list.filter(j => j.set === "phonetics").length}, verbs ${list.filter(j => j.set === "verbs").length})`);
+console.log(`jobs: ${list.length} (phonetics ${list.filter(j => j.set === "phonetics").length}, verbs ${list.filter(j => j.set === "verbs").length}, skills ${list.filter(j => j.set === "skills").length})`);
