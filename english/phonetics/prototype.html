@@ -69,12 +69,12 @@
   const takes = (files, prefix, cls) => files.map((f, i) => btn([f], files.length > 1 ? `${prefix} ${String.fromCharCode(65 + i)}` : prefix, cls)).join("");
   root.innerHTML = `
     ${M.problems && M.problems.length ? `<div class="warn"><b>Notes from the generator</b><ul>${M.problems.map(p => `<li>${esc(p)}</li>`).join("")}</ul></div>` : ""}
-    <p class="lead">British voice: <b>${esc((M.voices.bre || {}).name || "—")}</b> · American voice: <b>${esc((M.voices.ga || {}).name || "—")}</b> · model ${esc(M.model)} · generated ${esc(M.generated)}. When there are takes A and B, tell me which one is better.</p>
-    <h2>Phonemes</h2>
+    <p class="lead">${esc(M.provider || "")} · British voice: <b>${esc((M.voices.bre || {}).name || "—")}</b> · American voice: <b>${esc((M.voices.ga || {}).name || "—")}</b> · generated ${esc(M.generated)}.</p>
+    ${M.phonemes.length ? `<h2>Phonemes</h2>
     <p class="lead">Authentic recordings of the IPA sounds from Wikimedia Commons (the sound files used by Wikipedia’s IPA articles). The note under each symbol says how close the recording is to the SSBE phoneme.</p>
     <div class="pgrid">${M.phonemes.map(p => `<div class="card pcard"><span class="ipa sym">/${esc(p.ipa)}/</span><span class="kw">${esc(p.kind)} · as in ${esc(p.keyword)}</span>
       <div class="plays">${btn([p.file], "Play")}</div><p class="note">${esc(p.match)}</p>
-      <p class="src">Recording: ${esc(p.source.author)} · <a href="${esc(p.source.page)}" target="_blank" rel="noopener">${esc(p.source.licence)}</a></p></div>`).join("")}</div>
+      <p class="src">Recording: ${esc(p.source.author)} · <a href="${esc(p.source.page)}" target="_blank" rel="noopener">${esc(p.source.licence)}</a></p></div>`).join("")}</div>` : ""}
     <h2>Words: British and American</h2>
     <div class="card">${M.words.map(w => `<div class="wrow"><b>${esc(w.text)}</b>
       <div class="acc"><small>BrE (SSBE) ${ipa(w.bre)}</small><div class="plays">${takes(w.files.bre || [], "British")}</div></div>

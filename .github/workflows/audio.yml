@@ -2,7 +2,7 @@ name: Audio
 
 # Generates the audio prototype for Sounds of English and commits the MP3 files.
 # Runs when tools/audio/ changes, or by hand (Actions → Audio → Run workflow).
-# The ElevenLabs key comes from the repository secret ELEVENLABS_API_KEY and never appears in the site.
+# The Azure Speech key comes from the repository secrets (AZURE_SPEECH_KEY, AZURE_SPEECH_REGION) and never appears in the site.
 on:
   workflow_dispatch:
   push:
@@ -25,11 +25,12 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Generate audio
         env:
-          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
         run: python3 tools/audio/generate.py
       - name: Commit audio
         run: |
           git config user.name "Language Dojo audio bot"
           git config user.email "actions@users.noreply.github.com"
-          git add english/phonetics/audio/proto english/phonetics/data/audio-proto.js
+          git add -A english/phonetics/audio/proto english/phonetics/data/audio-proto.js
           git diff --cached --quiet || (git commit -m "Audio prototype: regenerate files" && git pull --rebase origin main && git push)
