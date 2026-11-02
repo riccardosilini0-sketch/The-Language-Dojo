@@ -2,8 +2,8 @@
    Verb Tenses — interface
    Reads exercises from window.TenseDojo (data/*.js). No grammar content here.
    Belts label the difficulty of each exercise; they are not a reward system.
-   Saved on the device (localStorage "language-dojo:en-verb-tenses"):
-   which exercises were answered correctly or wrongly, to offer a review.
+   Nothing is saved: every visit starts fresh. During the visit the app remembers
+   which exercises were answered wrongly, to offer a review.
    ===================================================================== */
 (function () {
   "use strict";
@@ -39,8 +39,8 @@
   const Store = {
     key: "language-dojo:en-verb-tenses", data: null,
     fresh: () => ({ q: {} }),
-    load() { let d = null; try { d = JSON.parse(localStorage.getItem(this.key) || "null"); } catch (e) {} this.data = { q: (d && d.q) || {} }; },
-    save() { try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) {} },
+    load() { this.data = this.fresh(); },
+    save() {},
     reset() { this.data = this.fresh(); this.save(); }
   };
   const qStat = id => Store.data.q[id] || [0, 0, 0]; // correct, wrong, last result (1 ok / -1 wrong)
@@ -69,12 +69,19 @@
       return sv.some(x => ins.includes(x));
     });
   }
+  // whole sentences: commas and quotes are ignored, contractions expanded, case ignored
+  const sentV = x => variants(String(x || "").replace(/[,"“”]/g, " "));
+  const checkSentence = (answers, given) => { const g = sentV(given); return answers.some(a => sentV(a).some(v => g.includes(v))); };
   const segs = q => { const out = []; q.raw.replace(/\[([^\]]+)\]/g, (_, t) => out.push(t)); return out; };
   const plainError = q => q.raw.replace(/\[([^\]]+)\]/g, "$1");
 
   /* ---------------- helpers ---------------- */
   const beltRange = t => { const ls = [...new Set(t.q.map(q => q.belt))].sort(); return `<span class="belt-range" title="${ls.map(l => B.get(l).short).join(", ")}">${ls.map(l => `<i style="background:${B.get(l).color}"></i>`).join("")}</span>`; };
   const fill = (q, ans) => {
+    if (q.type === "build" || q.type === "order") return `<b>${esc(q.answers[0])}</b>`;
+    if (q.type === "judge") return q.correct ? `${esc(q.text)}<br><b>The sentence is correct.</b>` : `<s>${esc(q.text)}</s><br><b>${esc(q.answers[0])}</b>`;
+    if (q.type === "halves") return q.pairs.map(p => `${esc(p[0])} <b>${esc(p[1])}</b>`).join("<br>");
+    if (q.type === "dialogue") { let k = 0; return q.lines.map(([sp, line]) => `${sp ? `<span class="who">${esc(sp)}:</span> ` : ""}${esc(line).replace(/___( \([^)]*\))?/g, () => `<b>${esc(q.answers[k++][0])}</b>`)}`).join("<br>"); }
     if (q.type === "error") { let k = 0; return esc(q.raw).replace(/\[([^\]]+)\]/g, (m, t) => (k++ === q.wrong ? `<b>${esc(ans)}</b>` : t)); }
     const parts = q.text.split("___"), bits = parts.length > 2 ? ans.split(" … ") : [ans];
     return parts.map((p, i) => esc(p) + (i < parts.length - 1 ? `<b>${esc(bits[i] || bits[0])}</b>` : "")).join("");
@@ -111,8 +118,7 @@
       <div class="card belt-legend">
         <h3>Levels (CEFR)</h3>
         <div class="legend-grid">${B.list.map(b => `<div class="lg"><i style="background:${b.color}"></i><b>${b.name}</b><span>${BELT_LEVEL[b.level]}</span></div>`).join("")}</div>
-      </div>
-      <div class="tools-row"><span>Results are saved on this device.</span><button class="btn soft sm" type="button" data-act="reset">${ICON.restart} Reset</button></div>`;
+      </div>`;
   }
 
   /* ---------------- AREA pages ---------------- */
@@ -206,10 +212,17 @@
   function startSession(opts) {
     if (!opts.qs.length) { toast("No exercises available with these settings."); return; }
     session = Object.assign({ i: 0, results: [], answered: false }, opts);
-    session.qs = session.qs.map(q => Object.assign({}, q, (q.type === "mc" || q.type === "tense") ? { opts: shuffle(q.answers) } : {}));
+    session.qs = session.qs.map(q => {
+      const c = Object.assign({}, q);
+      if (q.type === "mc" || q.type === "tense") c.opts = shuffle(q.answers);
+      if (q.type === "order") { const w = q.answers[0].replace(/[.?!]+$/, "").split(/\s+/); if (!/^I(\b|')/.test(w[0])) w[0] = w[0].charAt(0).toLowerCase() + w[0].slice(1); let t; do { t = shuffle(w.map((x, i) => ({ x, i }))); } while (w.length > 2 && t.every((o, i) => o.i === i)); c.tiles = t.map(o => o.x); c.end = (q.answers[0].match(/[.?!]+$/) || ["."])[0]; }
+      if (q.type === "halves") c.right = shuffle(q.pairs.map(p => p[1]));
+      return c;
+    });
     renderQuestion();
   }
   const isWritten = q => ["gap", "comp", "trans", "ita", "context"].includes(q.type);
+  const needsCheck = q => isWritten(q) || ["error", "build", "order", "dialogue"].includes(q.type);
   function renderQuestion() {
     window.Dojo.toView();
     const s = session, q = s.qs[s.i], n = s.qs.length, ok = s.results.filter(r => r.ok).length;
@@ -221,6 +234,11 @@
     else if (q.type === "context") body = `<p class="q-context">${esc(q.context)}</p><p class="sentence">${esc(q.text).replace("___", input)}</p>`;
     else if (q.type === "gap" || q.type === "comp") body = `<p class="sentence">${esc(q.text).replace("___", input)}</p>`;
     else if (q.type === "error") { let k = 0; body = `<p class="q-instr">Tap the part that contains a mistake, then write the correct form.</p><p class="sentence err">${esc(q.raw).replace(/\[([^\]]+)\]/g, (m, t) => `<button type="button" class="seg-btn" data-seg="${k++}">${t}</button>`)}</p><div class="fix-row" id="fixRow" hidden><label for="gapIn">Correct form:</label>${input}</div>`; }
+    else if (q.type === "build") body = `<p class="q-instr">${esc(q.instr)}</p><p class="q-prompt">${esc(q.text)}</p><div class="sent-row">${input.replace('id="gapIn"', 'id="gapIn" class="sent-in"')}</div>`;
+    else if (q.type === "order") body = `<p class="q-instr">Put the words in the correct order.</p><div class="built" id="built" aria-live="polite"><span class="ph">Tap the words below…</span></div><div class="tiles">${q.tiles.map((t, i) => `<button type="button" class="tile" data-t="${i}">${esc(t)}</button>`).join("")}</div><div class="tile-tools"><button type="button" class="btn soft sm" data-act="undo">Undo</button><button type="button" class="btn soft sm" data-act="clear">Clear</button></div>`;
+    else if (q.type === "judge") body = `<p class="q-instr">Is this sentence right or wrong?</p><p class="sentence">${esc(q.text)}</p><div class="opts two judge"><button type="button" class="opt" data-j="1">${ICON.check} Right</button><button type="button" class="opt" data-j="0">${ICON.x} Wrong</button></div><div class="fix-row" id="fixRow" hidden><label for="gapIn">Write it correctly:</label>${input.replace('id="gapIn"', 'id="gapIn" class="sent-in"')}<button class="btn ink" type="button" data-act="check">${ICON.check} Check</button></div>`;
+    else if (q.type === "dialogue") { let k = 0; body = `${q.context ? `<p class="q-context">${esc(q.context)}</p>` : ""}<div class="dlg">${q.lines.map(([sp, line]) => `<p>${sp ? `<span class="who">${esc(sp)}</span>` : ""}<span>${esc(line).replace(/___/g, () => { const a = q.answers[k]; return `<input type="text" class="dgin" data-k="${k++}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Gap ${k}" size="${Math.max(8, Math.max(...a.map(x => x.length)) + 1)}">`; })}</span></p>`).join("")}</div>`; }
+    else if (q.type === "halves") body = `<p class="q-instr">${esc(q.instr)}</p><div class="halves"><div class="hcol">${q.pairs.map((p, i) => `<button type="button" class="hl-l" data-i="${i}">${esc(p[0])}</button>`).join("")}</div><div class="hcol">${q.right.map((r, i) => `<button type="button" class="hl-r" data-i="${i}">${esc(r)}</button>`).join("")}</div></div><p class="pool-note">Tap a beginning, then its ending.</p>`;
     else body = `${q.type === "tense" ? `<p class="q-instr">Which tense ${q.text.includes("___") ? "fits the gap" : "is used"}?</p>` : ""}<p class="sentence">${esc(q.text).split("___").join('<span class="blank">&nbsp;</span>')}</p><div class="opts">${q.opts.map((o, i) => `<button type="button" class="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>`;
     view().innerHTML = `<div class="q">
       <div class="q-top"><span class="sc">${s.i + 1} / ${n}</span><div class="bar"><span style="width:${s.i / n * 100}%;background:var(--shu)"></span></div><span class="sc"><b style="color:var(--ok)">${ok}</b> ✓ · <b style="color:var(--bad)">${s.results.length - ok}</b> ✗</span></div>
@@ -228,16 +246,37 @@
         <div class="q-meta"><span class="q-kind">${esc(s.title)} · ${TYPES[q.type]}</span>${B.chip(q.belt, `${B.get(q.belt).name} · ${CEFR[q.belt]}`)}</div>
         ${body}
         <div id="fb" aria-live="polite"></div>
-        <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-act="quit">Quit</button>${isWritten(q) || q.type === "error" ? `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" data-act="skip">I don't know</button><button class="btn ink lg" type="button" data-act="check">${ICON.check} Check</button></div>` : ""}</div>
+        <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-act="quit">Quit</button>${needsCheck(q) ? `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" data-act="skip">I don't know</button><button class="btn ink lg" type="button" data-act="check">${ICON.check} Check</button></div>` : ""}</div>
       </div></div>`;
+    s.st = { built: [] };
+    $$(".dgin").forEach(g => g.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); s.answered ? next() : answer(""); } }));
+    if (q.type === "dialogue" && matchMedia("(hover:hover)").matches) { const g = $(".dgin"); if (g) g.focus({ preventScroll: true }); }
     const inp = $("#gapIn");
-    if (inp) { if (isWritten(q) && matchMedia("(hover:hover)").matches) inp.focus({ preventScroll: true }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); s.answered ? next() : answer(inp.value); } }); }
+    if (inp) { if ((isWritten(q) || q.type === "build") && matchMedia("(hover:hover)").matches) inp.focus({ preventScroll: true }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); s.answered ? next() : answer(inp.value); } }); }
   }
   function answer(given, idx) {
     const s = session; if (!s || s.answered) return;
     const q = s.qs[s.i];
     let ok, note = "";
-    if (isWritten(q)) {
+    if (q.type === "build") {
+      ok = checkSentence(q.answers, given); const inp = $("#gapIn"); inp.disabled = true; inp.classList.add(ok ? "right" : "wrong");
+    } else if (q.type === "order") {
+      given = s.st.built.map(i => q.tiles[i]).join(" ") + (s.st.built.length ? q.end : "");
+      ok = checkSentence(q.answers, given); $$(".tile").forEach(b => b.disabled = true); $("#built").classList.add(ok ? "right" : "wrong");
+    } else if (q.type === "judge") {
+      // given: "R" (said right), or the typed correction after saying wrong
+      if (given === "R") { ok = q.correct; given = "Right"; }
+      else { ok = !q.correct && checkSentence(q.answers, given); const inp = $("#gapIn"); if (inp) { inp.disabled = true; inp.classList.add(ok ? "right" : "wrong"); } given = q.correct ? "Wrong" : (given || "—"); }
+      $$(".judge .opt").forEach(b => { b.disabled = true; if ((b.dataset.j === "1") === q.correct) b.classList.add("right"); });
+      $$("#fixRow .btn").forEach(b => b.remove());
+    } else if (q.type === "dialogue") {
+      const befores = []; q.lines.forEach(([, l]) => { const parts = l.split("___"); for (let i = 0; i < parts.length - 1; i++) befores.push(parts[i]); });
+      const res = $$(".dgin").map(g => { const k = +g.dataset.k; const good = checkText({ text: befores[k] + "___", answers: q.answers[k] }, g.value); g.disabled = true; g.classList.add(good ? "right" : "wrong"); return good; });
+      ok = res.every(Boolean); given = $$(".dgin").map(g => g.value || "—").join(" · ");
+      if (!ok) note = `${res.filter(Boolean).length} of ${res.length} gaps correct.`;
+    } else if (q.type === "halves") {
+      ok = !s.st.err; given = ok ? "" : `${s.st.err} wrong match${s.st.err > 1 ? "es" : ""}`;
+    } else if (isWritten(q)) {
       ok = checkText(q, given);
       const inp = $("#gapIn"); inp.disabled = true; inp.classList.add(ok ? "right" : "wrong");
     } else if (q.type === "error") {
@@ -256,7 +295,7 @@
     s.results.push({ q, ok, given });
     const st = Store.data.q[q.id] || [0, 0, 0]; ok ? st[0]++ : st[1]++; st[2] = ok ? 1 : -1; Store.data.q[q.id] = st; Store.save();
     const solution = q.type === "tense" ? `${esc(q.text).split("___").join("<b>…</b>")}<br><b>${esc(q.answers[0])}</b>` : fill(q, q.answers[0]);
-    const others = (isWritten(q) || q.type === "error") && q.answers.length > 1 ? `<p class="you">Also accepted: ${q.answers.slice(1).map(esc).join(" · ")}</p>` : "";
+    const others = (isWritten(q) || ["error", "build", "order"].includes(q.type) || (q.type === "judge" && !q.correct)) && q.answers.length > 1 ? `<p class="you">Also accepted: ${q.answers.slice(1).map(esc).join(" · ")}</p>` : "";
     $("#fb").innerHTML = `<div class="fb ${ok ? "good" : "bad"}"><span class="ic">${ok ? ICON.check : ICON.x}</span><div>
       <h3>${ok ? pick(["Correct.", "Well done.", "Exactly right.", "Correct — good reasoning."]) : "Not quite."}</h3>
       <div class="ans">${solution}</div>
@@ -265,6 +304,7 @@
     $("#qfoot").innerHTML = `<button class="btn soft sm" type="button" data-act="quit">Quit</button><button class="btn ink lg" type="button" data-act="next" id="nextBtn">${s.i < s.qs.length - 1 ? "Next question" : "See results"} ${ICON.arrow}</button>`;
     $("#nextBtn").focus({ preventScroll: true });
   }
+  function drawBuilt(q) { const b = $("#built"), st = session.st; b.innerHTML = st.built.length ? st.built.map((i, k) => `<span class="bw">${esc(k ? q.tiles[i] : q.tiles[i].charAt(0).toUpperCase() + q.tiles[i].slice(1))}</span>`).join(" ") + `<span class="bw end">${esc(q.end)}</span>` : `<span class="ph">Tap the words below…</span>`; }
   function next() { const s = session; if (!s || !s.answered) return; if (s.i < s.qs.length - 1) { s.i++; s.answered = false; s.seg = undefined; renderQuestion(); } else finish(); }
   function finish() {
     window.Dojo.toView();
@@ -284,11 +324,29 @@
   view().addEventListener("click", e => {
     const sb = e.target.closest(".seg-btn");
     if (sb && session && !session.answered) { session.seg = +sb.dataset.seg; $$(".seg-btn").forEach(b => b.classList.toggle("sel", b === sb)); $("#fixRow").hidden = false; const inp = $("#gapIn"); inp.value = ""; inp.placeholder = sb.textContent; inp.focus(); return; }
+    if (session && !session.answered) {
+      const q = session.qs[session.i], st = session.st;
+      const tile = e.target.closest(".tile");
+      if (tile && !tile.disabled) { st.built.push(+tile.dataset.t); tile.disabled = true; drawBuilt(q); return; }
+      const jb = e.target.closest(".judge .opt");
+      if (jb) { if (jb.dataset.j === "1") return answer("R"); $$(".judge .opt").forEach(x => x.classList.toggle("sel", x === jb)); $("#fixRow").hidden = false; const inp = $("#gapIn"); inp.value = q.text; inp.focus(); return; }
+      const hl = e.target.closest(".hl-l"), hr = e.target.closest(".hl-r");
+      if (hl && !hl.classList.contains("done")) { $$(".hl-l").forEach(x => x.classList.toggle("sel", x === hl)); st.left = +hl.dataset.i; return; }
+      if (hr && !hr.classList.contains("done")) {
+        if (st.left == null) { toast("First tap a beginning."); return; }
+        const good = q.right[+hr.dataset.i] === q.pairs[st.left][1];
+        if (good) { $(`.hl-l[data-i="${st.left}"]`).classList.add("done"); $(`.hl-l[data-i="${st.left}"]`).classList.remove("sel"); hr.classList.add("done"); st.left = null; }
+        else { st.err = (st.err || 0) + 1; hr.classList.add("bad"); setTimeout(() => hr.classList.remove("bad"), 500); }
+        if ($$(".hl-l.done").length === q.pairs.length) answer("");
+        return;
+      }
+    }
     const b = e.target.closest("[data-act], .opt"); if (!b) return;
-    if (b.classList.contains("opt")) return answer(null, +b.dataset.i);
+    if (b.classList.contains("opt")) { if (b.closest(".judge")) return; return answer(null, +b.dataset.i); }
     const a = b.dataset.act;
-    if (a === "check") { const q = session.qs[session.i]; if (q.type === "error" && session.seg === undefined) { toast("First tap the part that contains the mistake."); return; } answer($("#gapIn") ? $("#gapIn").value : ""); }
-    else if (a === "skip") answer("");
+    if (a === "check") { const q = session.qs[session.i]; if (q.type === "error" && session.seg === undefined) { toast("First tap the part that contains the mistake."); return; } if (q.type === "order" && !session.st.built.length) { toast("Tap the words to build the sentence."); return; } answer($("#gapIn") ? $("#gapIn").value : ""); }
+    else if (a === "undo" || a === "clear") { const st = session.st, q = session.qs[session.i]; const back = a === "undo" ? [st.built.pop()] : st.built.splice(0); back.forEach(i => { if (i != null) $(`.tile[data-t="${i}"]`).disabled = false; }); drawBuilt(q); }
+    else if (a === "skip") { const q = session.qs[session.i]; answer(q.type === "judge" ? "" : ""); }
     else if (a === "next") next();
     else if (a === "quit") dialog({ title: "Leave this session?", text: "Your answers so far are saved.", ok: "Leave", cancel: "Keep going" }).then(y => { if (y) route(); });
     else if (a === "repeat") startSession(Object.assign({}, session, { qs: session.redo ? session.redo() : shuffle(session.qs) }));
@@ -304,5 +362,5 @@
   });
 
   Store.load(); route();
-  window.__tenseDojo = { checkText, variants, QUESTIONS, TOPICS, segs, plainError, current: () => session && session.qs[session.i] }; // used by automated tests
+  window.__tenseDojo = { checkText, checkSentence, variants, QUESTIONS, TOPICS, segs, plainError, current: () => session && session.qs[session.i] }; // used by automated tests
 })();

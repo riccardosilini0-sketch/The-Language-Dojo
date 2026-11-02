@@ -155,6 +155,19 @@ D.add({ id: "past-perfect-continuous", area: "tenses", group: "past", title: "Pa
   ] });
 
 /* ============================= FUTURE ============================= */
+D.add({ id: "used-to", area: "tenses", group: "past", title: "Used to", short: "Past habits and states that are no longer true",
+  intro: "We use used to + base form for habits and states in the past that are no longer true now.",
+  form: "used to + base form · didn't use to + base form · Did … use to …?",
+  uses: [["Past habits", "I used to walk to school."], ["Past states", "There used to be a cinema in our street."], ["Contrast with now", "She used to have long hair, but now it's short."]],
+  q: [
+    ["g", 2, "When I was little, I ___ (be) afraid of the dark.", ["used to be", "was"], "A past state that is no longer true: used to + base form (or the past simple)."],
+    ["g", 2, "We ___ (live) in a flat, but now we have a house.", ["used to live", "lived"], "A past situation that has changed: used to live."],
+    ["g", 2, "My grandfather ___ (not / use) a computer, but now he sends emails every day.", ["did not use to use", "didn't use to use", "never used to use"], "Negative: didn't use to + base form (no -d after didn't)."],
+    ["m", 2, "___ you use to play with dolls?", ["Did", "Were", "Do", "Have"], "Questions: Did + subject + use to + base form."],
+    ["m", 3, "There ___ a cinema here, but they closed it in 2015.", ["used to be", "use to be", "was used to be", "used to being"], "There used to be = there was in the past (but not now)."],
+    ["m", 3, "I ___ go to the beach every summer when I was a child.", ["used to", "use to", "am used to", "was used"], "Used to + base form for past habits."]
+  ] });
+
 D.add({ id: "future-simple", area: "tenses", group: "future", title: "Future Simple (will)", short: "Predictions, instant decisions, offers and promises",
   intro: "We use will for predictions based on opinion, decisions made at the moment of speaking, offers, promises and future facts.",
   form: "will / won't + base form",

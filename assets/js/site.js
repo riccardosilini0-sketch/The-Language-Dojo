@@ -141,6 +141,8 @@
   /* In-page navigation of the learning apps (#routes): the app re-renders the view itself, so the
      browser must not restore old scroll positions, and after a route change the page scrolls back to
      the top of the view (just under the sticky header and tabs) when the reader was further down. */
+  // The site no longer saves anything: remove progress stored by earlier versions.
+  try { Object.keys(localStorage).filter(k => k.startsWith("language-dojo:")).forEach(k => localStorage.removeItem(k)); } catch (e) {}
   if (document.querySelector(".app-hero") && "scrollRestoration" in history) history.scrollRestoration = "manual";
   function toView(force) {
     const view = document.getElementById("view") || [...document.querySelectorAll(".view")].find(v => !v.hidden); if (!view) return;

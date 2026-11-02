@@ -2,8 +2,7 @@
    Sounds of English (phonetics & phonology) — interface
    Content lives in data/*.js (window.Phon). This file renders units, lessons,
    sound cards and charts, generates extra exercises from the sound cards and
-   runs practice sessions. Progress is saved on the device
-   (localStorage "language-dojo:en-phonetics").
+   runs practice sessions. Nothing is saved: every visit starts fresh.
    ===================================================================== */
 (function () {
   "use strict";
@@ -44,8 +43,8 @@
   const Store = {
     key: "language-dojo:en-phonetics", data: null,
     fresh: () => ({ seen: {}, best: {}, last: "" }),
-    load() { let d = null; try { d = JSON.parse(localStorage.getItem(this.key) || "null"); } catch (e) {} this.data = Object.assign(this.fresh(), d || {}); },
-    save() { try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) {} },
+    load() { this.data = this.fresh(); },
+    save() {},
     reset() { this.data = this.fresh(); this.save(); }
   };
 
@@ -292,15 +291,13 @@
   function renderHome() {
     const last = Store.data.last, lastTitle = last ? (byId[last] ? `Sound ${titleOf(last)}` : lessonById[last] ? lessonById[last].title : unitById[last] ? unitById[last].title : "") : "";
     view().innerHTML = `
-      ${lastTitle ? `<div class="continue card"><div><small>Continue where you left off</small><b>${ipaText(lastTitle)}</b></div><a class="btn ink" href="#${last}">Continue ${ICON.arrow}</a></div>` : ""}
       <div class="intro-block">
         <h2>Start here</h2>
         <div class="lesson-list">${LESSONS.filter(l => l.unit === "intro").map(l => lessonLink(l)).join("")}</div>
       </div>
       <div class="units">${UNITS.filter(u => u.n).map(u => `<a class="card card-link unit-card" href="#${u.id}">
         <span class="un">Unit ${u.n}</span><h3>${u.title}</h3><p>${u.sub}</p>
-        <div class="bar" title="${unitProgress(u.id)}% visited"><span style="width:${unitProgress(u.id)}%;background:var(--app)"></span></div></a>`).join("")}</div>
-      <div class="tools-row"><span>Your progress is saved on this device.</span><button class="btn soft sm" type="button" data-act="reset">${ICON.restart} Reset progress</button></div>`;
+        <div class="bar" title="${unitProgress(u.id)}% visited"><span style="width:${unitProgress(u.id)}%;background:var(--app)"></span></div></a>`).join("")}</div>`;
   }
   const lessonLink = l => `<a class="lesson-link" href="#${l.id}"><span class="ll-ic">${ICON.book}</span><span class="ll-t">${ipaText(l.title)}</span>${doneMark(l.id)}<span class="ll-go">${ICON.arrow}</span></a>`;
   const soundTile = s => `<a class="card card-link stile" href="#${s.id}"><span class="ipa big">${esc(s.ipa)}</span><small>${esc(s.keyword)}</small>${doneMark(s.id)}</a>`;

@@ -20,12 +20,18 @@
      ["k", belt, "Sentence (with ___ or complete).", ["Correct tense", "Tense", "Tense", "Tense"], "Explanation"] choose the correct tense
      ["i", belt, "Frase italiana.", "English sentence with ___ .", ["answer"], "Explanation"]               translation from Italian
      ["x", belt, "Short context.", "Sentence with ___ (verb).", ["answer"], "Explanation"]                  context-based gap
+     ["q", belt, "Instruction", "you / enjoy / learning English?", ["Do you enjoy learning English?"], "Explanation"]   write the full sentence from prompts
+     ["o", belt, "What are you doing?", ["other accepted order"], "Explanation"]                           word order (tiles made from the first sentence)
+     ["j", belt, "I am knowing him.", false, ["I know him."], "Explanation"]                                right or wrong? (true = already correct; corrections if wrong)
+     ["d", belt, "Context", [["Speaker", "Line with ___ (verb)"], …], [["gap 1"], ["gap 2"], …], "Explanation"]  dialogue / short text with several gaps
+     ["h", belt, "Instruction", [["Beginning", "ending"], …], "Explanation"]                                match the halves
    ===================================================================== */
 window.TenseDojo = {
   topics: [],
   TYPES: {
     gap: "Fill in the gaps", mc: "Multiple choice", comp: "Sentence completion", trans: "Sentence transformation",
-    error: "Error correction", tense: "Choose the correct tense", ita: "Translation", context: "In context"
+    error: "Error correction", tense: "Choose the correct tense", ita: "Translation", context: "In context",
+    build: "Write the sentence", order: "Word order", judge: "Right or wrong?", dialogue: "Dialogue", halves: "Match the halves"
   },
   /* Lowest CEFR level at which each topic is normally taught (1 = A1 … 6 = C2).
      An exercise is never labelled below the level of its tense: belt = max(written belt, FLOOR). */
@@ -33,7 +39,7 @@ window.TenseDojo = {
     "present-simple": 1, "present-continuous": 1, "past-simple": 1, "be-going-to": 1,
     "present-perfect-simple": 2, "past-continuous": 2, "future-simple": 2, "present-continuous-future": 2, "present-simple-future": 2,
     "present-perfect-continuous": 3, "past-perfect-simple": 3, "future-continuous": 3,
-    "past-perfect-continuous": 4, "future-perfect-simple": 4, "future-perfect-continuous": 5,
+    "past-perfect-continuous": 4, "used-to": 2, "future-perfect-simple": 4, "future-perfect-continuous": 5,
     "ps-vs-pc": 1, "pst-vs-pcont": 2, "will-vs-going-to": 2, "will-vs-pcont-future": 2, "will-vs-ps-timetable": 2, "pp-vs-ps": 2,
     "pps-vs-ppc": 3, "pst-vs-ppf": 3, "pcont-vs-ppf": 3, "will-vs-fcont": 3,
     "ppf-vs-ppfc": 4, "will-vs-fperf": 4, "fperf-vs-fperfc": 5,
@@ -51,6 +57,11 @@ window.TenseDojo = {
       case "k": return Object.assign(q, { type: "tense", text: r[2], answers: r[3], expl: r[4] });
       case "i": return Object.assign(q, { type: "ita", it: r[2], text: r[3], answers: r[4], expl: r[5] });
       case "x": return Object.assign(q, { type: "context", context: r[2], text: r[3], answers: r[4], expl: r[5] });
+      case "q": return Object.assign(q, { type: "build", instr: r[2], text: r[3], answers: r[4], expl: r[5] });
+      case "o": return Object.assign(q, { type: "order", text: r[2], answers: [r[2], ...(r[3] || [])], expl: r[4] });
+      case "j": return Object.assign(q, { type: "judge", text: r[2], correct: !!r[3], answers: r[4] || [], expl: r[5] });
+      case "d": return Object.assign(q, { type: "dialogue", context: r[2], lines: r[3], answers: r[4], expl: r[5] });
+      case "h": return Object.assign(q, { type: "halves", instr: r[2], pairs: r[3], answers: [], expl: r[4] });
     }
     throw new Error("Unknown exercise format in " + topicId + ": " + r[0]);
   },

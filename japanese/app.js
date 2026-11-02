@@ -1,7 +1,7 @@
 /* =====================================================================
    Japanese Dojo — interface
    Content: data/kana.js, data/kanji.js, data/strokes.js (KanjiVG).
-   Progress: localStorage "language-dojo:japanese".
+   Nothing is saved: every visit starts fresh.
    ===================================================================== */
 (function () {
   "use strict";
@@ -38,8 +38,8 @@
   const Store = {
     key: "language-dojo:japanese", data: null,
     fresh: () => ({ items: {}, answered: 0, correct: 0 }),
-    load() { let d = null; try { d = JSON.parse(localStorage.getItem(this.key) || "null"); } catch (e) {} this.data = Object.assign(this.fresh(), d && typeof d === "object" ? d : {}); },
-    save() { try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) {} },
+    load() { this.data = this.fresh(); },
+    save() {},
     reset() { this.data = this.fresh(); this.save(); }
   };
   const unlocked = () => 6; // all content is always open; belts only label difficulty
@@ -158,10 +158,6 @@
         <div class="card" style="padding:24px 26px"><h3 style="font-size:20px;margin-bottom:10px">Tests by difficulty</h3>
           ${B.list.map(b => `<button class="bp bp-btn" type="button" data-act="exam" data-level="${b.level}"><i style="background:${b.color}"></i><div><b>${b.name}</b><span class="d">${BELT_INFO[b.level]}</span></div><span class="st">20 questions</span></button>`).join("")}
         </div>
-      </div>
-      <div class="tools-row">
-        <span>Progress is saved on this device.</span>
-        <button class="btn soft sm" type="button" data-act="reset">${ICON.restart} Reset progress</button>
       </div>`;
   }
 

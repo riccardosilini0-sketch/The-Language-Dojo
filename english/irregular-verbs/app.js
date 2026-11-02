@@ -2,7 +2,7 @@
    Language Dojo · English Irregular Verbs
    Sections: Overview, Verb list, Flashcards, Practice, Progress.
    Data: verbs-data.js (verb list) and audio-data.js (recordings).
-   Progress is stored in localStorage under "language-dojo:en-irregular-verbs".
+   Nothing is saved: every visit starts fresh (progress lasts for the current visit only).
    ===================================================================== */
 (function () {
   "use strict";
@@ -49,12 +49,8 @@
   const Store = {
     key: "language-dojo:en-irregular-verbs", ok: true, data: null,
     fresh() { return { v: {}, quiz: { answered: 0, correct: 0, history: [] }, len: 10 }; },
-    load() {
-      let d = null; try { d = JSON.parse(localStorage.getItem(this.key) || "null"); } catch (e) { this.ok = false; }
-      const f = this.fresh(); d = d && typeof d === "object" ? d : {};
-      this.data = { v: d.v || {}, quiz: Object.assign(f.quiz, d.quiz || {}), len: d.len || 10 };
-    },
-    save() { try { localStorage.setItem(this.key, JSON.stringify(this.data)); this.ok = true; } catch (e) { this.ok = false; } },
+    load() { this.data = this.fresh(); },
+    save() {},
     reset() { this.data = this.fresh(); this.save(); }
   };
   const rec = v => Store.data.v[v.base] || (Store.data.v[v.base] = { s: "", c: 0, w: 0, st: 0, t: 0 });
@@ -462,7 +458,7 @@
       const box = $("#progressBox"); if (!box) return;
       box.innerHTML = `
         <div class="vhead" style="margin-top:44px"><h2>Your progress</h2></div>
-        ${Store.ok ? "" : `<div class="card" style="padding:16px 20px;margin-bottom:18px;background:var(--kincha-bg);border-color:#ecd7ad">This browser is blocking storage (private mode?). Progress will be lost when you close the page.</div>`}
+        
         <div class="stats">
           <div class="card stat"><small>Total verbs</small><b>${VERBS.length}</b></div>
           <div class="card stat"><small>Learnt</small><b style="color:var(--ok)">${n}</b></div>
@@ -482,8 +478,7 @@
         <div class="card" style="padding:28px">
           <h3 style="font-size:24px;margin-bottom:8px">Recent practice</h3>
           ${Q.history.length ? `<table class="hist">${Q.history.slice(0, 8).map(h => `<tr><td>${MODES[h.m] ? MODES[h.m].name : h.m}</td><td style="color:var(--stone)">${new Date(h.d).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</td><td style="text-align:right"><b>${h.s}/${h.n}</b> · ${Math.round(h.s / h.n * 100)}%</td></tr>`).join("")}</table>` : `<p style="color:var(--stone);margin:0">No practice sessions yet. <a href="#practice" style="color:var(--shu);font-weight:600">Start your first one</a>.</p>`}
-        </div>
-        <div class="reset"><div><b>Start over</b><p>Delete all progress for this resource on this device.</p></div><button class="btn soft" type="button" data-reset>${ICON.restart} Reset progress</button></div>`;
+        </div>`;
     }
   };
 
