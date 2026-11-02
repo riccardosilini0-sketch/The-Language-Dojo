@@ -16,6 +16,7 @@ assets/js/language.js           Builds any language page from the catalog
 assets/img/                     Logo files: logo-horizontal.svg, logo-square.svg, logo-mark.svg, favicon.svg
 english/index.html              English language page
 english/verb-tenses/            Verb Tenses Dojo
+english/phonetics/              Sounds of English — phonetics & phonology (data/, img/, audio/)
   index.html, app.css, app.js   Interface (dojo, areas, topics, sessions, exams, belts)
   data/engine.js                Question format and registry
   data/tenses.js                Area 1: the 15 individual tenses
@@ -37,6 +38,7 @@ english/irregular-verbs/        First learning app
 ## Adding content
 - **News, a new resource or a status change:** edit `assets/js/catalog.js`. Homepage, footer and language pages update automatically.
 - **A new language:** add it to `languages` in the catalog, copy `english/index.html` into a new folder (e.g. `spanish/index.html`) and change `data-lang="english"` to the new id.
+- **Sounds of English (phonetics):** sound cards in `english/phonetics/data/vowels.js`, `diphthongs.js`, `consonants.js`; lessons in `lessons.js`; hand-written exercises in `exercises.js` (formats at the top of each file). Further exercises are generated automatically from the sound cards. Word audio: `audio/` + `data/audio.js`.
 - **New tense exercises:** add lines to the files in `english/verb-tenses/data/` (format explained in `engine.js`).
 - **More kanji:** add entries to `japanese/data/kanji.js` and their strokes to `strokes.js` (from KanjiVG).
 - **A new learning app:** create a folder under the language (e.g. `english/phrasal-verbs/`), reuse the page shell of `english/irregular-verbs/index.html`, and set the resource `status` to `"available"` with its `url` in the catalog.
@@ -51,3 +53,15 @@ Progress is saved in each student's browser (localStorage), on that device only.
 
 © 2026 Language Dojo · Created by Riccardo Silini Nedrotti. All rights reserved.
 Stroke-order data: KanjiVG (https://kanjivg.tagaini.net) by Ulrich Apel, CC BY-SA 3.0.
+
+## Sounds of English — sources and integrations
+
+Main source: *English Phonetics and Phonology* (revised course slides, Prof. Riccardo Silini Nedrotti), plus the strong/weak forms exercise from the earlier PowerPoint version. The vocal-tract and vocal-fold diagrams are taken from those slides. Reference accent: SSBE; GA forms are given as broad phonetic transcriptions.
+
+Content added to the original material (for review by the author):
+- Common mistakes of Italian speakers for every sound (the slides cover only /θ ð/, h, /iː ɪ/ and /æ/).
+- Minimal pairs beyond /iː–ɪ/ and /æ–e/ (e.g. /ʊ–uː/, /ɒ–ɔː/, /æ–ʌ–ɑː/, /ɜː/, /e–eɪ/, /θ–t/, /ð–d/, /s–z/, /v–w/, /ʃ–tʃ/, /dʒ–j/, /n–ŋ/, /h/–zero).
+- Grapheme definition; note on /r/ as [ɹ] (phonemic vs phonetic transcription); linking r; syllabic /n/.
+- Word stress: stress tendencies (two-syllable nouns/verbs, compounds, suffixes), noun–verb pairs, vowel reduction, strong and weak forms.
+- Corrections: silent-letters item 2 (participated → listened: non-rhotic r is a matter of accent, not a silent letter); letter-c item 1 (exciting → decision: the /s/ of exciting is ambiguous between x and c).
+- Extra examples on each sound card (all transcriptions in SSBE, Cambridge/Oxford conventions).
