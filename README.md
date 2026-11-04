@@ -17,6 +17,10 @@ assets/img/                     Logo files: logo-horizontal.svg, logo-square.svg
 english/index.html              English language page
 english/verb-tenses/            Verb Tenses Dojo
 english/phonetics/              Sounds of English — phonetics & phonology (data/, img/, audio/)
+english/dependent-prepositions/ Dependent Prepositions — reference and practice tests
+  data/reference.js             Verbs, adjectives, nouns + prepositions (example + Italian translation, belt)
+  data/practice-pack.js         Batteries from the teacher's exercise pack (formats explained at the top)
+  data/practice.js              Original batteries
 english/skills/                 Skill Development — reading, use of English, writing, listening (B1–C1)
   data/core.js                  Task formats (read this first) and registry
   data/reading.js, use.js, writing.js, listening.js   The tasks, one file per skill
@@ -45,6 +49,7 @@ english/irregular-verbs/        First learning app
 - **A new language:** add it to `languages` in the catalog, copy `english/index.html` into a new folder (e.g. `spanish/index.html`) and change `data-lang="english"` to the new id.
 - **Sounds of English (phonetics):** sound cards in `english/phonetics/data/vowels.js`, `diphthongs.js`, `consonants.js`; lessons in `lessons.js`; hand-written exercises in `exercises.js` (formats at the top of each file). Further exercises are generated automatically from the sound cards. Word audio: `audio/` + `data/audio.js`.
 - **New tense exercises:** add lines to the files in `english/verb-tenses/data/` (format explained in `engine.js`).
+- **Dependent Prepositions:** add expressions to `data/reference.js`; add a new test battery by copying one in `data/practice-pack.js` (formats at the top of the file).
 - **Skill Development:** add tasks to `english/skills/data/` (formats in `core.js`). Reading texts and listening scripts are recorded automatically by the Audio workflow; listening scripts can use several voices.
 - **Interface translations:** every new interface string in English needs its Italian version in `assets/js/i18n.js`.
 - **More kanji:** add entries to `japanese/data/kanji.js` and their strokes to `strokes.js` (from KanjiVG).
