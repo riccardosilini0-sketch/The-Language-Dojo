@@ -282,3 +282,7 @@ td.c-it{color:var(--stone);font-size:15px}
 @media (max-width:720px){ .sort-m{display:block;width:100%} .sortsel{width:100%} }
 .step .num svg{width:20px;height:20px}
 .rank h3{font-size:22px}
+/* exercise header in question-by-question quizzes: TYPE (.q-kind) · title · instruction */
+.ex-title{font:700 22px/1.25 var(--serif);color:var(--sumi);margin:10px 0 0}
+.ex-instr{margin:4px 0 0;font-size:15.5px;line-height:1.5;color:var(--sumi-2)}
+.ex-head{padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--line-2)}

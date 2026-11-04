@@ -23,16 +23,36 @@
 
   const CATS = [["verbs", "Verbs + prepositions"], ["adjectives", "Adjectives + prepositions"], ["nouns", "Nouns + prepositions"]];
   const BELTS = [1, 2, 3];
-  const TYPES = { mc: "Multiple choice", gap: "Gap filling", correct: "Error correction", transform: "Sentence transformation", translate: "Translation", text: "Texts and dialogues", halves: "Matching" };
+  /* Exercise headers (shared vocabulary in assets/js/exercises.js): TYPE · Title · Instruction */
+  const EX = window.DojoEx;
+  const KEY = { mc: "mc", gap: "gaps", correct: "errors", transform: "transform", translate: "translation", halves: "matching" };
+  const typeKey = b => b.type === "text" ? (b.parts.some(p => p[0] && p[0] !== "#") ? "gapDialogue" : "gapText") : KEY[b.type];
+  const TYPE_ORDER = ["mc", "gaps", "errors", "transform", "translation", "matching", "gapDialogue", "gapText"];
   const INSTR = {
-    mc: "Choose the correct option for each sentence.",
-    gap: "Complete each sentence. Write the missing words in the gap.",
-    correct: "Each sentence contains one mistake. Write the whole sentence correctly.",
-    transform: "Complete the second sentence so that it means the same as the first. Use the word given.",
-    translate: "Translate each sentence into English, using the word in brackets and the right preposition. Then compare your sentence with the model answer.",
-    text: "Read the text and write one preposition in each gap.",
-    halves: "Match each beginning with the right ending."
+    mc: "Choose the correct preposition to complete each sentence.",
+    gaps: "Complete the sentences with the correct preposition.",
+    errors: "Each sentence contains one mistake with a preposition. Write the correct sentence.",
+    transform: "Complete the second sentence so that it has a similar meaning to the first, using the word given.",
+    translation: "Translate the sentences into English, using the word in brackets and the correct preposition. Then compare your sentence with the model answer.",
+    matching: "Match the beginnings of the sentences with the correct endings.",
+    gapDialogue: "Complete the dialogues with the correct preposition.",
+    gapText: "Read the whole text first, then write one preposition in each gap."
   };
+  // topic of each battery (title level 2); exercises built on a text keep the title of the text
+  const TOPIC = {
+    verbs: "Verbs + Prepositions", adjectives: "Adjectives + Prepositions", nouns: "Nouns + Prepositions",
+    confused: "Easily Confused Prepositions", mixed: "Dependent Prepositions"
+  };
+  const TOPIC_OF = {
+    "w-verbs-mc": "verbs", "y-verbs-gap": "verbs", "w-adjectives-gap": "adjectives", "y-feelings-mc": "adjectives",
+    "y-nouns-mc": "nouns", "o-nouns-gap": "nouns", "w-which-one": "confused", "pack-confused": "confused"
+  };
+  const TEXT_TITLE = { "o-cloze": "My first summer job", "pack-cloze": "A new life in Dublin" };
+  const SPECIFIC = { "pack-combo": "Complete the sentences with the words in brackets: add the correct preposition and use the right form of the second word." };
+  BATS.forEach(b => { b.typeKey = typeKey(b); b.instr = SPECIFIC[b.id] || INSTR[b.typeKey]; });
+  // numbered in the order in which the batteries are listed (by level)
+  EX.numberAll([1, 2, 3].flatMap(l => BATS.filter(b => b.belt === l)), b => TEXT_TITLE[b.id] ? null : TOPIC[TOPIC_OF[b.id] || "mixed"], (b, t) => { b.title = t; });
+  BATS.forEach(b => { if (TEXT_TITLE[b.id]) b.title = TEXT_TITLE[b.id]; });
   const beltChip = l => B.chip(l, B.get(l).name);
   const hl = s => esc(s).replace(/\[([^\]]+)\]/g, "<b class=\"pp\">$1</b>");
   const plain = s => s.replace(/[\[\]]/g, "");
@@ -134,13 +154,13 @@
     drawPractice();
   }
   function drawPractice() {
-    const used = [...new Set(BATS.map(b => b.type))];
+    const used = TYPE_ORDER.filter(k => BATS.some(b => b.typeKey === k));
     $("#pbelt").innerHTML = [["all", "All levels"], ...BELTS.map(l => [String(l), B.get(l).short])].map(([k, l]) => `<button type="button" data-belt="${k}" class="${pf.belt === k ? "on" : ""}">${k !== "all" ? `<i class="bdot" style="background:${B.get(+k).color}"></i>` : ""}${l}</button>`).join("");
-    $("#ptype").innerHTML = [["all", "All types"], ...Object.entries(TYPES).filter(([k]) => used.includes(k))].map(([k, l]) => `<button type="button" data-type="${k}" class="${pf.type === k ? "on" : ""}">${l}</button>`).join("");
-    const list = BATS.filter(b => (pf.belt === "all" || b.belt === +pf.belt) && (pf.type === "all" || b.type === pf.type));
+    $("#ptype").innerHTML = [["all", "All types"], ...used.map(k => [k, EX.TYPE[k]])].map(([k, l]) => `<button type="button" data-type="${k}" class="${pf.type === k ? "on" : ""}">${l}</button>`).join("");
+    const list = BATS.filter(b => (pf.belt === "all" || b.belt === +pf.belt) && (pf.type === "all" || b.typeKey === pf.type));
     $("#plist").innerHTML = BELTS.filter(l => list.some(b => b.belt === l)).map(l => `<div class="lv-head">${beltChip(l)}</div>
       <div class="bat-grid">${list.filter(b => b.belt === l).map(b => `<a class="card card-link bat-card" href="#b-${b.id}">
-        <span class="bt-type">${TYPES[b.type]}</span><h4>${esc(b.title)}</h4><p>${esc(b.goal)}</p>
+        <span class="bt-type">${EX.TYPE[b.typeKey]}</span><h4>${esc(b.title)}</h4><p>${b.instr}</p>
         <div class="bt-meta"><span>${nItems(b)} questions</span><span>${b.source === "pack" ? "Exercise pack" : "Language Dojo"}</span></div></a>`).join("")}</div>`).join("")
       || `<div class="card empty"><h3>No tests with these settings</h3>Choose another level or type.</div>`;
   }
@@ -149,8 +169,8 @@
   function renderBattery(b) {
     cur = { b, checked: false };
     view().innerHTML = `<a class="back" href="#practice">${ICON.back} Practice</a>
-      <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${TYPES[b.type]}</span><span class="bt-n">${nItems(b)} questions</span></div>
-        <h2>${esc(b.title)}</h2><p class="bt-goal">${esc(b.goal)}</p><div class="instr"><p>${INSTR[b.type]}</p></div></div>
+      <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${EX.TYPE[b.typeKey]}</span><span class="bt-n">${nItems(b)} questions</span></div>
+        <h2>${esc(b.title)}</h2><p class="bt-goal">${b.instr}</p></div>
       <div id="btBody"></div><div class="bt-foot" id="btFoot"></div><div id="btResult" aria-live="polite"></div>`;
     ({ mc: buildMC, gap: buildGap, correct: buildCorrect, transform: buildTransform, translate: buildTranslate, text: buildText, halves: buildHalves })[b.type](b, $("#btBody"));
     drawFoot();

@@ -191,3 +191,4 @@
 .tfb.wrong{background:var(--bad);border-color:var(--bad);color:#fff}
 /* on wide screens the video stays in view while you answer (a card under the header, nothing floats over text) */
 @media (min-width:981px){ .split.lis > .pane:first-child{position:sticky;top:96px} }
+.tk-context{margin:-6px 0 18px;font-size:16px;line-height:1.6;color:var(--sumi-2);font-style:italic}

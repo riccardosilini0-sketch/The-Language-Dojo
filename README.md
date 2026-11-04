@@ -44,6 +44,17 @@ english/irregular-verbs/        First learning app
   audio-data.js                 Recorded British English pronunciation for every form
 ```
 
+## Exercise headers
+
+Every exercise in every section is introduced by the same three levels:
+
+1. **TYPE** (in capitals): the kind of activity, e.g. MULTIPLE CHOICE, FILL IN THE GAPS, GAP FILL – TEXT, ERROR CORRECTION.
+2. **Title** (bold): the topic, numbered when there are several exercises on it (*Present Simple – 2*, *Irregular Verbs – 3*).
+   Exercises built on a text use the title of the text instead (*A new life in Dublin*).
+3. **Instruction** (normal text): what the student has to do.
+
+The type names and the default instructions are defined once, in `assets/js/exercises.js` (`window.DojoEx`), and every section uses them. Add new types there, never inside a single section.
+
 ## Adding content
 - **News, a new resource or a status change:** edit `assets/js/catalog.js`. Homepage, footer and language pages update automatically.
 - **A new language:** add it to `languages` in the catalog, copy `english/index.html` into a new folder (e.g. `spanish/index.html`) and change `data-lang="english"` to the new id.

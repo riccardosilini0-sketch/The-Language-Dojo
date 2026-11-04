@@ -233,7 +233,7 @@
     },
     render() {
       const root = $("#view-cards"), nt = tricky().length;
-      const head = `<div class="vhead" style="text-align:center"><h2>Flashcards</h2></div>
+      const head = `<div class="vhead" style="text-align:center"><span class="q-kind">${EX.TYPE.flashcards}</span><h2 style="margin-top:8px">Irregular Verbs</h2><p style="margin:8px auto 0">Say the past simple and the past participle of each verb, then turn the card to check.</p></div>
         <div class="fc-head"><div class="seg"><button type="button" data-fc="deck" data-d="all" class="${fc.deck === "all" ? "on" : ""}">All verbs</button><button type="button" data-fc="deck" data-d="practise" class="${fc.deck === "practise" ? "on" : ""}">Tricky verbs (${nt})</button></div>
         <button class="icon-btn" type="button" data-fc="shuffle" title="Shuffle" aria-label="Shuffle cards">${ICON.shuffle}</button></div>`;
       if (!fc.order.length) {
@@ -272,13 +272,17 @@
   };
 
   /* ================= PRACTICE ================= */
+  /* Exercise headers (shared vocabulary in assets/js/exercises.js): TYPE (kind) · Title (name) · Instruction (desc) */
+  const EX = window.DojoEx;
   const MODES = {
-    mix: { letter: "E", kind: "All skills", name: "Mixed challenge", desc: "A random mix of every exercise type. The complete test.", ex: "All question types" },
-    mc: { letter: "A", kind: "Recognition", name: "Multiple choice", desc: "Choose the correct past simple or past participle.", ex: "go → went · goed · gone · goes" },
-    gap: { letter: "B", kind: "Verb forms", name: "Fill the gap", desc: "Two forms are given. Write the missing one.", ex: "go – ______ – gone" },
-    three: { letter: "C", kind: "Verb forms", name: "Complete the forms", desc: "One form is given. Write the other two.", ex: "______ – went – ______" },
-    ita: { letter: "D", kind: "Translation", name: "Italian to English", desc: "Read the Italian verb and write its three English forms.", ex: "andare → go – went – gone" }
+    mix: { letter: "E", kind: EX.TYPE.mixed, desc: "Answer questions of every type: choose, complete and translate the verb forms.", ex: "All question types" },
+    mc: { letter: "A", kind: EX.TYPE.mc, desc: "Choose the correct past simple or past participle of each verb.", ex: "go → went · goed · gone · goes" },
+    gap: { letter: "B", kind: EX.TYPE.gaps, desc: "Write the missing form of each verb.", ex: "go – ______ – gone" },
+    three: { letter: "C", kind: EX.TYPE.gaps, desc: "Write the two missing forms of each verb.", ex: "______ – went – ______" },
+    ita: { letter: "D", kind: EX.TYPE.translation, desc: "Translate each Italian verb into English and write its three forms.", ex: "andare → go – went – gone" }
   };
+  // "Irregular Verbs – 1" … in the order in which the exercises are listed
+  EX.numberAll(Object.values(MODES), () => "Irregular Verbs", (m, t) => { m.name = t; });
   const NO_REGULAR = new Set(["be", "burn", "dream", "learn", "smell", "broadcast", "hang", "kneel", "light", "quit", "bet", "shine", "forecast", "show", "dig"]);
   const regularize = b => /e$/.test(b) ? b + "d" : /[^aeiou]y$/.test(b) ? b.slice(0, -1) + "ied" : /^[^aeiou]*[aeiou][bdgklmnprt]$/.test(b) ? b + b.slice(-1) + "ed" : b + "ed";
   function buildOptions(v, target) {
@@ -434,7 +438,7 @@
       root.innerHTML = `<div class="q">
         <div class="q-top"><span class="sc">${qz.i + 1} / ${n}</span><div class="bar"><span style="width:${qz.i / n * 100}%;background:var(--shu)"></span></div><span class="sc">Score <b id="qscore">${qz.score}</b></span></div>
         <div class="card q-card">
-          <span class="q-kind">${m.name}</span>
+          <div class="ex-head"><span class="q-kind">${m.kind}</span><h3 class="ex-title">${MODES[qz.mode].name}</h3><p class="ex-instr">${m.desc}</p></div>
           ${body}
           <div id="qfb" aria-live="polite"></div>
           <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-q="menu">Quit</button>${q.type === "mc" ? "" : `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" data-q="skip">I don't know</button><button class="btn ink lg" type="button" data-q="check">${ICON.check} Check</button></div>`}</div>
@@ -471,7 +475,7 @@
           ${t.length ? `<div class="tricky-acts">
             <button class="btn" type="button" data-go="cards" data-params='{"deck":"practise"}'>${ICON.cards} Flashcards</button>
             <button class="btn" type="button" data-go="practice" data-params='{"mode":"mc","src":"practise"}'>${ICON.practice} Multiple choice</button>
-            <button class="btn" type="button" data-go="practice" data-params='{"mode":"gap","src":"practise"}'>${ICON.pen} Fill the gap</button></div>
+            <button class="btn" type="button" data-go="practice" data-params='{"mode":"gap","src":"practise"}'>${ICON.pen} Fill in the gaps</button></div>
             <div class="tchips">${t.map(v => { const r = rec(v); return `<span class="tchip" title="${esc(v.base + " – " + v.past + " – " + v.pp)} · ${r.st}/${MASTER} correct in a row">${esc(v.base)}<span class="dots">${Array.from({ length: MASTER }, (_, i) => `<i class="${i < r.st ? "on" : ""}"></i>`).join("")}</span>${spkAll(v)}</span>`; }).join("")}</div>`
           : `<div class="empty" style="padding:24px"><h3>Nothing to review</h3>Mistakes will appear here so you can train them.</div>`}
         </div>

@@ -210,7 +210,30 @@
 
   /* ---------------- question builders ---------------- */
   const opt = (label, ok, cls) => ({ label, ok });
-  function kanaQ(mode, it, pool) {
+  /* Exercise headers (shared vocabulary in assets/js/exercises.js): TYPE · Title · Instruction.
+     Every question remembers the exercise it comes from (mode). */
+  const EX = window.DojoEx;
+  const MODE_TYPE = { romaji: "mc", char: "mc", listen: "listening", write: "charWriting", flash: "flashcards", words: "mc",
+    meaning: "mc", reading: "mc", onkun: "mc", vocab: "mc", gap: "gaps", strokes: "strokes", kflash: "flashcards" };
+  const MODE_INSTR = {
+    romaji: "Choose the rōmaji that matches each character.",
+    char: "Choose the character that matches each rōmaji syllable.",
+    listen: "Listen and choose the character you hear.",
+    write: "Write the character for each sound, then compare it with the model.",
+    flash: "Say the reading aloud, then turn the card to check.",
+    words: "Choose the meaning of each loanword.",
+    meaning: "Choose the meaning of each kanji.",
+    reading: "Choose the correct reading of each word.",
+    onkun: "Decide whether each reading is on'yomi or kun'yomi.",
+    vocab: "Choose the word that contains each kanji.",
+    gap: "Complete each sentence with the correct kanji.",
+    strokes: "Tap the strokes of each kanji in the correct order.",
+    kflash: "Say the meaning and the readings aloud, then turn the card to check."
+  };
+  const kanaQ = (mode, ...a) => Object.assign(kanaQ0(mode, ...a), { mode });
+  const kanjiQ = (mode, ...a) => Object.assign(kanjiQ0(mode, ...a), { mode: mode === "flash" ? "kflash" : mode });
+  const wordQ = (...a) => Object.assign(wordQ0(...a), { mode: "words" });
+  function kanaQ0(mode, it, pool) {
     const others = shuffle(pool.filter(x => x.rom !== it.rom));
     const near = others.filter(x => x.row === it.row).concat(others.filter(x => x.row !== it.row));
     const ds = [], seen = new Set([it.rom]);
@@ -223,12 +246,12 @@
     if (mode === "write") return { kind: "write", key: it.key, ch: it.ch, rom: it.rom, name };
     return { kind: "flash", key: it.key, front: `<div class="ch" lang="ja">${esc(it.ch)}</div>`, back: `<div class="rom">${esc(it.rom)}</div><div class="sub">${esc(it.rowLabel)} row</div>${spk(it.ch)}`, say: it.ch };
   }
-  function wordQ(w) {
+  function wordQ0(w) {
     const ds = shuffle(WORDS.filter(x => x !== w)).slice(0, 3);
     return { kind: "choice", key: w.key, prompt: `<div class="word" lang="ja">${esc(w.ch)}</div>`, ask: "What does this loanword mean?", options: shuffle([opt(`${w.rom} · ${w.en}`, true), ...ds.map(d => opt(`${d.rom} · ${d.en}`, false))]), explain: `<span class="jp">${esc(w.ch)}</span> = <b>${esc(w.rom)}</b>: ${esc(w.en)}.`, say: w.ch };
   }
   const readingsText = k => `On'yomi: ${k.on.map(r => r[0] + " (" + r[1] + ")").join(", ") || "—"} · Kun'yomi: ${k.kun.map(r => r[0] + " (" + r[1] + ")").join(", ") || "—"}`;
-  function kanjiQ(mode, k, pool) {
+  function kanjiQ0(mode, k, pool) {
     const others = shuffle(KANJI.filter(x => x !== k));
     const same = shuffle(pool.filter(x => x !== k)).concat(others);
     const uniq = (arr, f, n, exclude) => { const out = [], s = new Set(exclude); for (const x of arr) { const v = f(x); if (!v || s.has(v)) continue; s.add(v); out.push(x); if (out.length === n) break; } return out; };
@@ -282,7 +305,7 @@
       else if (b.dataset.act === "kj-start") {
         const pool = KANJI.filter(k => kjSel.groups.has(k.g) && k.belt <= unlocked());
         const n = kjSel.mode === "strokes" ? 8 : 15;
-        return startSession({ title: "Kanji practice", qs: shuffle(pool).slice(0, n).map(k => kanjiQ(kjSel.mode, k, pool)), back: "#kanji", redo: () => shuffle(pool).slice(0, n).map(k => kanjiQ(kjSel.mode, k, pool)) });
+        return startSession({ title: "Kanji", qs: shuffle(pool).slice(0, n).map(k => kanjiQ(kjSel.mode, k, pool)), back: "#kanji", redo: () => shuffle(pool).slice(0, n).map(k => kanjiQ(kjSel.mode, k, pool)) });
       }
       draw();
     });
@@ -319,10 +342,10 @@
   /* ---------------- starting sessions ---------------- */
   function startKana(script) {
     const mode = kanaMode[script];
-    if (mode === "words") { const make = () => shuffle(WORDS).slice(0, 15).map(wordQ); return startSession({ title: "Loanwords", qs: make(), back: "#katakana", redo: make }); }
+    if (mode === "words") { const make = () => shuffle(WORDS).slice(0, 15).map(wordQ); return startSession({ title: "Katakana loanwords", qs: make(), back: "#katakana", redo: make }); }
     const pool = itemsFor(script); const all = (script === "hiragana" ? HIRA : KATA).filter(i => i.belt <= unlocked());
     const make = () => shuffle(pool).slice(0, Math.min(20, pool.length)).map(it => kanaQ(mode, it, all.length >= 8 ? all : (script === "hiragana" ? HIRA : KATA)));
-    startSession({ title: script === "hiragana" ? "Hiragana practice" : "Katakana practice", qs: make(), back: "#" + script, redo: make });
+    startSession({ title: script === "hiragana" ? "Hiragana" : "Katakana", qs: make(), back: "#" + script, redo: make });
   }
   function beltQuestions(level, n = 20) {
     const kanjiAt = KANJI.filter(k => k.belt === level), kanjiUpTo = KANJI.filter(k => k.belt <= level);
@@ -368,7 +391,7 @@
       <div class="pad-wrap"><div><div class="drawpad"><div class="gl"></div><canvas id="pad" width="520" height="520"></canvas></div><div class="pad-ctrl"><button class="btn soft sm" type="button" data-act="clear">Clear</button><button class="btn ink sm" type="button" data-act="reveal">Show the answer</button></div></div><div id="padAns"></div></div>`;
     if (q.kind === "strokes") body = `<p class="q-ask">Tap the strokes of <b>${esc(q.mean)}</b> in the correct order.</p><div class="sc-box" id="sc">${scSVG(q.ch)}<div class="sc-status" id="scStatus">Stroke 1 of ${(STROKES[q.ch] || []).length}</div></div>`;
     if (q.kind === "flash") body = `<p class="q-ask">Say the answer aloud, then flip the card.</p><div class="flip"><div class="card3" id="fc3" role="button" tabindex="0"><div class="face front">${q.front}</div><div class="face back">${q.back}</div></div></div>`;
-    view().innerHTML = `<div class="q">${head(s)}<div class="card q-card"><div class="q-meta"><span class="q-kind">${esc(s.title)}</span></div>${body}<div id="fb" aria-live="polite"></div>
+    view().innerHTML = `<div class="q">${head(s)}<div class="card q-card"><div class="ex-head"><span class="q-kind">${EX.TYPE[MODE_TYPE[q.mode]]}</span><h3 class="ex-title">${esc(s.title)}</h3><p class="ex-instr">${MODE_INSTR[q.mode]}</p></div>${body}<div id="fb" aria-live="polite"></div>
       <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-act="quit">Quit</button>${q.kind === "flash" ? `<button class="btn ink" type="button" data-act="flip">Flip the card</button>` : ""}</div></div></div>`;
     if (q.kind === "write") initPad();
     if (q.kind === "strokes") initSC(q);
@@ -453,9 +476,9 @@
     else if (a === "flip") flipCard();
     else if (a === "fc-ok" || a === "fc-no") { const ok = a === "fc-ok"; result(ok, ""); session.answered = true; next(); }
     else if (a === "repeat") startSession(Object.assign({}, session, { qs: session.redo ? session.redo() : session.qs }));
-    else if (a === "retry") startSession({ title: "Your mistakes", qs: session.results.filter(r => !r.ok).map(r => Object.assign({}, r.q, { revealed: false })), back: session.back });
-    else if (a === "exam") { const L = +b.dataset.level; const make = () => beltQuestions(L, 20); startSession({ title: `Test · ${B.get(L).name}`, qs: make(), exam: L, back: "#dojo", redo: make }); }
-    else if (a === "mixed") startSession({ title: "Mixed review", qs: mixedReview(), back: "#dojo", redo: mixedReview });
+    else if (a === "retry") startSession({ title: `${session.title} – Your mistakes`.replace(/( – Your mistakes)+$/, " – Your mistakes"), qs: session.results.filter(r => !r.ok).map(r => Object.assign({}, r.q, { revealed: false })), back: session.back });
+    else if (a === "exam") { const L = +b.dataset.level; const make = () => beltQuestions(L, 20); startSession({ title: `${B.get(L).name} – Level test`, qs: make(), exam: L, back: "#dojo", redo: make }); }
+    else if (a === "mixed") startSession({ title: "Mixed revision", qs: mixedReview(), back: "#dojo", redo: mixedReview });
     else if (a === "due") startSession({ title: "Review", qs: dueQuestions(), back: "#dojo", redo: dueQuestions });
     else if (a === "reset") dialog({ title: "Reset your progress?", text: "This deletes your belts and practice history for the Writing System on this device.", ok: "Reset", danger: true }).then(y => { if (y) { Store.reset(); renderDojo(); toast("Progress reset"); } });
   });

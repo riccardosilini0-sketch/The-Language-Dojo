@@ -39,7 +39,7 @@ Skills.add(
       ["DISCOVER", ["discovery"], "A singular noun after “the most important”: discovery."]
     ] },
   { id: "u-b2-transformations", skill: "use", level: 4, type: "kwt", time: 10, words: "2–5",
-    title: "Key word transformations 1", topic: "Mixed grammar",
+    title: "Mixed Grammar", topic: "Mixed grammar",
     items: [
       ["I haven’t been to the cinema for months.", "LAST", "It’s months", "to the cinema.", ["since I last went"], "“It’s + time + since + subject + last + past simple” = I haven’t done it for that time."],
       ["It’s possible that Anna missed the train.", "MAY", "Anna", "the train.", ["may have missed"], "“May have + past participle” expresses possibility about the past."],
@@ -64,7 +64,7 @@ Skills.add(
       [["quoted", "told", "said", "spoken"], 0, "A figure is “quoted” in a book. “Told” and “spoken” cannot be used this way, and “said” would need “to be”."]
     ] },
   { id: "u-c1-transformations", skill: "use", level: 5, type: "kwt", time: 12, words: "3–6",
-    title: "Key word transformations 2", topic: "Advanced grammar",
+    title: "Advanced Grammar", topic: "Advanced grammar",
     items: [
       ["The concert was cancelled because so few tickets had been sold.", "DUE", "The concert was cancelled", "of tickets sold.", ["due to the small number", "due to the low number"], "“Due to” + noun phrase gives the reason."],
       ["I had no idea that the shop had closed down.", "AWARE", "I", "the shop had closed down.", ["was not aware that", "wasn't aware that", "wasn’t aware that"], "“Be aware that” = know. The key word must not change, so “unaware” is not accepted."],

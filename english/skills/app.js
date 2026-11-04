@@ -53,7 +53,13 @@
     vcomplete: ["Watch the video and complete the notes with a word or a short phrase.", "You can watch it as many times as you need."]
   };
   const chip = l => B.chip(l, `${B.get(l).name} · ${CEFR[l]}`);
-  const typeLabel = t => t.type === "write" ? t.genre : TYPES[t.type];
+  /* Exercise headers (shared vocabulary in assets/js/exercises.js): TYPE · Title · Instruction */
+  const EX = window.DojoEx;
+  const TYPE_KEY = { rmc: "readingMC", gapped: "readingGapped", match: "readingMatch", mcc: "useMCC", open: "useOpen", wf: "useWF", kwt: "useKWT",
+    lmc: "listeningMC", complete: "listeningSentences", vmc: "listeningMC", vtf: "listeningTF", vmatch: "listeningMatch", vcomplete: "listeningNotes" };
+  const typeLabel = t => t.type === "write" ? EX.TYPE.writing(t.genre) : EX.TYPE[TYPE_KEY[t.type]];
+  const instruction = t => t.type === "write" ? "Read the task and write your answer. Then check it with the checklist and compare it with the model answer."
+    : INSTR[t.type].map(x => `<span>${x}</span>`).join(" ") + (t.type === "kwt" ? ` <span>Use between ${t.words.split("–")[0]} and ${t.words.split("–")[1]} words, including the word given.</span>` : "");
 
   /* ---------------- answer checking ---------------- */
   // capital letters, extra spaces, final punctuation and curly apostrophes are ignored; contractions are expanded
@@ -139,8 +145,8 @@
     cur = { t, checked: false };
     const head = `<a class="back" href="#${t.skill}">${ICON.back} ${skillName(t.skill)}</a>
       <div class="tk-head"><div class="tk-chips">${chip(t.level)}<span class="tk-type">${esc(typeLabel(t))}</span><span class="tk-time">${ICON.clock}${t.time} min</span></div>
-      <h2>${esc(t.title)}</h2>${t.intro ? `<p class="tk-intro">${esc(t.intro)}</p>` : ""}
-      ${INSTR[t.type] ? `<div class="instr">${INSTR[t.type].map(x => `<p>${x}</p>`).join("")}${t.type === "kwt" ? `<p>Use between ${t.words.split("–")[0]} and ${t.words.split("–")[1]} words, including the word given.</p>` : ""}</div>` : ""}</div>`;
+      <h2>${esc(t.title)}</h2><p class="tk-intro">${instruction(t)}</p></div>
+      ${t.intro ? `<p class="tk-context">${esc(t.intro)}</p>` : ""}`;
     const foot = `<div class="tk-foot" id="tkFoot"></div><div id="tkResult" aria-live="polite"></div>`;
     const builders = { rmc: buildChoice, lmc: buildChoice, gapped: buildGapped, match: buildMatch, mcc: buildCloze, open: buildCloze, wf: buildCloze, kwt: buildKwt, complete: buildComplete, write: buildWriting,
       vmc: buildChoice, vtf: buildTrueFalse, vmatch: buildVideoMatch, vcomplete: buildComplete };

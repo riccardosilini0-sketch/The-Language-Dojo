@@ -37,7 +37,7 @@
   const SOUND_UNITS = ["vowels", "diphthongs", "consonants"];
   const VOWEL_GROUPS = [["short", "Short vowels"], ["long", "Long vowels"], ["central", "Central vowels"]];
   const unitOfTopic = id => (byId[id] || lessonById[id] || {}).unit;
-  const titleOf = id => byId[id] ? `/${byId[id].ipa}/` : (lessonById[id] || {}).title || id;
+  const titleOf = id => byId[id] ? `The sound /${byId[id].ipa}/` : (lessonById[id] || {}).title || id;
 
   /* ---------------- storage ---------------- */
   const Store = {
@@ -289,7 +289,7 @@
 
   /* ---------------- HOME ---------------- */
   function renderHome() {
-    const last = Store.data.last, lastTitle = last ? (byId[last] ? `Sound ${titleOf(last)}` : lessonById[last] ? lessonById[last].title : unitById[last] ? unitById[last].title : "") : "";
+    const last = Store.data.last, lastTitle = last ? (byId[last] ? titleOf(last) : lessonById[last] ? lessonById[last].title : unitById[last] ? unitById[last].title : "") : "";
     view().innerHTML = `
       <div class="intro-block">
         <h2>Start here</h2>
@@ -388,7 +388,23 @@
     });
     renderQ();
   }
-  const KIND_LABEL = { mc: "Multiple choice", choice: "Choose", sort: "Classification", multi: "Sound identification", seg: "Find the sound", write: "Transcription", stress: "Word stress", odd: "Odd one out", gap: "Complete", text: "Transcription", match: "Matching", listen: "Listening", fix: "Error correction" };
+  /* Exercise headers (shared vocabulary in assets/js/exercises.js): TYPE · Title · Instruction */
+  const EX = window.DojoEx;
+  const KIND = { mc: "mc", choice: "mc", sort: "sorting", multi: "soundId", seg: "soundId", write: "transcription", stress: "stress", odd: "oddOne", gap: "gaps", text: "transcription", match: "matching", listen: "listening", fix: "errors" };
+  const KIND_INSTR = {
+    mc: "Choose the correct answer.", choice: "Choose the correct answer.",
+    sort: "Put each word in the correct group.",
+    multi: "Listen to the word and select every vowel sound you hear.",
+    seg: "Tap the part of the word that contains the sound in the question.",
+    write: "Read the phonemic transcription and write the word in ordinary spelling.",
+    text: "Read the phonemic transcription and write the sentence in ordinary spelling.",
+    stress: "Tap the stressed syllable of the word.",
+    gap: "Complete the sentences with the missing words.",
+    match: "Match each item on the left with the correct item on the right.",
+    listen: "Listen and choose the word you hear.",
+    fix: "Find the wrong symbol in the transcription, then choose the correct one."
+  };
+  const kindInstr = q => q.type === "odd" ? (unitOfTopic(q.topic) === "consonants" ? "Three words share the same consonant sound or the same silent letter: find the word that is different." : "Three words share the same vowel sound (SSBE): find the word that is different.") : KIND_INSTR[q.type];
   function renderQ() {
     const s = session, q = s.qs[s.i], n = s.qs.length, ok = s.results.filter(r => r.ok).length;
     s.state = {};
@@ -397,13 +413,13 @@
       case "mc": case "choice":
         body = `<p class="qp">${q.type === "choice" ? hlIpa(q.prompt) : ipaText(q.prompt)}${q.say ? " " + spk(q.say) : ""}</p><div class="opts ${q.opts.length === 2 ? "two" : ""}">${q.opts.map((o, i) => `<button type="button" class="opt" data-i="${i}">${ipaText(o)}</button>`).join("")}</div>`; break;
       case "odd":
-        body = `<p class="qp">${unitOfTopic(q.topic) === "consonants" ? "Three of these words share the same consonant sound or the same silent letter. Which word is different?" : "Three of these words share the same vowel sound (SSBE). Which word is different?"}</p><div class="opts">${q.opts.map((o, i) => `<button type="button" class="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>`; break;
+        body = `<div class="opts">${q.opts.map((o, i) => `<button type="button" class="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>`; break;
       case "listen":
-        body = `<p class="qp">Listen. Which word do you hear?</p><div class="listen-row"><button class="btn ink lg" type="button" data-say="${esc(q.word)}">${ICON.play} Play</button></div><div class="opts two">${q.opts.map((o, i) => `<button type="button" class="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>`; break;
+        body = `<div class="listen-row"><button class="btn ink lg" type="button" data-say="${esc(q.word)}">${ICON.play} Play</button></div><div class="opts two">${q.opts.map((o, i) => `<button type="button" class="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>`; break;
       case "write":
-        body = `<p class="qp">Write the word (or words) in ordinary spelling.</p><p class="qipa">${ipaText(q.ipa)}</p><div class="write-row"><input type="text" id="wIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer"></div>`; needCheck = true; break;
+        body = `<p class="qipa">${ipaText(q.ipa)}</p><div class="write-row"><input type="text" id="wIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer"></div>`; needCheck = true; break;
       case "text":
-        body = `<p class="qp">Write the sentence in ordinary spelling.</p><p class="qipa long">${ipaText(q.ipa)}</p><textarea id="tIn" rows="3" spellcheck="false" aria-label="Your answer"></textarea>`; needCheck = true; break;
+        body = `<p class="qipa long">${ipaText(q.ipa)}</p><textarea id="tIn" rows="3" spellcheck="false" aria-label="Your answer"></textarea>`; needCheck = true; break;
       case "stress":
         body = `${q.context ? `<p class="qctx">${esc(q.context).replace(new RegExp(`\\b(${q.word})\\b`, "i"), "<b>$1</b>")}</p>` : ""}<p class="qp">Tap the stressed syllable of <b>${esc(q.word)}</b>.</p><div class="syls">${q.syl.map((x, i) => `<button type="button" class="syl" data-i="${i}">${esc(x)}</button>`).join("")}</div>`; break;
       case "sort":
@@ -424,7 +440,7 @@
     view().innerHTML = `<div class="q">
       <div class="q-top"><span class="sc">${s.i + 1} / ${n}</span><div class="bar"><span style="width:${s.i / n * 100}%;background:var(--shu)"></span></div><span class="sc"><b style="color:var(--ok)">${ok}</b> ✓ · <b style="color:var(--bad)">${s.results.length - ok}</b> ✗</span></div>
       <div class="card q-card">
-        <div class="q-meta"><span class="q-kind">${esc(s.title)} · ${KIND_LABEL[q.type]}</span>${B.chip(q.belt)}</div>
+        <div class="ex-head"><div class="q-meta"><span class="q-kind">${EX.TYPE[KIND[q.type]]}</span>${B.chip(q.belt)}</div><h3 class="ex-title">${ipaText(s.title)}</h3><p class="ex-instr">${kindInstr(q)}</p></div>
         ${body}
         <div id="fb" aria-live="polite"></div>
         <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-act="quit">Quit</button>${needCheck ? `<button class="btn ink lg" type="button" data-act="check">${ICON.check} Check</button>` : ""}</div>
@@ -566,12 +582,12 @@
     else if (a === "next") next();
     else if (a === "quit") dialog({ title: "Leave this session?", text: "Your answers in this session will not be counted.", ok: "Leave", cancel: "Keep going" }).then(y => { if (y) route(); });
     else if (a === "practice") { const id = b.dataset.topic, n = +b.dataset.n, make = () => selectQs(poolFor(id), n); startSession({ title: titleOf(id), qs: make(), back: "#" + id, key: id, redo: make }); }
-    else if (a === "unit-test") { const u = b.dataset.unit, make = () => selectQs(unitPool(u), 20); startSession({ title: `Unit test · ${unitById[u].title}`, qs: make(), back: "#" + u, key: "test-" + u, redo: make }); }
-    else if (a === "revise") { const u = b.dataset.unit, make = () => selectQs(unitPool(u), 15); startSession({ title: `Revision · ${unitById[u].title}`, qs: make(), back: "#revision", key: "rev-" + u, redo: make }); }
-    else if (a === "mixed") { const make = () => selectQs(["intro", ...SOUND_UNITS, "stress", "revision"].flatMap(unitPool), 20); startSession({ title: "Mixed exercises", qs: make(), back: "#revision", key: "mixed", redo: make }); }
+    else if (a === "unit-test") { const u = b.dataset.unit, make = () => selectQs(unitPool(u), 20); startSession({ title: `${unitById[u].title} – Unit test`, qs: make(), back: "#" + u, key: "test-" + u, redo: make }); }
+    else if (a === "revise") { const u = b.dataset.unit, make = () => selectQs(unitPool(u), 15); startSession({ title: `${unitById[u].title} – Revision`, qs: make(), back: "#revision", key: "rev-" + u, redo: make }); }
+    else if (a === "mixed") { const make = () => selectQs(["intro", ...SOUND_UNITS, "stress", "revision"].flatMap(unitPool), 20); startSession({ title: "Mixed revision", qs: make(), back: "#revision", key: "mixed", redo: make }); }
     else if (a === "final") { const make = () => selectQs([...selectQs(unitPool("vowels"), 7), ...selectQs(unitPool("diphthongs"), 5), ...selectQs(unitPool("consonants"), 8), ...selectQs(unitPool("stress"), 6), ...selectQs(unitPool("revision"), 4)], 30); startSession({ title: "Final test", qs: make(), back: "#revision", key: "final", redo: make }); }
     else if (a === "repeat") startSession(Object.assign({}, session, { qs: session.redo ? session.redo() : shuffle(session.qs) }));
-    else if (a === "retry") { const w = session.results.filter(r => !r.ok).map(r => r.q); startSession({ title: "Your mistakes", qs: shuffle(w), back: session.back }); }
+    else if (a === "retry") { const w = session.results.filter(r => !r.ok).map(r => r.q); startSession({ title: `${session.title} – Your mistakes`.replace(/( – Your mistakes)+$/, " – Your mistakes"), qs: shuffle(w), back: session.back }); }
     else if (a === "reset") dialog({ title: "Reset your progress?", text: "This deletes your saved progress for Sounds of English on this device.", ok: "Reset", danger: true }).then(y => { if (y) { Store.reset(); renderHome(); toast("Progress reset"); } });
   });
   view().addEventListener("focusin", e => { if (session && e.target.classList.contains("gin")) session.state.lastGap = e.target; });

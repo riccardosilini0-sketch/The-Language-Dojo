@@ -86,8 +86,25 @@
 
   /* ---------------- batteries ---------------- */
   const FAM = { mc: "choice", tense: "choice", gap: "gaps", comp: "gaps", context: "gaps", ita: "write", trans: "write", build: "write", order: "write", error: "errors", judge: "errors", dialogue: "dialogue", halves: "dialogue", passage: "passage" };
-  const FAM_LABEL = { choice: "Multiple choice", gaps: "Gap filling", write: "Transformation and writing", errors: "Error correction", dialogue: "Dialogues and matching", passage: "Text completion", mixed: "Mixed practice", test: "Belt test", textTest: "Text test", custom: "Custom test" };
   const FAM_ORDER = ["choice", "gaps", "write", "errors", "dialogue", "mixed", "passage"];
+  /* Exercise headers (shared vocabulary in assets/js/exercises.js): TYPE · Title · Instruction */
+  const EX = window.DojoEx;
+  const ITEM_TYPE = { mc: "mc", tense: "mc", gap: "gaps", comp: "gaps", context: "gaps", trans: "transform", ita: "translation", build: "building", order: "building", error: "errors", judge: "errors", dialogue: "gapDialogue", halves: "matching", passage: "gapText" };
+  const TYPE_ORDER = ["mc", "gaps", "transform", "translation", "building", "errors", "gapDialogue", "matching", "mixed", "gapText", "test"];
+  const VT_INSTR = {
+    mc: "Choose the correct option to complete each sentence.",
+    gaps: "Complete the sentences with the correct form of the verbs in brackets.",
+    gapText: "Read the whole text first, then complete it with the correct form of the verbs in brackets.",
+    gapDialogue: "Complete the dialogues with the correct form of the verbs in brackets.",
+    matching: "Match the beginnings of the sentences with the correct endings."
+  };
+  const typeKey = b => {
+    if (b.fam === "test" || b.custom) return "test";
+    const ks = [...new Set(b.items.map(q => ITEM_TYPE[q.type]))];
+    return ks.length === 1 ? ks[0] : "mixed";
+  };
+  const typeLabel = b => EX.TYPE[b.typeKey];
+  const instruction = b => b.typeKey === "errors" && b.items.some(q => q.type === "judge") ? "Identify and correct the mistakes. Some sentences may already be correct." : VT_INSTR[b.typeKey] || EX.INSTR[b.typeKey];
   const weight = q => q.type === "dialogue" || q.type === "passage" ? q.answers.length : q.type === "halves" ? q.pairs.length : 1;
   const wsum = a => a.reduce((s, q) => s + weight(q), 0);
   const median = a => { const s = a.map(q => q.belt).sort((x, y) => x - y); return s[Math.floor((s.length - 1) / 2)]; };
@@ -108,7 +125,7 @@
     return { chunks, rest };
   }
   const BATS = [], BAT = {};
-  const addBat = b => { b.points = wsum(b.items); b.belt = b.belt || median(b.items); b.lo = Math.min(...b.items.map(q => q.belt)); b.hi = Math.max(...b.items.map(q => q.belt)); BATS.push(b); BAT[b.id] = b; return b; };
+  const addBat = b => { b.typeKey = typeKey(b); b.points = wsum(b.items); b.belt = b.belt || median(b.items); b.lo = Math.min(...b.items.map(q => q.belt)); b.hi = Math.max(...b.items.map(q => q.belt)); BATS.push(b); BAT[b.id] = b; return b; };
   function buildTopicBatteries(t) {
     const out = [];
     const byBelt = (a, b) => a.belt - b.belt;
@@ -147,10 +164,11 @@
     t.bats = out.map(b => {
       count[b.fam] = (count[b.fam] || 0) + 1;
       if (b.fam !== "passage") b.items.sort(byBelt);
-      return addBat({ id: `${t.id}--${b.fam}-${count[b.fam]}`, topic: t.id, fam: b.fam, items: b.items, title: b.title || `${FAM_LABEL[b.fam]} ${count[b.fam]}`, back: "#t-" + t.id, backLabel: t.title });
+      return addBat({ id: `${t.id}--${b.fam}-${count[b.fam]}`, topic: t.id, fam: b.fam, items: b.items, title: b.title || "", back: "#t-" + t.id, backLabel: t.title });
     });
-    // number the families only when there is more than one battery of that kind
-    t.bats.forEach(b => { if (b.fam !== "passage" && count[b.fam] === 1) b.title = FAM_LABEL[b.fam]; });
+    // in the order shown on the page (grouped by type), numbered per topic: "Present Simple – 1", "Present Simple – 2"…
+    t.bats.sort((a, b) => TYPE_ORDER.indexOf(a.typeKey) - TYPE_ORDER.indexOf(b.typeKey));
+    EX.numberAll(t.bats.filter(b => b.fam !== "passage"), () => t.title, (b, title) => { b.title = title; });
   }
   TOPICS.forEach(buildTopicBatteries);
 
@@ -170,7 +188,7 @@
       for (let c = 1; c <= n; c++) {
         const items = []; let w = 0;
         while (i < order.length && w < 15) { if (w + weight(order[i]) <= 15) { items.push(order[i]); w += weight(order[i]); } i++; }
-        TESTS.push(addBat({ id: `test-${L}-${c}`, fam: "test", belt: L, items: seeded(items, c * 7 + L), title: `${B.get(L).name} test ${c}`, back: "#exam", backLabel: "Tests", test: true }));
+        TESTS.push(addBat({ id: `test-${L}-${c}`, fam: "test", belt: L, items: seeded(items, c * 7 + L), title: EX.numbered(`${B.get(L).name} (${CEFR[L]})`, c, n), back: "#exam", backLabel: "Tests", test: true }));
       }
       // text tests: the passages written for the mixed area at this level
       QUESTIONS.filter(q => q.type === "passage" && q.belt === L && areaKey(byId[q.topic]) === "mixed").forEach((q, k) =>
@@ -232,7 +250,7 @@
   /* ---------------- TOPIC page: explanation + batteries ---------------- */
   const tf = { belt: "all", fam: "all" };
   function batCard(b) {
-    return `<a class="card card-link bat-card" href="#b-${b.id}"><span class="bt-type">${FAM_LABEL[b.fam]}</span><h4${b.fam === "passage" || b.fam === "textTest" ? ' translate="no"' : ""}>${esc(b.title)}</h4>
+    return `<a class="card card-link bat-card" href="#b-${b.id}"><span class="bt-type">${typeLabel(b)}</span><h4${b.fam === "passage" || b.fam === "textTest" ? ' translate="no"' : ""}>${esc(b.title)}</h4>
       <div class="bt-meta"><span>${bdot(b.belt)} ${B.get(b.belt).short} · ${CEFR[b.belt]}</span><span>${b.points} ${b.fam === "passage" || b.fam === "textTest" ? "gaps" : "questions"}</span></div></a>`;
   }
   function renderTopic(t) {
@@ -248,7 +266,7 @@
         <aside class="card train">
           <h3>Practice</h3>
           <p>${t.bats.length} batteries · ${t.bats.reduce((s, b) => s + b.points, 0)} questions in all.</p>
-          <div class="tp-sum">${FAM_ORDER.filter(f => t.bats.some(b => b.fam === f)).map(f => `<div><span>${FAM_LABEL[f]}</span><b>${t.bats.filter(b => b.fam === f).length}</b></div>`).join("")}</div>
+          <div class="tp-sum">${TYPE_ORDER.filter(k => t.bats.some(b => b.typeKey === k)).map(k => `<div><span>${EX.TYPE[k]}</span><b>${t.bats.filter(b => b.typeKey === k).length}</b></div>`).join("")}</div>
           <a class="btn primary lg start" href="#b-${t.bats[0].id}">Start the first battery ${ICON.arrow}</a>
           <a class="btn soft start2" href="#batteries">See all the batteries</a>
         </aside>
@@ -259,14 +277,14 @@
         <div id="tlist"></div>
       </section>`;
     const levels = [...new Set(t.bats.map(b => b.belt))].sort();
-    const fams = FAM_ORDER.filter(f => t.bats.some(b => b.fam === f));
+    const fams = TYPE_ORDER.filter(k => t.bats.some(b => b.typeKey === k));
     if (tf.belt !== "all" && !levels.includes(+tf.belt)) tf.belt = "all";
     if (tf.fam !== "all" && !fams.includes(tf.fam)) tf.fam = "all";
     const draw = () => {
       $("#tbelt").innerHTML = [["all", "All levels"], ...levels.map(l => [String(l), `${B.get(l).short} · ${CEFR[l]}`])].map(([k, l]) => `<button type="button" data-belt="${k}" class="${tf.belt === k ? "on" : ""}">${k !== "all" ? bdot(+k) : ""}${l}</button>`).join("");
-      $("#tfam").innerHTML = [["all", "All types"], ...fams.map(f => [f, FAM_LABEL[f]])].map(([k, l]) => `<button type="button" data-fam="${k}" class="${tf.fam === k ? "on" : ""}">${l}</button>`).join("");
-      const list = t.bats.filter(b => (tf.belt === "all" || b.belt === +tf.belt) && (tf.fam === "all" || b.fam === tf.fam));
-      $("#tlist").innerHTML = fams.filter(f => list.some(b => b.fam === f)).map(f => `<h4 class="fam-h">${FAM_LABEL[f]}</h4><div class="bat-grid">${list.filter(b => b.fam === f).map(batCard).join("")}</div>`).join("")
+      $("#tfam").innerHTML = [["all", "All types"], ...fams.map(f => [f, EX.TYPE[f]])].map(([k, l]) => `<button type="button" data-fam="${k}" class="${tf.fam === k ? "on" : ""}">${l}</button>`).join("");
+      const list = t.bats.filter(b => (tf.belt === "all" || b.belt === +tf.belt) && (tf.fam === "all" || b.typeKey === tf.fam));
+      $("#tlist").innerHTML = fams.filter(f => list.some(b => b.typeKey === f)).map(f => `<h4 class="fam-h">${EX.TYPE[f]}</h4><div class="bat-grid">${list.filter(b => b.typeKey === f).map(batCard).join("")}</div>`).join("")
         || `<div class="card empty"><h3>No batteries with these settings</h3>Choose another level or type.</div>`;
     };
     draw();
@@ -311,16 +329,11 @@
   function startCustom() {
     const items = customPool();
     if (!items.length) { toast("No exercises available with these settings."); return; }
-    custom = { id: "custom", fam: "custom", items, points: wsum(items), belt: ex.level === "all" ? median(items) : +ex.level, title: ex.level === "all" ? "Custom test" : `Custom test · ${B.get(+ex.level).name}`, back: "#exam", backLabel: "Tests", custom: true };
+    custom = { id: "custom", fam: "custom", typeKey: "test", items, points: wsum(items), belt: ex.level === "all" ? median(items) : +ex.level, title: ex.level === "all" ? "Custom test" : `Custom test · ${B.get(+ex.level).name}`, back: "#exam", backLabel: "Tests", custom: true };
     if (location.hash === "#custom") route(); else location.hash = "custom";
   }
 
   /* ---------------- BATTERY page ---------------- */
-  const INSTR = {
-    passage: "Read the whole text first. Then write the correct form of the verb in brackets in each gap.",
-    textTest: "Read the whole text first. Then write the correct form of the verb in brackets in each gap.",
-    def: "Answer all the questions, then press Check answers. You will see your score, the correct answers and an explanation for each one."
-  };
   const inputHTML = (attrs, size) => `<input type="text" ${attrs} size="${size}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">`;
   const sizeFor = arr => Math.max(6, Math.min(26, Math.max(...arr.map(a => String(a).length)) + 2));
   const qn = i => `<span class="qn">${i + 1}</span>`;
@@ -331,9 +344,8 @@
     const single = b.items.length === 1 && b.items[0].type === "passage";
     const q0 = b.items[0];
     view().innerHTML = `<a class="back" href="${b.back}">${ICON.back} ${esc(b.backLabel)}</a>
-      <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${FAM_LABEL[b.fam]}</span><span class="bt-n">${b.points} ${single ? "gaps" : "questions"}</span></div>
-        <h2>${esc(b.title)}</h2>${b.topic && !single ? `<p class="bt-goal">${esc(byId[b.topic].title)}</p>` : single && q0.intro ? `<p class="bt-goal" translate="no">${esc(q0.intro)}</p>` : ""}
-        <div class="instr"><p>${INSTR[b.fam] || (single ? INSTR.passage : INSTR.def)}</p></div></div>
+      <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${typeLabel(b)}</span><span class="bt-n">${b.points} ${single ? "gaps" : "questions"}</span></div>
+        <h2${single ? ' translate="no"' : ""}>${esc(b.title)}</h2><p class="bt-goal">${instruction(b)}</p></div>
       <div id="btBody">${single ? passageHTML(q0, 0) : `<ol class="qlist">${b.items.map((q, i) => itemHTML(q, i)).join("")}</ol>`}</div>
       <div class="bt-foot" id="btFoot"></div><div id="btResult" aria-live="polite"></div>`;
     drawFoot();
