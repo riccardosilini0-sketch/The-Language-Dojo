@@ -37,7 +37,7 @@ window.DOJO_CATALOG = {
     { id: "verb-tenses", lang: "english", skill: "grammar", status: "available",
       title: "Verb Tenses", topic: "Grammar", accent: "#2f5d50", art: ["was", "has been", "will"],
       url: "english/verb-tenses/index.html",
-      items: ["Tenses", "Contrasts", "Mixed Groups", "Challenges", "Test"] },
+      items: ["Tenses", "Contrasts", "Mixed Tenses", "Belt tests"] },
     { id: "dependent-prepositions", lang: "english", skill: "grammar", status: "available",
       title: "Dependent Prepositions", topic: "Grammar", accent: "#7a3b5c", art: ["depend on", "good at", "reason for"],
       url: "english/dependent-prepositions/index.html",

@@ -1,21 +1,23 @@
 /* =====================================================================
-   Verb Tenses — interface
+   Verb Tenses — interface (battery model)
    Reads exercises from window.TenseDojo (data/*.js). No grammar content here.
-   Belts label the difficulty of each exercise; they are not a reward system.
-   Nothing is saved: every visit starts fresh. During the visit the app remembers
-   which exercises were answered wrongly, to offer a review.
+   Every activity is a battery: 10–15 questions, or a text with many gaps.
+   The student answers everything, presses "Check answers", then sees the score,
+   the correct answers and an explanation for each item, and can try again.
+   Belts label the difficulty (CEFR level) of the materials; they are not a reward system.
    ===================================================================== */
 (function () {
   "use strict";
-  const { esc, toast, dialog } = window.Dojo;
+  const { esc, toast } = window.Dojo;
   const B = window.DojoBelts;
-  const TD = window.TenseDojo, TOPICS = TD.topics, TYPES = TD.TYPES;
+  const TD = window.TenseDojo, TOPICS = TD.topics;
   const QUESTIONS = TOPICS.flatMap(t => t.q);
   const byId = Object.fromEntries(TOPICS.map(t => [t.id, t]));
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-  const pick = a => a[Math.floor(Math.random() * a.length)];
+  // deterministic shuffle: fixed batteries (belt tests) are the same for every visit
+  const seeded = (a, seed) => { let s = seed >>> 0 || 1; const r = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
   const I = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
   const ICON = {
@@ -25,26 +27,20 @@
   };
 
   const AREAS = [
-    { id: "tenses", title: "Tenses", groups: [["present", "Present"], ["past", "Past"], ["future", "Future"]] },
-    { id: "contrasts", title: "Contrasts", groups: [["present", "Present"], ["past", "Past"], ["future", "Future"], ["other", "Other"]] },
-    { id: "mixed", title: "Mixed Groups", groups: [["groups", ""]] },
-    { id: "challenges", title: "Challenges", groups: [["challenges", ""]] },
-    { id: "exam", title: "Test" }
+    { id: "tenses", title: "Tenses", lead: "One tense at a time: form, uses and several batteries of exercises for each tense.", groups: [["present", "Present"], ["past", "Past"], ["future", "Future"]] },
+    { id: "contrasts", title: "Contrasts", lead: "Two or more tenses side by side: decide which one fits the situation, not the time expression.", groups: [["present", "Present"], ["past", "Past"], ["future", "Future"], ["other", "Across time"]] },
+    { id: "mixed", title: "Mixed Tenses", lead: "Any tense can appear: you don't know in advance which one you need. Groups of tenses, long texts and challenges of increasing difficulty.", groups: [["groups", "Groups of tenses"], ["texts", "Texts and situations"], ["challenges", "Challenges"]] },
+    { id: "exam", title: "Tests" }
   ];
+  const areaOf = id => AREAS.find(a => a.id === (id === "challenges" ? "mixed" : id));
+  const areaKey = t => t.area === "challenges" ? "mixed" : t.area;
+  const groupKey = t => t.area === "challenges" ? "challenges" : t.group;
+
   // Belts follow the Common European Framework of Reference (CEFR)
   const CEFR = { 1: "A1", 2: "A2", 3: "B1", 4: "B2", 5: "C1", 6: "C2" };
   const BELT_LEVEL = { 1: "A1 · Beginner", 2: "A2 · Elementary", 3: "B1 · Intermediate", 4: "B2 · Upper intermediate", 5: "C1 · Advanced", 6: "C2 · Proficiency" };
-
-  /* ---------------- storage: per-exercise results only ---------------- */
-  const Store = {
-    key: "language-dojo:en-verb-tenses", data: null,
-    fresh: () => ({ q: {} }),
-    load() { this.data = this.fresh(); },
-    save() {},
-    reset() { this.data = this.fresh(); this.save(); }
-  };
-  const qStat = id => Store.data.q[id] || [0, 0, 0]; // correct, wrong, last result (1 ok / -1 wrong)
-  const missed = () => QUESTIONS.filter(q => qStat(q.id)[2] === -1);
+  const beltChip = l => B.chip(l, `${B.get(l).name} · ${CEFR[l]}`);
+  const bdot = l => `<i class="bdot" style="background:${B.get(l).color}"></i>`;
 
   /* ---------------- answer checking ---------------- */
   // Answers are stored in full. Contractions typed by the student are expanded before comparing.
@@ -57,7 +53,9 @@
     if (/'d\b/.test(s)) out = out.flatMap(x => [x.replace(/'d\b/g, " had"), x.replace(/'d\b/g, " would")]);
     return out.map(x => x.replace(/\s+/g, " ").trim());
   }
+  // q.text = text up to the gap ("___"); the student may also type the subject before the verb
   function checkText(q, input) {
+    if (!String(input || "").trim()) return false;
     const before = (q.text || "").split("___")[0].trim().split(/\s+/).pop() || "";
     const subject = before.toLowerCase().replace(/[^a-z']/g, "");
     const ins = variants(input);
@@ -65,8 +63,7 @@
       const av = variants(a);
       if (av.some(x => ins.includes(x))) return true;
       if (!subject) return false;
-      const sv = variants(subject + " " + a);
-      return sv.some(x => ins.includes(x));
+      return variants(subject + " " + a).some(x => ins.includes(x));
     });
   }
   // whole sentences: commas and quotes are ignored, contractions expanded, case ignored
@@ -75,32 +72,131 @@
   const segs = q => { const out = []; q.raw.replace(/\[([^\]]+)\]/g, (_, t) => out.push(t)); return out; };
   const plainError = q => q.raw.replace(/\[([^\]]+)\]/g, "$1");
 
-  /* ---------------- helpers ---------------- */
-  const beltRange = t => { const ls = [...new Set(t.q.map(q => q.belt))].sort(); return `<span class="belt-range" title="${ls.map(l => B.get(l).short).join(", ")}">${ls.map(l => `<i style="background:${B.get(l).color}"></i>`).join("")}</span>`; };
+  /* ---------------- solutions ---------------- */
   const fill = (q, ans) => {
     if (q.type === "build" || q.type === "order") return `<b>${esc(q.answers[0])}</b>`;
-    if (q.type === "judge") return q.correct ? `${esc(q.text)}<br><b>The sentence is correct.</b>` : `<s>${esc(q.text)}</s><br><b>${esc(q.answers[0])}</b>`;
+    if (q.type === "judge") return q.correct ? `<b>The sentence is correct.</b>` : `<b>${esc(q.answers[0])}</b>`;
     if (q.type === "halves") return q.pairs.map(p => `${esc(p[0])} <b>${esc(p[1])}</b>`).join("<br>");
     if (q.type === "dialogue") { let k = 0; return q.lines.map(([sp, line]) => `${sp ? `<span class="who">${esc(sp)}:</span> ` : ""}${esc(line).replace(/___( \([^)]*\))?/g, () => `<b>${esc(q.answers[k++][0])}</b>`)}`).join("<br>"); }
     if (q.type === "error") { let k = 0; return esc(q.raw).replace(/\[([^\]]+)\]/g, (m, t) => (k++ === q.wrong ? `<b>${esc(ans)}</b>` : t)); }
-    const parts = q.text.split("___"), bits = parts.length > 2 ? ans.split(" … ") : [ans];
-    return parts.map((p, i) => esc(p) + (i < parts.length - 1 ? `<b>${esc(bits[i] || bits[0])}</b>` : "")).join("");
+    if (q.type === "tense") return `<b>${esc(q.answers[0])}</b>`;
+    const parts = q.text.split("___"), bits = parts.length > 2 ? String(ans).split(/\s*…\s*/) : [ans];
+    return parts.map((p, i) => esc(i ? p.replace(/^ \([^)]*\)/, "") : p) + (i < parts.length - 1 ? `<b>${esc(bits[i] || bits[0])}</b>` : "")).join("");
   };
-  const areaOf = id => AREAS.find(a => a.id === id);
-  const chipBelt = l => `<i class="bdot" style="background:${B.get(l).color}"></i>`;
+
+  /* ---------------- batteries ---------------- */
+  const FAM = { mc: "choice", tense: "choice", gap: "gaps", comp: "gaps", context: "gaps", ita: "write", trans: "write", build: "write", order: "write", error: "errors", judge: "errors", dialogue: "dialogue", halves: "dialogue", passage: "passage" };
+  const FAM_LABEL = { choice: "Multiple choice", gaps: "Gap filling", write: "Transformation and writing", errors: "Error correction", dialogue: "Dialogues and matching", passage: "Text completion", mixed: "Mixed practice", test: "Belt test", textTest: "Text test", custom: "Custom test" };
+  const FAM_ORDER = ["choice", "gaps", "write", "errors", "dialogue", "mixed", "passage"];
+  const weight = q => q.type === "dialogue" || q.type === "passage" ? q.answers.length : q.type === "halves" ? q.pairs.length : 1;
+  const wsum = a => a.reduce((s, q) => s + weight(q), 0);
+  const median = a => { const s = a.map(q => q.belt).sort((x, y) => x - y); return s[Math.floor((s.length - 1) / 2)]; };
+
+  // split into contiguous chunks of 10–15 points; what does not fit is returned as rest
+  function partition(items) {
+    const W = wsum(items);
+    if (W < 10) return { chunks: [], rest: items };
+    let k = Math.ceil(W / 15); if (W / k < 10) k = Math.floor(W / 10);
+    const target = Math.min(15, W / k), chunks = [], rest = [];
+    let i = 0;
+    for (let c = 0; c < k; c++) {
+      const ch = []; let w = 0;
+      while (i < items.length && w < target - 0.01 && w + weight(items[i]) <= 15) { w += weight(items[i]); ch.push(items[i++]); }
+      if (w >= 10) chunks.push(ch); else rest.push(...ch);
+    }
+    rest.push(...items.slice(i));
+    return { chunks, rest };
+  }
+  const BATS = [], BAT = {};
+  const addBat = b => { b.points = wsum(b.items); b.belt = b.belt || median(b.items); b.lo = Math.min(...b.items.map(q => q.belt)); b.hi = Math.max(...b.items.map(q => q.belt)); BATS.push(b); BAT[b.id] = b; return b; };
+  function buildTopicBatteries(t) {
+    const out = [];
+    const byBelt = (a, b) => a.belt - b.belt;
+    let pool = [];
+    FAM_ORDER.filter(f => f !== "mixed" && f !== "passage").forEach(f => {
+      const items = t.q.filter(q => FAM[q.type] === f).sort(byBelt);
+      const { chunks, rest } = partition(items);
+      chunks.forEach(ch => out.push({ fam: f, items: ch }));
+      pool = pool.concat(rest);
+    });
+    pool.sort(byBelt);
+    const { chunks, rest } = partition(pool);
+    chunks.forEach(ch => out.push({ fam: "mixed", items: ch }));
+    if (rest.length) {
+      // the last few items join the smallest battery that still has room, otherwise they form a short review
+      let left = [];
+      rest.forEach(q => { const cand = out.filter(b => (b.fam === "mixed" || b.fam === FAM[q.type]) && wsum(b.items) + weight(q) <= 15).sort((a, b) => wsum(a.items) - wsum(b.items))[0]; if (cand) cand.items.push(q); else left.push(q); });
+      if (left.length) {
+        // borrow the hardest item from the largest batteries until the review reaches 10 questions
+        while (wsum(left) < 10) {
+          const donor = out.filter(b => b.fam !== "passage" && wsum(b.items) - weight(b.items[b.items.length - 1]) >= 10).sort((a, b) => wsum(b.items) - wsum(a.items))[0];
+          if (!donor) break;
+          left.push(donor.items.pop());
+        }
+        if (wsum(left) >= 10) out.push({ fam: "mixed", items: left });
+        else left.forEach(q => {
+          // last resort: spread the items over the batteries that still have room
+          const host = out.filter(b => b.fam !== "passage").sort((a, b) => wsum(a.items) - wsum(b.items))[0];
+          host.items.push(q); if (FAM[q.type] !== host.fam) host.fam = "mixed";
+        });
+      }
+    }
+    t.q.filter(q => q.type === "passage").sort(byBelt).forEach(q => out.push({ fam: "passage", items: [q], title: q.title }));
+    const count = {};
+    out.sort((a, b) => FAM_ORDER.indexOf(a.fam) - FAM_ORDER.indexOf(b.fam) || median(a.items) - median(b.items));
+    t.bats = out.map(b => {
+      count[b.fam] = (count[b.fam] || 0) + 1;
+      if (b.fam !== "passage") b.items.sort(byBelt);
+      return addBat({ id: `${t.id}--${b.fam}-${count[b.fam]}`, topic: t.id, fam: b.fam, items: b.items, title: b.title || `${FAM_LABEL[b.fam]} ${count[b.fam]}`, back: "#t-" + t.id, backLabel: t.title });
+    });
+    // number the families only when there is more than one battery of that kind
+    t.bats.forEach(b => { if (b.fam !== "passage" && count[b.fam] === 1) b.title = FAM_LABEL[b.fam]; });
+  }
+  TOPICS.forEach(buildTopicBatteries);
+
+  /* Belt tests: fixed, progressive batteries for each level, drawn from every area.
+     Items come from as many different topics and exercise types as possible. */
+  const TESTS = [];
+  function buildBeltTests() {
+    B.list.forEach(({ level: L }) => {
+      const pool = QUESTIONS.filter(q => q.belt === L && q.type !== "passage" && weight(q) <= 3);
+      const byTopic = {};
+      seeded(pool, 97 * L + 13).forEach(q => (byTopic[q.topic] = byTopic[q.topic] || []).push(q));
+      const order = []; let more = true;
+      const keys = seeded(Object.keys(byTopic), L * 31);
+      while (more) { more = false; keys.forEach(k => { const q = byTopic[k].shift(); if (q) { order.push(q); more = true; } }); }
+      const n = Math.min(3, Math.floor(wsum(order) / 15));
+      let i = 0;
+      for (let c = 1; c <= n; c++) {
+        const items = []; let w = 0;
+        while (i < order.length && w < 15) { if (w + weight(order[i]) <= 15) { items.push(order[i]); w += weight(order[i]); } i++; }
+        TESTS.push(addBat({ id: `test-${L}-${c}`, fam: "test", belt: L, items: seeded(items, c * 7 + L), title: `${B.get(L).name} test ${c}`, back: "#exam", backLabel: "Tests", test: true }));
+      }
+      // text tests: the passages written for the mixed area at this level
+      QUESTIONS.filter(q => q.type === "passage" && q.belt === L && areaKey(byId[q.topic]) === "mixed").forEach((q, k) =>
+        TESTS.push(addBat({ id: `test-${L}-text-${k + 1}`, fam: "textTest", belt: L, items: [q], title: q.title, back: "#exam", backLabel: "Tests", test: true })));
+    });
+  }
+  buildBeltTests();
 
   /* ---------------- router ---------------- */
   $("#tabs").innerHTML = [["dojo", "Overview"], ...AREAS.map(a => [a.id, a.title])].map(([k, l]) => `<a class="tab" href="#${k}" data-tab="${k}">${l}</a>`).join("");
-  let session = null;
+  let cur = null, custom = null;
   const view = () => $("#view");
   function route() {
-    const h = location.hash.replace(/^#\/?/, "") || "dojo";
-    session = null;
-    let tab = h.startsWith("t-") ? (byId[h.slice(2)] || {}).area : h;
-    if (!["dojo", "tenses", "contrasts", "mixed", "challenges", "exam"].includes(tab)) tab = "dojo";
+    let h = location.hash.replace(/^#\/?/, "") || "dojo";
+    if (h === "challenges") h = "mixed";
+    cur = null;
+    let tab = h;
+    if (h.startsWith("t-")) tab = byId[h.slice(2)] ? areaKey(byId[h.slice(2)]) : "dojo";
+    else if (h.startsWith("b-")) { const b = BAT[h.slice(2)]; tab = !b ? "dojo" : b.test ? "exam" : areaKey(byId[b.topic]); }
+    else if (h === "custom") tab = "exam";
+    if (!["dojo", "tenses", "contrasts", "mixed", "exam"].includes(tab)) tab = "dojo";
     $$(".tab").forEach(a => { const on = a.dataset.tab === tab; a.classList.toggle("active", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); });
     window.Dojo.toView();
     if (h.startsWith("t-") && byId[h.slice(2)]) return renderTopic(byId[h.slice(2)]);
+    if (h.startsWith("b-") && BAT[h.slice(2)]) return renderBattery(BAT[h.slice(2)]);
+    if (h === "custom" && custom) return renderBattery(custom);
     if (tab === "exam") return renderExam();
     if (tab === "dojo") return renderDojo();
     return renderArea(areaOf(tab));
@@ -109,12 +205,11 @@
   $("#tabs").addEventListener("click", e => { const a = e.target.closest(".tab"); if (a && a.getAttribute("href") === (location.hash || "#dojo")) { e.preventDefault(); route(); } });
 
   /* ---------------- OVERVIEW ---------------- */
+  const areaBats = id => BATS.filter(b => id === "exam" ? b.test : !b.test && areaKey(byId[b.topic]) === id);
   function renderDojo() {
-    const miss = missed().length;
-    const count = id => TOPICS.filter(t => t.area === id).reduce((s, t) => s + t.q.length, 0);
     view().innerHTML = `
-      ${miss ? `<div class="review-card"><p><b>${miss}</b> exercise${miss > 1 ? "s" : ""} to review</p><button class="btn ink sm" type="button" data-act="review">Review ${ICON.arrow}</button></div>` : ""}
-      <div class="areas">${AREAS.map(a => `<a class="card card-link area ${a.id === "exam" ? "exam" : ""}" href="#${a.id}"><h3>${a.title}</h3><span class="c">${a.id === "exam" ? "10, 20 or 30 questions" : `${count(a.id)} exercises`}</span></a>`).join("")}</div>
+      <div class="vhead"><p>Every activity is a battery of 10–15 questions or a text with many gaps. Answer everything, then check: you get your score, the correct answers and an explanation for each one.</p></div>
+      <div class="areas">${AREAS.map(a => { const bs = areaBats(a.id); return `<a class="card card-link area ${a.id === "exam" ? "exam" : ""}" href="#${a.id}"><h3>${a.title}</h3><span class="c">${bs.length} batteries · ${wsum(bs.flatMap(b => b.items))} questions</span></a>`; }).join("")}</div>
       <div class="card belt-legend">
         <h3>Levels (CEFR)</h3>
         <div class="legend-grid">${B.list.map(b => `<div class="lg"><i style="background:${b.color}"></i><b>${b.name}</b><span>${BELT_LEVEL[b.level]}</span></div>`).join("")}</div>
@@ -122,41 +217,26 @@
   }
 
   /* ---------------- AREA pages ---------------- */
+  const beltRange = bs => { const ls = [...new Set(bs.map(b => b.belt))].sort(); return `<span class="belt-range" title="${ls.map(l => B.get(l).short).join(", ")}">${ls.map(l => `<i style="background:${B.get(l).color}"></i>`).join("")}</span>`; };
   function renderArea(a) {
-    view().innerHTML = `<div class="vhead"><h2>${a.title}</h2></div>` +
+    view().innerHTML = `<div class="vhead"><h2>${a.title}</h2><p>${a.lead}</p></div>` +
       a.groups.map(([g, label]) => {
-        const ts = TOPICS.filter(t => t.area === a.id && t.group === g);
-        return `${label ? `<div class="group-title"><h3>${label}</h3></div>` : ""}<div class="topics">${ts.map(t => {
-          const done = t.q.filter(q => qStat(q.id)[0] > 0).length;
-          return `<a class="card card-link topic" href="#t-${t.id}"><h4>${esc(t.title)}</h4>
-            <div class="bar" title="${done} of ${t.q.length} answered correctly"><span style="width:${done / t.q.length * 100}%;background:var(--ok)"></span></div>
-            <div class="meta"><span>${t.q.length} exercises</span>${beltRange(t)}</div></a>`;
-        }).join("")}</div>`;
+        const ts = TOPICS.filter(t => areaKey(t) === a.id && groupKey(t) === g);
+        if (!ts.length) return "";
+        return `${label ? `<div class="group-title"><h3>${label}</h3></div>` : ""}<div class="topics">${ts.map(t =>
+          `<a class="card card-link topic" href="#t-${t.id}"><h4>${esc(t.title)}</h4><p>${esc(t.short || "")}</p>
+            <div class="meta"><span>${t.bats.length} batteries · ${((n) => `${n} text${n === 1 ? "" : "s"}`)(t.bats.filter(b => b.fam === "passage").length)}</span>${beltRange(t.bats)}</div></a>`).join("")}</div>`;
       }).join("");
   }
 
-  /* ---------------- TOPIC page: tense → belt → exercises ---------------- */
-  const tp = { belt: "all", type: "all", n: 10 };
+  /* ---------------- TOPIC page: explanation + batteries ---------------- */
+  const tf = { belt: "all", fam: "all" };
+  function batCard(b) {
+    return `<a class="card card-link bat-card" href="#b-${b.id}"><span class="bt-type">${FAM_LABEL[b.fam]}</span><h4${b.fam === "passage" || b.fam === "textTest" ? ' translate="no"' : ""}>${esc(b.title)}</h4>
+      <div class="bt-meta"><span>${bdot(b.belt)} ${B.get(b.belt).short} · ${CEFR[b.belt]}</span><span>${b.points} ${b.fam === "passage" || b.fam === "textTest" ? "gaps" : "questions"}</span></div></a>`;
+  }
   function renderTopic(t) {
     const a = areaOf(t.area);
-    const levels = [...new Set(t.q.map(q => q.belt))].sort();
-    if (tp.belt !== "all" && !levels.includes(+tp.belt)) tp.belt = "all";
-    const inBelt = () => t.q.filter(q => tp.belt === "all" || q.belt === +tp.belt);
-    const types = () => [...new Set(inBelt().map(q => q.type))];
-    const pool = () => inBelt().filter(q => tp.type === "all" || q.type === tp.type);
-    const draw = () => {
-      if (tp.type !== "all" && !types().includes(tp.type)) tp.type = "all";
-      const n = pool().length, len = Math.min(n, tp.n);
-      $("#trainBox").innerHTML = `
-        <label class="l">Level</label>
-        <div class="belt-pick">${[["all", "All levels", ""], ...levels.map(l => [String(l), B.get(l).name, l])].map(([k, label, l]) => `<button type="button" data-belt="${k}" class="${tp.belt === k ? "on" : ""}">${l ? chipBelt(l) : ""}<span>${label}${l ? ` · ${CEFR[l]}` : ""}</span><small>${k === "all" ? t.q.length : t.q.filter(q => q.belt === +k).length}</small></button>`).join("")}</div>
-        <label class="l">Exercise type</label>
-        <div class="seg types">${[["all", "All types"], ...types().map(k => [k, TYPES[k]])].map(([k, l]) => `<button type="button" data-type="${k}" class="${tp.type === k ? "on" : ""}">${l}</button>`).join("")}</div>
-        <label class="l">Questions</label>
-        <div class="seg">${[10, 20, 40].map(k => `<button type="button" data-n="${k}" class="${tp.n === k ? "on" : ""}">${k}</button>`).join("")}</div>
-        <button class="btn primary lg start" type="button" data-act="start" ${n ? "" : "disabled"}>Start · ${len} question${len === 1 ? "" : "s"}</button>
-        <p class="pool-note">${n} exercise${n === 1 ? "" : "s"} available with these settings. A different selection every time.</p>`;
-    };
     view().innerHTML = `<a class="back" href="#${a.id}">${ICON.back} ${a.title}</a>
       <div class="topic-page">
         <div>
@@ -165,202 +245,329 @@
           ${t.form ? `<div class="form"><b>Form</b>${esc(t.form)}</div>` : ""}
           <div class="uses">${t.uses.map(u => `<div class="use"><b>${esc(u[0])}</b><span>${esc(u[1])}</span></div>`).join("")}</div>
         </div>
-        <aside class="card train" id="trainBox"></aside>
-      </div>`;
+        <aside class="card train">
+          <h3>Practice</h3>
+          <p>${t.bats.length} batteries · ${t.bats.reduce((s, b) => s + b.points, 0)} questions in all.</p>
+          <div class="tp-sum">${FAM_ORDER.filter(f => t.bats.some(b => b.fam === f)).map(f => `<div><span>${FAM_LABEL[f]}</span><b>${t.bats.filter(b => b.fam === f).length}</b></div>`).join("")}</div>
+          <a class="btn primary lg start" href="#b-${t.bats[0].id}">Start the first battery ${ICON.arrow}</a>
+          <a class="btn soft start2" href="#batteries">See all the batteries</a>
+        </aside>
+      </div>
+      <section class="bat-sec" id="batteries">
+        <div class="bat-head"><h3>Batteries</h3></div>
+        <div class="pr-tools"><div class="seg" id="tbelt" role="group" aria-label="Level"></div><div class="seg types" id="tfam" role="group" aria-label="Type"></div></div>
+        <div id="tlist"></div>
+      </section>`;
+    const levels = [...new Set(t.bats.map(b => b.belt))].sort();
+    const fams = FAM_ORDER.filter(f => t.bats.some(b => b.fam === f));
+    if (tf.belt !== "all" && !levels.includes(+tf.belt)) tf.belt = "all";
+    if (tf.fam !== "all" && !fams.includes(tf.fam)) tf.fam = "all";
+    const draw = () => {
+      $("#tbelt").innerHTML = [["all", "All levels"], ...levels.map(l => [String(l), `${B.get(l).short} · ${CEFR[l]}`])].map(([k, l]) => `<button type="button" data-belt="${k}" class="${tf.belt === k ? "on" : ""}">${k !== "all" ? bdot(+k) : ""}${l}</button>`).join("");
+      $("#tfam").innerHTML = [["all", "All types"], ...fams.map(f => [f, FAM_LABEL[f]])].map(([k, l]) => `<button type="button" data-fam="${k}" class="${tf.fam === k ? "on" : ""}">${l}</button>`).join("");
+      const list = t.bats.filter(b => (tf.belt === "all" || b.belt === +tf.belt) && (tf.fam === "all" || b.fam === tf.fam));
+      $("#tlist").innerHTML = fams.filter(f => list.some(b => b.fam === f)).map(f => `<h4 class="fam-h">${FAM_LABEL[f]}</h4><div class="bat-grid">${list.filter(b => b.fam === f).map(batCard).join("")}</div>`).join("")
+        || `<div class="card empty"><h3>No batteries with these settings</h3>Choose another level or type.</div>`;
+    };
     draw();
-    $("#trainBox").addEventListener("click", e => {
-      const b = e.target.closest("button"); if (!b || b.disabled) return;
-      if (b.dataset.belt) tp.belt = b.dataset.belt;
-      else if (b.dataset.type) tp.type = b.dataset.type;
-      else if (b.dataset.n) tp.n = +b.dataset.n;
-      else if (b.dataset.act === "start") { const make = () => shuffle(pool()).slice(0, tp.n); return startSession({ title: t.title, qs: make(), back: "#t-" + t.id, redo: make }); }
-      draw();
-    });
+    $("#tbelt").addEventListener("click", e => { const b = e.target.closest("[data-belt]"); if (b) { tf.belt = b.dataset.belt; draw(); } });
+    $("#tfam").addEventListener("click", e => { const b = e.target.closest("[data-fam]"); if (b) { tf.fam = b.dataset.fam; draw(); } });
+    $(".start2").addEventListener("click", e => { e.preventDefault(); $("#batteries").scrollIntoView({ behavior: "smooth" }); });
   }
 
-  /* ---------------- TEST (random, chosen difficulty) ---------------- */
-  const ex = { n: 20, level: "all", scope: "all" };
-  function examPool() {
-    const inScope = QUESTIONS.filter(q => ex.scope === "all" || byId[q.topic].area === ex.scope);
-    if (ex.level === "all") return shuffle(inScope).slice(0, ex.n);
-    const L = +ex.level; let picked = shuffle(inScope.filter(q => q.belt === L));
-    for (let d = 1; picked.length < ex.n && d < 6; d++) picked = picked.concat(shuffle(inScope.filter(q => q.belt === L - d || q.belt === L + d)));
-    return shuffle(picked.slice(0, ex.n));
+  /* ---------------- TESTS: belt tests + custom test ---------------- */
+  const ex = { n: 15, level: "all", scope: "all" };
+  function customPool() {
+    const inScope = QUESTIONS.filter(q => q.type !== "passage" && weight(q) <= 3 && (ex.scope === "all" || areaKey(byId[q.topic]) === ex.scope));
+    let cand = ex.level === "all" ? shuffle(inScope) : shuffle(inScope.filter(q => q.belt === +ex.level));
+    for (let d = 1; ex.level !== "all" && wsum(cand) < ex.n && d < 6; d++) cand = cand.concat(shuffle(inScope.filter(q => Math.abs(q.belt - ex.level) === d)));
+    const items = []; let w = 0;
+    for (const q of cand) { if (w >= ex.n) break; if (w + weight(q) <= ex.n) { items.push(q); w += weight(q); } }
+    return items.sort((a, b) => a.belt - b.belt);
   }
   function renderExam() {
+    view().innerHTML = `<div class="vhead"><h2>Tests</h2><p>Comprehensive tests for each level, from White belt (A1) upwards. Each one mixes tenses and exercise types: you never know in advance which tense you need.</p></div>
+      ${B.list.map(({ level: L }) => { const ts = TESTS.filter(b => b.belt === L); return ts.length ? `<div class="lv-head">${beltChip(L)}</div><div class="bat-grid">${ts.map(batCard).join("")}</div>` : ""; }).join("")}
+      <div class="group-title"><h3>Custom test</h3><span>A new random selection every time</span></div>
+      <div class="exam-setup"><div class="card" id="examBox"></div></div>`;
     const draw = () => {
       $("#examBox").innerHTML = `
         <label class="l">Questions</label>
-        <div class="seg">${[10, 20, 30].map(n => `<button type="button" data-n="${n}" class="${ex.n === n ? "on" : ""}">${n}</button>`).join("")}</div>
+        <div class="seg">${[10, 15].map(n => `<button type="button" data-n="${n}" class="${ex.n === n ? "on" : ""}">${n}</button>`).join("")}</div>
         <label class="l">Level</label>
-        <div class="belt-pick">${[["all", "All levels", ""], ...B.list.map(b => [String(b.level), b.name, b.level])].map(([k, label, l]) => `<button type="button" data-level="${k}" class="${String(ex.level) === k ? "on" : ""}">${l ? chipBelt(l) : ""}<span>${label}${l ? ` · ${CEFR[l]}` : ""}</span></button>`).join("")}</div>
+        <div class="belt-pick">${[["all", "All levels", ""], ...B.list.map(b => [String(b.level), b.name, b.level])].map(([k, label, l]) => `<button type="button" data-level="${k}" class="${String(ex.level) === k ? "on" : ""}">${l ? bdot(l) : ""}<span>${label}${l ? ` · ${CEFR[l]}` : ""}</span></button>`).join("")}</div>
         <label class="l">From</label>
         <div class="seg">${[["all", "Everything"], ...AREAS.filter(a => a.id !== "exam").map(a => [a.id, a.title])].map(([k, l]) => `<button type="button" data-scope="${k}" class="${ex.scope === k ? "on" : ""}">${l}</button>`).join("")}</div>
-        <button class="btn primary lg" type="button" data-act="exam" style="margin-top:24px">Start the test ${ICON.arrow}</button>`;
+        <button class="btn primary lg" type="button" data-act="custom" style="margin-top:24px">Start the test ${ICON.arrow}</button>`;
     };
-    view().innerHTML = `<div class="vhead"><h2>Test</h2></div><div class="exam-setup"><div class="card" id="examBox"></div></div>`;
     draw();
     $("#examBox").addEventListener("click", e => {
-      const b = e.target.closest("button"); if (!b || b.disabled) return;
+      const b = e.target.closest("button"); if (!b) return;
       if (b.dataset.n) ex.n = +b.dataset.n; else if (b.dataset.level) ex.level = b.dataset.level; else if (b.dataset.scope) ex.scope = b.dataset.scope;
-      else if (b.dataset.act === "exam") return startSession({ title: ex.level === "all" ? "Test" : `Test · ${B.get(+ex.level).name} (${CEFR[+ex.level]})`, qs: examPool(), back: "#exam", redo: examPool });
+      else if (b.dataset.act === "custom") { startCustom(); return; }
       draw();
     });
   }
+  function startCustom() {
+    const items = customPool();
+    if (!items.length) { toast("No exercises available with these settings."); return; }
+    custom = { id: "custom", fam: "custom", items, points: wsum(items), belt: ex.level === "all" ? median(items) : +ex.level, title: ex.level === "all" ? "Custom test" : `Custom test · ${B.get(+ex.level).name}`, back: "#exam", backLabel: "Tests", custom: true };
+    if (location.hash === "#custom") route(); else location.hash = "custom";
+  }
 
-  /* ---------------- SESSION ---------------- */
-  function startSession(opts) {
-    if (!opts.qs.length) { toast("No exercises available with these settings."); return; }
-    session = Object.assign({ i: 0, results: [], answered: false }, opts);
-    session.qs = session.qs.map(q => {
-      const c = Object.assign({}, q);
-      if (q.type === "mc" || q.type === "tense") c.opts = shuffle(q.answers);
-      if (q.type === "order") { const w = q.answers[0].replace(/[.?!]+$/, "").split(/\s+/); if (!/^I(\b|')/.test(w[0])) w[0] = w[0].charAt(0).toLowerCase() + w[0].slice(1); let t; do { t = shuffle(w.map((x, i) => ({ x, i }))); } while (w.length > 2 && t.every((o, i) => o.i === i)); c.tiles = t.map(o => o.x); c.end = (q.answers[0].match(/[.?!]+$/) || ["."])[0]; }
-      if (q.type === "halves") c.right = shuffle(q.pairs.map(p => p[1]));
-      return c;
-    });
-    renderQuestion();
+  /* ---------------- BATTERY page ---------------- */
+  const INSTR = {
+    passage: "Read the whole text first. Then write the correct form of the verb in brackets in each gap.",
+    textTest: "Read the whole text first. Then write the correct form of the verb in brackets in each gap.",
+    def: "Answer all the questions, then press Check answers. You will see your score, the correct answers and an explanation for each one."
+  };
+  const inputHTML = (attrs, size) => `<input type="text" ${attrs} size="${size}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">`;
+  const sizeFor = arr => Math.max(6, Math.min(26, Math.max(...arr.map(a => String(a).length)) + 2));
+  const qn = i => `<span class="qn">${i + 1}</span>`;
+  const sub = s => `<p class="q-sub">${s}</p>`;
+
+  function renderBattery(b) {
+    cur = { b, checked: false, st: [], warned: false };
+    const single = b.items.length === 1 && b.items[0].type === "passage";
+    const q0 = b.items[0];
+    view().innerHTML = `<a class="back" href="${b.back}">${ICON.back} ${esc(b.backLabel)}</a>
+      <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${FAM_LABEL[b.fam]}</span><span class="bt-n">${b.points} ${single ? "gaps" : "questions"}</span></div>
+        <h2>${esc(b.title)}</h2>${b.topic && !single ? `<p class="bt-goal">${esc(byId[b.topic].title)}</p>` : single && q0.intro ? `<p class="bt-goal" translate="no">${esc(q0.intro)}</p>` : ""}
+        <div class="instr"><p>${INSTR[b.fam] || (single ? INSTR.passage : INSTR.def)}</p></div></div>
+      <div id="btBody">${single ? passageHTML(q0, 0) : `<ol class="qlist">${b.items.map((q, i) => itemHTML(q, i)).join("")}</ol>`}</div>
+      <div class="bt-foot" id="btFoot"></div><div id="btResult" aria-live="polite"></div>`;
+    drawFoot();
   }
-  const isWritten = q => ["gap", "comp", "trans", "ita", "context"].includes(q.type);
-  const needsCheck = q => isWritten(q) || ["error", "build", "order", "dialogue"].includes(q.type);
-  function renderQuestion() {
-    window.Dojo.toView();
-    const s = session, q = s.qs[s.i], n = s.qs.length, ok = s.results.filter(r => r.ok).length;
-    const size = Math.max(10, Math.max(...q.answers.map(a => String(a).length)) + 2);
-    const input = `<input type="text" id="gapIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Your answer" size="${size}">`;
+  function drawFoot() {
+    const b = cur.b;
+    $("#btFoot").innerHTML = cur.checked
+      ? `<button class="btn ink" type="button" data-act="retry">${ICON.restart} Try again</button>${b.custom ? `<button class="btn primary" type="button" data-act="newcustom">New test</button>` : nextBat(b) ? `<a class="btn primary" href="#b-${nextBat(b).id}">Next battery ${ICON.arrow}</a>` : ""}<a class="btn soft" href="${b.back}">${b.test || b.custom ? "Back to the tests" : "Choose another battery"}</a>`
+      : `<button class="btn ink lg" type="button" data-act="check">${ICON.check} Check answers</button>`;
+  }
+  function nextBat(b) {
+    const list = b.test ? TESTS : b.topic ? byId[b.topic].bats : [];
+    const i = list.indexOf(b); return i >= 0 ? list[i + 1] : null;
+  }
+
+  /* item renderers: every item is one <li class="qi" data-i> with its own state cur.st[i] */
+  function itemHTML(q, i) {
+    const st = cur.st[i] = { sel: null };
+    const gapIn = `${inputHTML(`class="gi" data-i="${i}" aria-label="Answer ${i + 1}"`, sizeFor(q.answers))}`;
+    const sentence = t => esc(t).replace("___", gapIn);
     let body = "";
-    if (q.type === "trans") body = `<p class="q-instr">${esc(q.instr)}</p><p class="q-source">${esc(q.source)}</p><p class="sentence">${esc(q.text).replace("___", input)}</p>`;
-    else if (q.type === "ita") body = `<p class="q-instr">Translate into English.</p><p class="q-source it">${esc(q.it)}</p><p class="sentence">${esc(q.text).replace("___", input)}</p>`;
-    else if (q.type === "context") body = `<p class="q-context">${esc(q.context)}</p><p class="sentence">${esc(q.text).replace("___", input)}</p>`;
-    else if (q.type === "gap" || q.type === "comp") body = `<p class="sentence">${esc(q.text).replace("___", input)}</p>`;
-    else if (q.type === "error") { let k = 0; body = `<p class="q-instr">Tap the part that contains a mistake, then write the correct form.</p><p class="sentence err">${esc(q.raw).replace(/\[([^\]]+)\]/g, (m, t) => `<button type="button" class="seg-btn" data-seg="${k++}">${t}</button>`)}</p><div class="fix-row" id="fixRow" hidden><label for="gapIn">Correct form:</label>${input}</div>`; }
-    else if (q.type === "build") body = `<p class="q-instr">${esc(q.instr)}</p><p class="q-prompt">${esc(q.text)}</p><div class="sent-row">${input.replace('id="gapIn"', 'id="gapIn" class="sent-in"')}</div>`;
-    else if (q.type === "order") body = `<p class="q-instr">Put the words in the correct order.</p><div class="built" id="built" aria-live="polite"><span class="ph">Tap the words below…</span></div><div class="tiles">${q.tiles.map((t, i) => `<button type="button" class="tile" data-t="${i}">${esc(t)}</button>`).join("")}</div><div class="tile-tools"><button type="button" class="btn soft sm" data-act="undo">Undo</button><button type="button" class="btn soft sm" data-act="clear">Clear</button></div>`;
-    else if (q.type === "judge") body = `<p class="q-instr">Is this sentence right or wrong?</p><p class="sentence">${esc(q.text)}</p><div class="opts two judge"><button type="button" class="opt" data-j="1">${ICON.check} Right</button><button type="button" class="opt" data-j="0">${ICON.x} Wrong</button></div><div class="fix-row" id="fixRow" hidden><label for="gapIn">Write it correctly:</label>${input.replace('id="gapIn"', 'id="gapIn" class="sent-in"')}<button class="btn ink" type="button" data-act="check">${ICON.check} Check</button></div>`;
-    else if (q.type === "dialogue") { let k = 0; body = `${q.context ? `<p class="q-context">${esc(q.context)}</p>` : ""}<div class="dlg">${q.lines.map(([sp, line]) => `<p>${sp ? `<span class="who">${esc(sp)}</span>` : ""}<span>${esc(line).replace(/___/g, () => { const a = q.answers[k]; return `<input type="text" class="dgin" data-k="${k++}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Gap ${k}" size="${Math.max(8, Math.max(...a.map(x => x.length)) + 1)}">`; })}</span></p>`).join("")}</div>`; }
-    else if (q.type === "halves") body = `<p class="q-instr">${esc(q.instr)}</p><div class="halves"><div class="hcol">${q.pairs.map((p, i) => `<button type="button" class="hl-l" data-i="${i}">${esc(p[0])}</button>`).join("")}</div><div class="hcol">${q.right.map((r, i) => `<button type="button" class="hl-r" data-i="${i}">${esc(r)}</button>`).join("")}</div></div><p class="pool-note">Tap a beginning, then its ending.</p>`;
-    else body = `${q.type === "tense" ? `<p class="q-instr">Which tense ${q.text.includes("___") ? "fits the gap" : "is used"}?</p>` : ""}<p class="sentence">${esc(q.text).split("___").join('<span class="blank">&nbsp;</span>')}</p><div class="opts">${q.opts.map((o, i) => `<button type="button" class="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>`;
-    view().innerHTML = `<div class="q">
-      <div class="q-top"><span class="sc">${s.i + 1} / ${n}</span><div class="bar"><span style="width:${s.i / n * 100}%;background:var(--shu)"></span></div><span class="sc"><b style="color:var(--ok)">${ok}</b> ✓ · <b style="color:var(--bad)">${s.results.length - ok}</b> ✗</span></div>
-      <div class="card q-card">
-        <div class="q-meta"><span class="q-kind">${esc(s.title)} · ${TYPES[q.type]}</span>${B.chip(q.belt, `${B.get(q.belt).name} · ${CEFR[q.belt]}`)}</div>
-        ${body}
-        <div id="fb" aria-live="polite"></div>
-        <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-act="quit">Quit</button>${needsCheck(q) ? `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" data-act="skip">I don't know</button><button class="btn ink lg" type="button" data-act="check">${ICON.check} Check</button></div>` : ""}</div>
-      </div></div>`;
-    s.st = { built: [] };
-    $$(".dgin").forEach(g => g.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); s.answered ? next() : answer(""); } }));
-    if (q.type === "dialogue" && matchMedia("(hover:hover)").matches) { const g = $(".dgin"); if (g) g.focus({ preventScroll: true }); }
-    const inp = $("#gapIn");
-    if (inp) { if ((isWritten(q) || q.type === "build") && matchMedia("(hover:hover)").matches) inp.focus({ preventScroll: true }); inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); s.answered ? next() : answer(inp.value); } }); }
-  }
-  function answer(given, idx) {
-    const s = session; if (!s || s.answered) return;
-    const q = s.qs[s.i];
-    let ok, note = "";
-    if (q.type === "build") {
-      ok = checkSentence(q.answers, given); const inp = $("#gapIn"); inp.disabled = true; inp.classList.add(ok ? "right" : "wrong");
-    } else if (q.type === "order") {
-      given = s.st.built.map(i => q.tiles[i]).join(" ") + (s.st.built.length ? q.end : "");
-      ok = checkSentence(q.answers, given); $$(".tile").forEach(b => b.disabled = true); $("#built").classList.add(ok ? "right" : "wrong");
-    } else if (q.type === "judge") {
-      // given: "R" (said right), or the typed correction after saying wrong
-      if (given === "R") { ok = q.correct; given = "Right"; }
-      else { ok = !q.correct && checkSentence(q.answers, given); const inp = $("#gapIn"); if (inp) { inp.disabled = true; inp.classList.add(ok ? "right" : "wrong"); } given = q.correct ? "Wrong" : (given || "—"); }
-      $$(".judge .opt").forEach(b => { b.disabled = true; if ((b.dataset.j === "1") === q.correct) b.classList.add("right"); });
-      $$("#fixRow .btn").forEach(b => b.remove());
-    } else if (q.type === "dialogue") {
-      const befores = []; q.lines.forEach(([, l]) => { const parts = l.split("___"); for (let i = 0; i < parts.length - 1; i++) befores.push(parts[i]); });
-      const res = $$(".dgin").map(g => { const k = +g.dataset.k; const good = checkText({ text: befores[k] + "___", answers: q.answers[k] }, g.value); g.disabled = true; g.classList.add(good ? "right" : "wrong"); return good; });
-      ok = res.every(Boolean); given = $$(".dgin").map(g => g.value || "—").join(" · ");
-      if (!ok) note = `${res.filter(Boolean).length} of ${res.length} gaps correct.`;
-    } else if (q.type === "halves") {
-      ok = !s.st.err; given = ok ? "" : `${s.st.err} wrong match${s.st.err > 1 ? "es" : ""}`;
-    } else if (isWritten(q)) {
-      ok = checkText(q, given);
-      const inp = $("#gapIn"); inp.disabled = true; inp.classList.add(ok ? "right" : "wrong");
-    } else if (q.type === "error") {
-      const chosen = s.seg;
-      const corrOk = q.answers.some(a => variants(a).some(v => variants(given).includes(v)));
-      ok = chosen === q.wrong && corrOk;
-      $$(".seg-btn").forEach((b, i) => { b.disabled = true; if (i === q.wrong) b.classList.add("bad-seg"); else if (i === chosen) b.classList.add("miss"); });
-      const inp = $("#gapIn"); if (inp) { inp.disabled = true; inp.classList.add(ok ? "right" : "wrong"); }
-      if (chosen !== undefined && chosen !== q.wrong) note = `The mistake is in “${esc(segs(q)[q.wrong])}”, not in “${esc(segs(q)[chosen])}”.`;
-      given = chosen === undefined ? "" : `${segs(q)[chosen]} → ${given || "—"}`;
-    } else {
-      given = q.opts[idx]; ok = given === q.answers[0];
-      $$(".opt").forEach((b, j) => { b.disabled = true; if (q.opts[j] === q.answers[0]) b.classList.add("right"); else if (j === idx) b.classList.add("wrong"); });
+    switch (q.type) {
+      case "mc": case "tense":
+        st.opts = shuffle(q.answers);
+        body = `${q.type === "tense" ? sub(q.text.includes("___") ? "Which tense fits the gap?" : "Which tense is used?") : ""}<p class="qs" translate="no">${qn(i)}${esc(q.text).split("___").join('<span class="blank">…</span>')}</p>
+          <div class="opts-row" translate="no">${st.opts.map((o, j) => `<button type="button" class="ob" data-i="${i}" data-o="${j}"><span class="k">${"abcd"[j]}</span>${esc(o)}</button>`).join("")}</div>`;
+        break;
+      case "gap": case "comp":
+        body = `<p class="qs" translate="no">${qn(i)}${sentence(q.text)}</p>`; break;
+      case "context":
+        body = `<p class="qs" translate="no">${qn(i)}<span class="ctx">${esc(q.context)}</span><br>${sentence(q.text)}</p>`; break;
+      case "trans":
+        body = `${sub(esc(q.instr))}<p class="qs" translate="no">${qn(i)}<span class="src">${esc(q.source)}</span><br>${sentence(q.text)}</p>`; break;
+      case "ita":
+        body = `${sub("Translate into English.")}<p class="qs" translate="no">${qn(i)}<span class="src it" lang="it">${esc(q.it)}</span><br>${sentence(q.text)}</p>`; break;
+      case "build":
+        body = `${sub(esc(q.instr))}<p class="qs" translate="no">${qn(i)}<span class="prompt">${esc(q.text)}</span></p><div class="row-in">${inputHTML(`class="si" data-i="${i}" aria-label="Sentence ${i + 1}" placeholder="Write the full sentence"`, 40)}</div>`; break;
+      case "order": {
+        const w = q.answers[0].replace(/[.?!]+$/, "").split(/\s+/);
+        if (!/^I(\b|')/.test(w[0])) w[0] = w[0].charAt(0).toLowerCase() + w[0].slice(1);
+        let t; do { t = shuffle(w.map((x, k) => ({ x, k }))); } while (w.length > 2 && t.every((o, k) => o.k === k));
+        st.tiles = t.map(o => o.x); st.end = (q.answers[0].match(/[.?!]+$/) || ["."])[0]; st.built = [];
+        body = `${sub("Put the words in the correct order.")}<div class="qs">${qn(i)}<div class="built" data-i="${i}" aria-live="polite" translate="no"><span class="ph">Tap the words below…</span></div></div>
+          <div class="tiles" translate="no">${st.tiles.map((x, k) => `<button type="button" class="tile" data-i="${i}" data-t="${k}">${esc(x)}</button>`).join("")}</div>
+          <div class="tile-tools"><button type="button" class="btn soft sm" data-act="undo" data-i="${i}">Undo</button><button type="button" class="btn soft sm" data-act="clear" data-i="${i}">Clear</button></div>`;
+        break;
+      }
+      case "error": {
+        let k = 0;
+        body = `${sub("Tap the part that contains a mistake, then write the correct form.")}<p class="qs err" translate="no">${qn(i)}${esc(q.raw).replace(/\[([^\]]+)\]/g, (m, t) => `<button type="button" class="seg-btn" data-i="${i}" data-seg="${k++}">${t}</button>`)}</p>
+          <div class="row-in fix" hidden><label>Correct form: ${inputHTML(`class="fi" data-i="${i}" aria-label="Correct form ${i + 1}"`, sizeFor(q.answers))}</label></div>`;
+        break;
+      }
+      case "judge":
+        body = `${sub("Is this sentence right or wrong? If it is wrong, correct it.")}<p class="qs" translate="no">${qn(i)}${esc(q.text)}</p>
+          <div class="opts-row"><button type="button" class="ob jb" data-i="${i}" data-j="1">${ICON.check} Right</button><button type="button" class="ob jb" data-i="${i}" data-j="0">${ICON.x} Wrong</button></div>
+          <div class="row-in fix" hidden>${inputHTML(`class="si ji" data-i="${i}" aria-label="Correct sentence ${i + 1}"`, 40)}</div>`;
+        break;
+      case "dialogue": {
+        let k = 0;
+        body = `${q.context ? `<p class="qs ctx-line" translate="no">${qn(i)}<span class="ctx">${esc(q.context)}</span></p>` : `<p class="qs">${qn(i)}</p>`}
+          <div class="dlg2" translate="no">${q.lines.map(([sp, line]) => `<p>${sp ? `<span class="who">${esc(sp)}</span>` : ""}<span>${esc(line).replace(/___/g, () => { const a = q.answers[k]; return inputHTML(`class="dg" data-i="${i}" data-k="${k++}" aria-label="Gap ${k}"`, sizeFor(a)); })}</span></p>`).join("")}</div>`;
+        break;
+      }
+      case "halves": {
+        st.right = shuffle(q.pairs.map(p => p[1]));
+        const L = st.right.map((_, k) => "abcdefghijklmnop"[k]);
+        body = `${sub(esc(q.instr))}<div class="hv">${qn(i)}<ol class="hv-left" translate="no">${q.pairs.map((p, k) => `<li><span>${esc(p[0])} …</span><select class="hs" data-i="${i}" data-k="${k}" aria-label="Ending for ${esc(p[0])}"><option value="">…</option>${L.map(l => `<option value="${l}">${l}</option>`).join("")}</select></li>`).join("")}</ol>
+          <ul class="hv-right" translate="no">${st.right.map((r, k) => `<li><span class="k">${L[k]}</span>${esc(r)}</li>`).join("")}</ul></div>`;
+        break;
+      }
+      case "passage":
+        return `<li class="qi qi-passage" data-i="${i}">${passageHTML(q, i, true)}</li>`;
     }
-    s.answered = true;
-    s.results.push({ q, ok, given });
-    const st = Store.data.q[q.id] || [0, 0, 0]; ok ? st[0]++ : st[1]++; st[2] = ok ? 1 : -1; Store.data.q[q.id] = st; Store.save();
-    const solution = q.type === "tense" ? `${esc(q.text).split("___").join("<b>…</b>")}<br><b>${esc(q.answers[0])}</b>` : fill(q, q.answers[0]);
-    const others = (isWritten(q) || ["error", "build", "order"].includes(q.type) || (q.type === "judge" && !q.correct)) && q.answers.length > 1 ? `<p class="you">Also accepted: ${q.answers.slice(1).map(esc).join(" · ")}</p>` : "";
-    $("#fb").innerHTML = `<div class="fb ${ok ? "good" : "bad"}"><span class="ic">${ok ? ICON.check : ICON.x}</span><div>
-      <h3>${ok ? pick(["Correct.", "Well done.", "Exactly right.", "Correct — good reasoning."]) : "Not quite."}</h3>
-      <div class="ans">${solution}</div>
-      ${!ok && given ? `<p class="you">Your answer: “${esc(given)}”.</p>` : ""}${note ? `<p class="you">${note}</p>` : ""}
-      <p class="why">${esc(q.expl)}</p>${others}</div></div>`;
-    $("#qfoot").innerHTML = `<button class="btn soft sm" type="button" data-act="quit">Quit</button><button class="btn ink lg" type="button" data-act="next" id="nextBtn">${s.i < s.qs.length - 1 ? "Next question" : "See results"} ${ICON.arrow}</button>`;
-    $("#nextBtn").focus({ preventScroll: true });
+    return `<li class="qi" data-i="${i}">${body}<div class="fbx"></div></li>`;
   }
-  function drawBuilt(q) { const b = $("#built"), st = session.st; b.innerHTML = st.built.length ? st.built.map((i, k) => `<span class="bw">${esc(k ? q.tiles[i] : q.tiles[i].charAt(0).toUpperCase() + q.tiles[i].slice(1))}</span>`).join(" ") + `<span class="bw end">${esc(q.end)}</span>` : `<span class="ph">Tap the words below…</span>`; }
-  function next() { const s = session; if (!s || !s.answered) return; if (s.i < s.qs.length - 1) { s.i++; s.answered = false; s.seg = undefined; renderQuestion(); } else finish(); }
-  function finish() {
-    window.Dojo.toView();
-    const s = session, n = s.results.length, ok = s.results.filter(r => r.ok).length, pct = Math.round(ok / n * 100);
-    const wrong = s.results.filter(r => !r.ok);
-    view().innerHTML = `<div class="q"><div class="card results">
-      <div class="score">${ok}<span> / ${n}</span></div>
-      <p class="meta">${esc(s.title)} · ${pct}% correct</p>
-      <div class="bar" style="max-width:360px;margin:18px auto 0;height:10px"><span style="width:${pct}%;background:${pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--kincha)" : "var(--shu)"}"></span></div>
-      <div class="nums"><span style="background:var(--ok-bg);color:var(--ok)">${ok} correct</span><span style="background:var(--bad-bg);color:var(--bad)">${n - ok} wrong</span></div>
-      <div class="actions"><button class="btn ink" type="button" data-act="repeat">${ICON.restart} Repeat</button>${wrong.length ? `<button class="btn primary" type="button" data-act="retry">Retry my mistakes</button>` : ""}<a class="btn soft" href="${s.back}">Back</a></div>
-      ${wrong.length ? `<div class="review"><h4>Review your mistakes</h4>${wrong.map(r => `<div class="rv"><div class="s">${r.q.type === "tense" ? `${esc(r.q.text)} — <b>${esc(r.q.answers[0])}</b>` : fill(r.q, r.q.answers[0])}</div><div class="y">Your answer: ${esc(r.given || "—")}</div><div class="e">${esc(r.q.expl)}</div></div>`).join("")}</div>` : ""}
-    </div></div>`;
+  function passageHTML(q, i, inList) {
+    cur.st[i] = cur.st[i] || {};
+    let k = 0;
+    const paras = q.paras.map(p => `<p>${esc(p).replace(/___/g, () => { const n = ++k; return `<span class="tg"><span class="gn">${n}</span>${inputHTML(`class="pg" data-i="${i}" data-k="${n - 1}" aria-label="Gap ${n}"`, sizeFor(q.answers[n - 1]))}</span>`; })}</p>`).join("");
+    return `${inList ? `<h4 class="ps-title">${esc(q.title)}</h4>` : ""}<div class="card textbox" data-i="${i}" translate="no">${paras}</div><ol class="gexp" data-i="${i}"></ol>`;
+  }
+
+  const drawBuilt = i => {
+    const st = cur.st[i], box = $(`.built[data-i="${i}"]`);
+    box.innerHTML = st.built.length ? st.built.map((t, k) => `<span class="bw">${esc(k ? st.tiles[t] : st.tiles[t].charAt(0).toUpperCase() + st.tiles[t].slice(1))}</span>`).join(" ") + `<span class="bw end">${esc(st.end)}</span>` : `<span class="ph">Tap the words below…</span>`;
+  };
+
+  // gap-level text before each gap (used to accept answers that repeat the subject)
+  const beforeGaps = lines => { const out = []; lines.forEach(l => { const parts = l.split("___"); for (let k = 0; k < parts.length - 1; k++) out.push(parts[k] + "___"); }); return out; };
+
+  function missingCount() {
+    let miss = 0;
+    cur.b.items.forEach((q, i) => {
+      const li = $(`.qi[data-i="${i}"]`) || document, st = cur.st[i];
+      switch (q.type) {
+        case "mc": case "tense": if (st.sel == null) miss++; break;
+        case "order": if (!st.built.length) miss++; break;
+        case "error": if (st.sel == null || !$(`.fi[data-i="${i}"]`).value.trim()) miss++; break;
+        case "judge": if (st.sel == null || (st.sel === 0 && !$(`.ji[data-i="${i}"]`).value.trim())) miss++; break;
+        case "halves": miss += $$(`.hs[data-i="${i}"]`).filter(x => !x.value).length; break;
+        case "dialogue": miss += $$(`.dg[data-i="${i}"]`).filter(x => !x.value.trim()).length; break;
+        case "passage": miss += $$(`.pg[data-i="${i}"]`).filter(x => !x.value.trim()).length; break;
+        default: { const x = $(`.gi[data-i="${i}"], .si[data-i="${i}"]`, li); if (x && !x.value.trim()) miss++; }
+      }
+    });
+    return miss;
+  }
+
+  const fbHTML = (ok, sol, why, extra) => `<div class="fbk ${ok ? "good" : "bad"}"><b>${ok ? "Correct." : "Not quite."}</b>${sol ? ` <span class="ans" translate="no">${sol}</span>` : ""}${extra ? ` <span class="you">${extra}</span>` : ""}${why ? ` <span class="why" translate="no">${esc(why)}</span>` : ""}</div>`;
+  const mark = (el, ok) => { if (!el) return; el.disabled = true; el.classList.add(ok ? "right" : "wrong"); };
+  const alsoAccepted = q => q.answers.length > 1 && ["gap", "comp", "context", "trans", "ita", "build", "order", "error"].includes(q.type) ? `<br><span class="also">Also accepted: ${q.answers.slice(1).map(esc).join(" · ")}</span>` : "";
+
+  // returns [points, max]
+  function checkItem(q, i) {
+    const st = cur.st[i], li = $(`.qi[data-i="${i}"]`), fbx = li ? $(".fbx", li) : null;
+    let ok = false, pts = 0, max = weight(q), extra = "";
+    switch (q.type) {
+      case "mc": case "tense": {
+        ok = st.sel != null && st.opts[st.sel] === q.answers[0];
+        $$(`.ob[data-i="${i}"]`).forEach(b => { b.disabled = true; const o = st.opts[+b.dataset.o]; if (o === q.answers[0]) b.classList.add("right"); else if (+b.dataset.o === st.sel) b.classList.add("wrong"); });
+        break;
+      }
+      case "gap": case "comp": case "context": case "trans": case "ita": {
+        const x = $(`.gi[data-i="${i}"]`); ok = checkText(q, x.value); mark(x, ok); break;
+      }
+      case "build": { const x = $(`.si[data-i="${i}"]`); ok = checkSentence(q.answers, x.value); mark(x, ok); break; }
+      case "order": {
+        const given = st.built.map(t => st.tiles[t]).join(" ") + (st.built.length ? st.end : "");
+        ok = checkSentence(q.answers, given);
+        $$(`.tile[data-i="${i}"], .tile-tools [data-i="${i}"]`).forEach(b => b.disabled = true);
+        $(`.built[data-i="${i}"]`).classList.add(ok ? "right" : "wrong"); break;
+      }
+      case "error": {
+        const x = $(`.fi[data-i="${i}"]`), corr = x.value;
+        ok = st.sel === q.wrong && q.answers.some(a => variants(a).some(v => variants(corr).includes(v)));
+        $$(`.seg-btn[data-i="${i}"]`).forEach((b, k) => { b.disabled = true; if (k === q.wrong) b.classList.add("bad-seg"); else if (k === st.sel) b.classList.add("miss"); });
+        mark(x, ok);
+        if (st.sel != null && st.sel !== q.wrong) extra = `The mistake is in “${esc(segs(q)[q.wrong])}”, not in “${esc(segs(q)[st.sel])}”.`;
+        break;
+      }
+      case "judge": {
+        const x = $(`.ji[data-i="${i}"]`);
+        if (st.sel === 1) ok = q.correct; else if (st.sel === 0) ok = !q.correct && checkSentence(q.answers, x.value);
+        $$(`.jb[data-i="${i}"]`).forEach(b => { b.disabled = true; if ((b.dataset.j === "1") === q.correct) b.classList.add("right"); else if (+b.dataset.j === st.sel) b.classList.add("wrong"); });
+        if (st.sel === 0) mark(x, ok);
+        if (st.sel === 0 && q.correct) extra = "This sentence was already correct.";
+        break;
+      }
+      case "dialogue": {
+        const bf = beforeGaps(q.lines.map(l => l[1]));
+        const res = $$(`.dg[data-i="${i}"]`).map(x => { const k = +x.dataset.k, good = checkText({ text: bf[k], answers: q.answers[k] }, x.value); mark(x, good); return good; });
+        pts = res.filter(Boolean).length; ok = pts === res.length;
+        if (!ok) extra = `${pts} of ${res.length} gaps correct.`;
+        break;
+      }
+      case "halves": {
+        const L = "abcdefghijklmnop";
+        const res = $$(`.hs[data-i="${i}"]`).map(x => { const k = +x.dataset.k, good = !!x.value && st.right[L.indexOf(x.value)] === q.pairs[k][1]; mark(x, good); return good; });
+        pts = res.filter(Boolean).length; ok = pts === res.length;
+        if (!ok) extra = `${pts} of ${res.length} matches correct.`;
+        break;
+      }
+      case "passage": {
+        const bf = beforeGaps(q.paras);
+        const list = $(`.gexp[data-i="${i}"]`);
+        const html = $$(`.pg[data-i="${i}"]`).map(x => {
+          const k = +x.dataset.k, good = checkText({ text: bf[k], answers: q.answers[k] }, x.value); mark(x, good); if (good) pts++;
+          return `<li>${fbHTML(good, `${k + 1} · <b>${esc(q.answers[k].join(" / "))}</b>`, q.expls[k])}</li>`;
+        });
+        list.innerHTML = html.join("");
+        return [pts, max];
+      }
+    }
+    if (!["dialogue", "halves"].includes(q.type)) pts = ok ? 1 : 0;
+    if (fbx) fbx.innerHTML = fbHTML(ok, fill(q, q.answers[0]) + alsoAccepted(q), q.expl, extra);
+    return [pts, max];
+  }
+
+  function checkAll() {
+    const miss = missingCount();
+    if (miss && !cur.warned) { cur.warned = true; toast(`${miss} answer${miss > 1 ? "s are" : " is"} missing. Press Check answers again to check anyway.`); return; }
+    let pts = 0, max = 0;
+    cur.b.items.forEach((q, i) => { const [p, m] = checkItem(q, i); pts += p; max += m; });
+    cur.checked = true; drawFoot();
+    const pct = Math.round(pts / max * 100);
+    $("#btResult").innerHTML = `<div class="card bt-result"><div class="score">${pts}<span> / ${max}</span></div><p><b>${pct >= 80 ? "Excellent work." : pct >= 60 ? "Good progress." : "Keep training."}</b> <span>Read the explanations under each answer, then try again or move on.</span></p>
+      <div class="bar"><span style="width:${pct}%;background:${pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--kincha)" : "var(--shu)"}"></span></div></div>`;
+    $("#btResult").scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   /* ---------------- events ---------------- */
   view().addEventListener("click", e => {
-    const sb = e.target.closest(".seg-btn");
-    if (sb && session && !session.answered) { session.seg = +sb.dataset.seg; $$(".seg-btn").forEach(b => b.classList.toggle("sel", b === sb)); $("#fixRow").hidden = false; const inp = $("#gapIn"); inp.value = ""; inp.placeholder = sb.textContent; inp.focus(); return; }
-    if (session && !session.answered) {
-      const q = session.qs[session.i], st = session.st;
-      const tile = e.target.closest(".tile");
-      if (tile && !tile.disabled) { st.built.push(+tile.dataset.t); tile.disabled = true; drawBuilt(q); return; }
-      const jb = e.target.closest(".judge .opt");
-      if (jb) { if (jb.dataset.j === "1") return answer("R"); $$(".judge .opt").forEach(x => x.classList.toggle("sel", x === jb)); $("#fixRow").hidden = false; const inp = $("#gapIn"); inp.value = q.text; inp.focus(); return; }
-      const hl = e.target.closest(".hl-l"), hr = e.target.closest(".hl-r");
-      if (hl && !hl.classList.contains("done")) { $$(".hl-l").forEach(x => x.classList.toggle("sel", x === hl)); st.left = +hl.dataset.i; return; }
-      if (hr && !hr.classList.contains("done")) {
-        if (st.left == null) { toast("First tap a beginning."); return; }
-        const good = q.right[+hr.dataset.i] === q.pairs[st.left][1];
-        if (good) { $(`.hl-l[data-i="${st.left}"]`).classList.add("done"); $(`.hl-l[data-i="${st.left}"]`).classList.remove("sel"); hr.classList.add("done"); st.left = null; }
-        else { st.err = (st.err || 0) + 1; hr.classList.add("bad"); setTimeout(() => hr.classList.remove("bad"), 500); }
-        if ($$(".hl-l.done").length === q.pairs.length) answer("");
-        return;
-      }
+    if (!cur) return;
+    const t = e.target;
+    const act = t.closest("[data-act]");
+    if (act && act.dataset.act === "check") return checkAll();
+    if (act && act.dataset.act === "retry") { renderBattery(cur.b); window.Dojo.toView(true); return; }
+    if (act && act.dataset.act === "newcustom") { startCustom(); return; }
+    if (cur.checked) return;
+    const ob = t.closest(".ob:not(.jb)");
+    if (ob && !ob.disabled) { const i = +ob.dataset.i; cur.st[i].sel = +ob.dataset.o; $$(`.ob[data-i="${i}"]`).forEach(x => x.classList.toggle("on", x === ob)); return; }
+    const jb = t.closest(".jb");
+    if (jb && !jb.disabled) {
+      const i = +jb.dataset.i, q = cur.b.items[i]; cur.st[i].sel = +jb.dataset.j;
+      $$(`.jb[data-i="${i}"]`).forEach(x => x.classList.toggle("on", x === jb));
+      const fix = $(`.qi[data-i="${i}"] .fix`); fix.hidden = jb.dataset.j === "1";
+      const x = $(`.ji[data-i="${i}"]`); if (!fix.hidden && !x.value) { x.value = q.text; x.focus(); }
+      return;
     }
-    const b = e.target.closest("[data-act], .opt"); if (!b) return;
-    if (b.classList.contains("opt")) { if (b.closest(".judge")) return; return answer(null, +b.dataset.i); }
-    const a = b.dataset.act;
-    if (a === "check") { const q = session.qs[session.i]; if (q.type === "error" && session.seg === undefined) { toast("First tap the part that contains the mistake."); return; } if (q.type === "order" && !session.st.built.length) { toast("Tap the words to build the sentence."); return; } answer($("#gapIn") ? $("#gapIn").value : ""); }
-    else if (a === "undo" || a === "clear") { const st = session.st, q = session.qs[session.i]; const back = a === "undo" ? [st.built.pop()] : st.built.splice(0); back.forEach(i => { if (i != null) $(`.tile[data-t="${i}"]`).disabled = false; }); drawBuilt(q); }
-    else if (a === "skip") { const q = session.qs[session.i]; answer(q.type === "judge" ? "" : ""); }
-    else if (a === "next") next();
-    else if (a === "quit") dialog({ title: "Leave this session?", text: "Your answers in this session will not be counted.", ok: "Leave", cancel: "Keep going" }).then(y => { if (y) route(); });
-    else if (a === "repeat") startSession(Object.assign({}, session, { qs: session.redo ? session.redo() : shuffle(session.qs) }));
-    else if (a === "retry") { const w = session.results.filter(r => !r.ok).map(r => QUESTIONS.find(q => q.id === r.q.id)); startSession({ title: "Your mistakes", qs: shuffle(w), back: session.back }); }
-    else if (a === "review") { const make = () => shuffle(missed()).slice(0, 20); startSession({ title: "Review", qs: make(), back: "#dojo", redo: make }); }
-    else if (a === "reset") dialog({ title: "Reset your results?", text: "This deletes your saved answers for Verb Tenses on this device.", ok: "Reset", danger: true }).then(y => { if (y) { Store.reset(); renderDojo(); toast("Results reset"); } });
+    const sb = t.closest(".seg-btn");
+    if (sb && !sb.disabled) {
+      const i = +sb.dataset.i; cur.st[i].sel = +sb.dataset.seg;
+      $$(`.seg-btn[data-i="${i}"]`).forEach(x => x.classList.toggle("sel", x === sb));
+      $(`.qi[data-i="${i}"] .fix`).hidden = false; const x = $(`.fi[data-i="${i}"]`); x.placeholder = sb.textContent; x.focus(); return;
+    }
+    const tile = t.closest(".tile");
+    if (tile && !tile.disabled) { const i = +tile.dataset.i; cur.st[i].built.push(+tile.dataset.t); tile.disabled = true; drawBuilt(i); return; }
+    if (act && (act.dataset.act === "undo" || act.dataset.act === "clear")) {
+      const i = +act.dataset.i, st = cur.st[i];
+      const back = act.dataset.act === "undo" ? st.built.splice(-1) : st.built.splice(0);
+      back.forEach(k => { const b = $(`.tile[data-i="${i}"][data-t="${k}"]`); if (b) b.disabled = false; });
+      drawBuilt(i);
+    }
   });
-  document.addEventListener("keydown", e => {
-    if (!session || document.querySelector(".modal")) return;
-    const q = session.qs[session.i];
-    if (!session.answered && (q.type === "mc" || q.type === "tense") && /^[1-4]$/.test(e.key) && !e.target.matches("input")) answer(null, +e.key - 1);
-    else if (session.answered && e.key === "Enter" && !e.target.matches("input,button,a")) { e.preventDefault(); next(); }
+  // Enter moves to the next empty field
+  view().addEventListener("keydown", e => {
+    if (e.key !== "Enter" || !e.target.matches("#btBody input") || !cur || cur.checked) return;
+    e.preventDefault();
+    const ins = $$("#btBody input:not([disabled])").filter(x => !x.closest("[hidden]"));
+    const i = ins.indexOf(e.target); if (ins[i + 1]) ins[i + 1].focus(); else $('[data-act="check"]').focus();
   });
 
-  Store.load(); route();
-  window.__tenseDojo = { checkText, checkSentence, variants, QUESTIONS, TOPICS, segs, plainError, current: () => session && session.qs[session.i] }; // used by automated tests
+  route();
+  // used by automated tests
+  window.__tenseDojo = { checkText, checkSentence, variants, QUESTIONS, TOPICS, BATS, TESTS, segs, plainError, weight, get current() { return cur; } };
 })();

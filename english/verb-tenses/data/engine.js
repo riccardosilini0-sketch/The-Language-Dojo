@@ -25,6 +25,8 @@
      ["j", belt, "I am knowing him.", false, ["I know him."], "Explanation"]                                right or wrong? (true = already correct; corrections if wrong)
      ["d", belt, "Context", [["Speaker", "Line with ___ (verb)"], …], [["gap 1"], ["gap 2"], …], "Explanation"]  dialogue / short text with several gaps
      ["h", belt, "Instruction", [["Beginning", "ending"], …], "Explanation"]                                match the halves
+     ["p", belt, "Title", ["Paragraph with ___ (verb) …", …], [["gap 1"], ["gap 2"], …], ["why gap 1", "why gap 2", …], "Intro?"]
+                                                                                                           text completion (a long text with many gaps)
    ===================================================================== */
 window.TenseDojo = {
   topics: [],
@@ -44,6 +46,7 @@ window.TenseDojo = {
     "pps-vs-ppc": 3, "pst-vs-ppf": 3, "pcont-vs-ppf": 3, "will-vs-fcont": 3,
     "ppf-vs-ppfc": 4, "will-vs-fperf": 4, "fperf-vs-fperfc": 5,
     "all-present": 2, "all-past": 3, "all-future": 3, "present-past-mixed": 2,
+    "past-narrative": 2, "future-forms": 2, "mixed-texts": 1,
     "challenge-intermediate": 3, "challenge-upper": 4, "challenge-advanced": 5
   },
   /* Highest CEFR level for each tense (beyond it the tense has nothing new to teach). */
@@ -68,6 +71,7 @@ window.TenseDojo = {
       case "o": return Object.assign(q, { type: "order", text: r[2], answers: [r[2], ...(r[3] || [])], expl: r[4] });
       case "j": return Object.assign(q, { type: "judge", text: r[2], correct: !!r[3], answers: r[4] || [], expl: r[5] });
       case "d": return Object.assign(q, { type: "dialogue", context: r[2], lines: r[3], answers: r[4], expl: r[5] });
+      case "p": return Object.assign(q, { type: "passage", title: r[2], paras: r[3], answers: r[4], expls: r[5], intro: r[6] || "", expl: "" });
       case "h": return Object.assign(q, { type: "halves", instr: r[2], pairs: r[3], answers: [], expl: r[4] });
     }
     throw new Error("Unknown exercise format in " + topicId + ": " + r[0]);
