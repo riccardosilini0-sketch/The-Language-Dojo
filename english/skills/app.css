@@ -192,3 +192,11 @@
 /* on wide screens the video stays in view while you answer (a card under the header, nothing floats over text) */
 @media (min-width:981px){ .split.lis > .pane:first-child{position:sticky;top:96px} }
 .tk-context{margin:-6px 0 18px;font-size:16px;line-height:1.6;color:var(--sumi-2);font-style:italic}
+
+/* Reading: the text column is as tall as the questions column and the text panel follows
+   the reader down the page, so the text stays in view while answering every question */
+@media (min-width:981px){
+  .split:not(.lis){align-items:stretch}
+  .split:not(.lis) > .pane:first-child{display:flex;flex-direction:column}
+  .split:not(.lis) > .pane:first-child > .passage:not(.cloze){position:sticky;top:96px;max-height:calc(100vh - 116px)}
+}
