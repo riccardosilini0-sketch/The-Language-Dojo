@@ -44,6 +44,15 @@ english/irregular-verbs/        First learning app
   audio-data.js                 Recorded British English pronunciation for every form
 ```
 
+## Grammar sections (Modal Verbs, The Passive Voice)
+
+Both sections use the shared engine `assets/js/grammar-lab.js` and `assets/css/grammar-lab.css`; each section has only its colours (`app.css`) and its data:
+
+- `data/lessons.js`: configuration and lessons (form and structure, main uses with examples and Italian translations, common mistakes, comparisons). The format is described at the top of `english/modal-verbs/data/lessons.js`.
+- `data/practice-*.js`: batteries of 10–15 questions or a text with gaps (types: mc, gap, correct, transform, rewrite, text, halves). Each battery belongs to a lesson (or to `review`) and to a belt. Titles are numbered automatically per topic.
+
+To add a new grammar section, copy one of the two folders, change `index.html`, `app.css` and the data, and add the section to `assets/js/catalog.js`.
+
 ## Exercise headers
 
 Every exercise in every section is introduced by the same three levels:
