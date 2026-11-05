@@ -64,6 +64,15 @@ Every exercise in every section is introduced by the same three levels:
 
 The type names and the default instructions are defined once, in `assets/js/exercises.js` (`window.DojoEx`), and every section uses them. Add new types there, never inside a single section.
 
+## PDF Worksheet Builder
+
+`worksheet/index.html` (linked as **Create a PDF Worksheet** in the header of every exercise section) builds printable A4 worksheets entirely in the browser: no server, no external service.
+
+- **Architecture.** `assets/js/worksheet/adapters.js` has one entry per section (`SECTIONS`): the section page is loaded in a hidden frame with `?ws=1`, its data are read through the hooks the section already exposes (`__tenseDojo`, `__depprep`, `__grammar`, `__skills`, `__phon`, `__jpDojo`, `VERB_DATA`) and converted into one normalized exercise format (`{section, topic, belt, type, title, instr, parts}`). New exercises added to the data files therefore appear in the builder automatically; a new *section* only needs a new adapter entry (plus its id in `WS_SECTIONS` in `site.js` for the entry link).
+- **PDF engine.** `assets/js/worksheet/pdf.js` lays out the normalized exercises (headers, page numbers, page breaks that never split a question) and writes the PDF with the vendored `pdf-lib` (`assets/js/vendor`, MIT). Fonts are embedded subsets in `assets/fonts/pdf` (Inter, Caladea, DejaVu Sans for IPA, IPA P Gothic for Japanese; licences in `licenses/`), rebuilt with `python3 tools/pdf-fonts/build.py` when new characters are added to the content. The Japanese font is downloaded only when the worksheet contains Japanese.
+- **Versions.** Student worksheet (no solutions) or Teacher's version (answer key on separate pages, taken only from the solutions stored in the data, with explanations when available). Listening tasks print the questions and a reference to the audio: no transcripts are added. Writing tasks print the prompt with lined space.
+- **Phonetics** practice is generated (as on the site): each PDF contains a new random selection of words and options.
+
 ## Adding content
 - **News, a new resource or a status change:** edit `assets/js/catalog.js`. Homepage, footer and language pages update automatically.
 - **A new language:** add it to `languages` in the catalog, copy `english/index.html` into a new folder (e.g. `spanish/index.html`) and change `data-lang="english"` to the new id.

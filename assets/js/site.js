@@ -20,9 +20,13 @@
   const LANG_KEY = "language-dojo-lang", LANGS = ["en", "it"];
   let LANG = "en";
   try {
-    const q = new URLSearchParams(location.search).get("lang");
-    if (LANGS.includes(q)) localStorage.setItem(LANG_KEY, q);
-    if (LANGS.includes(localStorage.getItem(LANG_KEY))) LANG = localStorage.getItem(LANG_KEY);
+    const qs = new URLSearchParams(location.search), q = qs.get("lang");
+    // ?ws=1: the page is read by the PDF Worksheet Builder (content in English, preference untouched)
+    if (qs.get("ws")) LANG = "en";
+    else {
+      if (LANGS.includes(q)) localStorage.setItem(LANG_KEY, q);
+      if (LANGS.includes(localStorage.getItem(LANG_KEY))) LANG = localStorage.getItem(LANG_KEY);
+    }
   } catch (e) {}
   const DICT = LANG !== "en" && window.DOJO_I18N ? window.DOJO_I18N[LANG] : null;
   const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
@@ -178,6 +182,17 @@
   /* ---------- resource badge: the brush mark in white on the resource colour ---------- */
   const badge = document.getElementById("appBadge");
   if (badge) badge.innerHTML = mark("badge-mark");
+
+  /* ---------- PDF Worksheet Builder: a discreet entry point in every section that supports it ---------- */
+  const WS_SECTIONS = ["verb-tenses", "dependent-prepositions", "modal-verbs", "passive-voice", "irregular-verbs", "skills", "phonetics", "japanese-dojo"];
+  const here = C.resources.find(r => r.url && location.pathname.endsWith(r.url.replace(/index\.html$/, "")) || location.pathname.endsWith(r.url));
+  const titleRow = document.querySelector(".app-title");
+  if (here && titleRow && WS_SECTIONS.includes(here.id) && !new URLSearchParams(location.search).get("ws")) {
+    const a = document.createElement("a");
+    a.className = "ws-link"; a.href = url("worksheet/index.html?from=" + here.id);
+    a.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M12 18v-6M9 15l3 3 3-3"/></svg><span>Create a PDF Worksheet</span>`;
+    titleRow.appendChild(a);
+  }
 
   /* ---------- toast & dialog ---------- */
   function toast(msg) {

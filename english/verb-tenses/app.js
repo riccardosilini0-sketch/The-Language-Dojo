@@ -581,5 +581,5 @@
 
   route();
   // used by automated tests
-  window.__tenseDojo = { checkText, checkSentence, variants, QUESTIONS, TOPICS, BATS, TESTS, segs, plainError, weight, get current() { return cur; } };
+  window.__tenseDojo = { instruction, typeLabel, byId, areaKey, AREAS, FAM_LABELS: null, checkText, checkSentence, variants, QUESTIONS, TOPICS, BATS, TESTS, segs, plainError, weight, get current() { return cur; } };
 })();

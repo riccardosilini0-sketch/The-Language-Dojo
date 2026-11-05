@@ -396,5 +396,5 @@
   });
 
   route();
-  window.__skills = { variants, accepts, TASKS }; // used by automated tests
+  window.__skills = { variants, accepts, TASKS, typeLabel, instruction }; // used by automated tests
 })();

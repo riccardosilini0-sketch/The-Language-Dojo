@@ -597,5 +597,5 @@
   });
 
   Store.load(); route();
-  window.__phon = { P, SOUNDS, LESSONS, poolFor, unitPool, generated, accepts, normW, current: () => session && session.qs[session.i] }; // used by automated tests
+  window.__phon = { P, SOUNDS, LESSONS, UNITS: typeof UNITS !== "undefined" ? UNITS : null, poolFor, unitPool, generated, accepts, normW, current: () => session && session.qs[session.i] }; // used by automated tests
 })();

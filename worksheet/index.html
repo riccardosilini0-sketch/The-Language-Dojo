@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF Worksheet Builder · Language Dojo</title>
+<meta name="description" content="Create printable PDF worksheets with exercises from every section of Language Dojo: choose the exercises, put them in order, add a title and download a student worksheet or a teacher's version with the answer key.">
+<meta name="theme-color" content="#f6f1e7">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Shippori+Mincho:wght@500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/dojo.css">
+<link rel="stylesheet" href="../assets/css/resource.css">
+<link rel="stylesheet" href="builder.css">
+</head>
+<body data-root="../" data-page="worksheet">
+<header id="site-header"></header>
+<main>
+  <section class="app-hero">
+    <div class="wrap">
+      <nav class="crumbs" aria-label="Breadcrumb"><a href="../index.html">Home</a><span aria-hidden="true">/</span><span>PDF Worksheet Builder</span></nav>
+      <div class="app-title">
+        <span class="app-badge" id="appBadge" aria-hidden="true"></span>
+        <div><h1>PDF Worksheet Builder</h1><p>Choose exercises from any section, put them in order and download a printable worksheet.</p></div>
+      </div>
+    </div>
+    <nav class="tabs ws-steps" aria-label="Steps"><div class="wrap" id="steps"></div></nav>
+  </section>
+  <div class="wrap"><section class="view" id="view" aria-live="polite"></section></div>
+  <div id="loader" aria-hidden="true"></div>
+</main>
+<footer id="site-footer"></footer>
+<script src="../assets/js/brand.js"></script>
+<script src="../assets/js/catalog.js"></script>
+<script src="../assets/js/i18n.js"></script>
+<script src="../assets/js/site.js"></script>
+<script src="../assets/js/belts.js"></script>
+<script src="../assets/js/exercises.js"></script>
+<script src="../assets/js/vendor/pdf-lib.min.js"></script>
+<script src="../assets/js/worksheet/pdf.js"></script>
+<script src="../assets/js/worksheet/adapters.js"></script>
+<script src="../assets/js/worksheet/builder.js"></script>
+</body>
+</html>
