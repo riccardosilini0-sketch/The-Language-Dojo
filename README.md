@@ -40,9 +40,17 @@ assets/css/resource.css         Shared shell for learning resources
 assets/js/belts.js              The belt system shared by all resources
 english/irregular-verbs/        First learning app
   index.html, app.css, app.js   The app (overview, verb list, flashcards, practice, progress)
-  verbs-data.js                 The verb list (104 verbs from the teacher's document)
+  verbs-data.js                 The verb list: 179 verbs in six belts (White → Black), each with two example sentences
   audio-data.js                 Recorded British English pronunciation for every form
 ```
+
+## Irregular Verbs — belts and examples
+
+Each row of `english/irregular-verbs/verbs-data.js` is `[base, past simple, past participle, Italian, {b, ex, ipa?, say?}]`: `b` is the belt (1 White … 6 Black: from the most frequent verbs to the rarest), `ex` holds two example sentences with their Italian translation (the first with the past simple, the second with the past participle; the verb form is in `[square brackets]`). Two accepted forms are written `dreamt / dreamed`.
+
+- The level selector (List, Flashcards, Practice) works **up to a belt** (cumulative, the default) or **only one belt**; the choice is kept in the address (`?belt=2`, `?belt=4&only=1`), so a teacher can share a link to one group.
+- The example sentences appear in the list, on the back of the flashcards, in the feedback and in the exercise *Irregular Verbs in context*; the PDF Worksheet Builder makes forms, translation and in-context worksheets per belt.
+- New verbs get their recordings from the Audio workflow when `verbs-data.js` changes.
 
 ## Grammar sections (Modal Verbs, The Passive Voice)
 

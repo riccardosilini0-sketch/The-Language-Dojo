@@ -50,7 +50,7 @@ const vctx = { window: {} }; vm.createContext(vctx);
 vm.runInContext(read("english/irregular-verbs/verbs-data.js"), vctx);
 const sayKey = (v, f) => (v.say && v.say[f]) || v[f].replace(/\s*[\/,]\s*/g, " or ");
 vctx.window.VERB_DATA.forEach(r => {
-  const v = { base: r[0], past: r[1], pp: r[2], say: r[5] || {} };
+  const v = { base: r[0], past: r[1], pp: r[2], say: (r[4] && r[4].say) || {} };
   ["base", "past", "pp"].forEach(f => add("verbs", sayKey(v, f)));
 });
 

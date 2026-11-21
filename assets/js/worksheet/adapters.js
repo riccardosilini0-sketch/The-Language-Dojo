@@ -204,16 +204,29 @@
 
   /* ---------------- Irregular Verbs ---------------- */
   function irregular(w) {
-    const V = w.VERB_DATA, EX = w.DojoEx;
-    const out = [], groups = chunk(V, 15);
-    groups.forEach((g, i) => {
-      const range = `${g[0][0]} – ${g[g.length - 1][0]}`;
-      // which form is given rotates through the verbs, so every form is practised
-      const rows = g.map((v, k) => { const given = k % 3; return [given === 0 ? v[0] : null, given === 1 ? v[1] : null, given === 2 ? v[2] : null, v[3]]; });
-      out.push({ uid: `iv:forms:${i}`, section: "irregular-verbs", sectionTitle: "Irregular Verbs", area: "English · Verbs", group: "Verb forms", topic: "Irregular Verbs", belt: 0, type: EX.TYPE.gaps, title: `Irregular Verbs – ${range}`,
-        instr: "Complete the table: write the missing forms of each verb.", parts: [{ k: "table", head: ["Base form", "Past simple", "Past participle", "Italian"], widths: [1, 1, 1, 1.2], rows, keyRows: g.map(v => [v[0], v[1], v[2]]) }] });
-      out.push({ uid: `iv:ita:${i}`, section: "irregular-verbs", sectionTitle: "Irregular Verbs", area: "English · Verbs", group: "Translation", topic: "Irregular Verbs", belt: 0, type: EX.TYPE.translation, title: `Irregular Verbs: translation – ${range}`,
-        instr: "Translate each Italian verb into English and write its three forms.", parts: [{ k: "table", head: ["Italian", "Base form", "Past simple", "Past participle"], widths: [1.3, 1, 1, 1], rows: seeded(g, "ita" + i).map(v => [v[3], null, null, null]), keyRows: seeded(g, "ita" + i).map(v => [v[0], v[1], v[2]]) }] });
+    const V = w.VERB_DATA, EX = w.DojoEx, B = w.DojoBelts, out = [];
+    const belt = r => (r[4] && r[4].b) || 1;
+    const base = { section: "irregular-verbs", sectionTitle: "Irregular Verbs", area: "English · Verbs", topic: "Irregular Verbs" };
+    [1, 2, 3, 4, 5, 6].forEach(b => {
+      const L = V.filter(r => belt(r) === b); if (!L.length) return;
+      const bn = B.get(b).name, parts = chunk(L, Math.ceil(L.length / Math.ceil(L.length / 15)));
+      parts.forEach((g, i) => {
+        const tag = parts.length > 1 ? ` (${i + 1})` : "", meta = Object.assign({ belt: b, beltLabel: beltName(B, b) }, base);
+        // which form is given rotates through the verbs, so every form is practised
+        const rows = g.map((v, k) => { const given = k % 3; return [given === 0 ? v[0] : null, given === 1 ? v[1] : null, given === 2 ? v[2] : null, v[3]]; });
+        out.push(Object.assign({ uid: `iv:forms:${b}:${i}`, group: "Verb forms", type: EX.TYPE.gaps, title: `Irregular Verbs – ${bn}${tag}`,
+          instr: "Complete the table: write the missing forms of each verb.", parts: [{ k: "table", head: ["Base form", "Past simple", "Past participle", "Italian"], widths: [1, 1, 1, 1.2], rows, keyRows: g.map(v => [v[0], v[1], v[2]]) }] }, meta));
+        const sh = seeded(g, "ita" + b + i);
+        out.push(Object.assign({ uid: `iv:ita:${b}:${i}`, group: "Translation", type: EX.TYPE.translation, title: `Irregular Verbs: translation – ${bn}${tag}`,
+          instr: "Translate each Italian verb into English and write its three forms.", parts: [{ k: "table", head: ["Italian", "Base form", "Past simple", "Past participle"], widths: [1.3, 1, 1, 1], rows: sh.map(v => [v[3], null, null, null]), keyRows: sh.map(v => [v[0], v[1], v[2]]) }] }, meta));
+        // verbs in context: the example sentences, alternating past simple and past participle
+        const items = seeded(g.filter(v => v[4] && v[4].ex && v[4].ex.length), "ctx" + b + i).map((v, k) => {
+          const [en] = v[4].ex[k % v[4].ex.length], form = k % v[4].ex.length ? v[2] : v[1];
+          return { t: "gap", text: en.replace(/\[[^\]]+\]/, `___ (${v[0]})`), ans: [form.split(" / ")[0]], key: form };
+        });
+        if (items.length) out.push(Object.assign({ uid: `iv:ctx:${b}:${i}`, group: "Verbs in context", type: EX.TYPE.gaps, title: `Irregular Verbs in context – ${bn}${tag}`,
+          instr: "Complete each sentence with the past simple or the past participle of the verb in brackets.", parts: [{ k: "q", items }] }, meta));
+      });
     });
     return out;
   }
@@ -256,7 +269,7 @@
     { id: "dependent-prepositions", title: "Dependent Prepositions", area: "Grammar", url: "english/dependent-prepositions/index.html", ready: w => w.__depprep, extract: depPrep },
     { id: "modal-verbs", title: "Modal Verbs", area: "Grammar", url: "english/modal-verbs/index.html", ready: w => w.__grammar, extract: grammar("modal-verbs", "Modal Verbs") },
     { id: "passive-voice", title: "The Passive Voice", area: "Grammar", url: "english/passive-voice/index.html", ready: w => w.__grammar, extract: grammar("passive-voice", "The Passive Voice") },
-    { id: "irregular-verbs", title: "Irregular Verbs", area: "Verbs", url: "english/irregular-verbs/index.html", ready: w => w.VERB_DATA && w.DojoEx, extract: irregular },
+    { id: "irregular-verbs", title: "Irregular Verbs", area: "Verbs", url: "english/irregular-verbs/index.html", ready: w => w.VERB_DATA && w.DojoEx && w.DojoBelts, extract: irregular },
     { id: "skills", title: "Skill Development", area: "Skills", url: "english/skills/index.html", ready: w => w.__skills, extract: skills },
     { id: "phonetics", title: "Sounds of English", area: "Pronunciation", url: "english/phonetics/index.html", ready: w => w.__phon, extract: phonetics },
     { id: "japanese-dojo", title: "Writing System", area: "Japanese", url: "japanese/writing-system/index.html", ready: w => w.__jpDojo, extract: japanese }

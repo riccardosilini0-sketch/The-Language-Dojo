@@ -20,11 +20,50 @@
   const AUDIO = window.VERB_AUDIO || {};
 
   const VERBS = (window.VERB_DATA || []).map((r, i) => {
-    const v = { id: i, base: r[0], past: r[1], pp: r[2], it: r[3], ipa: r[4] || null, say: r[5] || {} };
+    const x = r[4] || {};
+    const v = { id: i, base: r[0], past: r[1], pp: r[2], it: r[3], belt: x.b || 1, ex: x.ex || [], ipa: x.ipa || null, say: x.say || {} };
     v.alt = { base: alts(v.base), past: alts(v.past), pp: alts(v.pp) };
     v.meanings = r[3].split(",").map(norm);
     return v;
   });
+
+  /* ---------- levels: belts from White (1) to Black (6) ---------- */
+  const BL = window.DojoBelts, BELTS = [1, 2, 3, 4, 5, 6];
+  const LV = { b: 0, only: false };
+  (() => { const q = new URLSearchParams(location.search), b = +q.get("belt"); if (BELTS.includes(b)) { LV.b = b; LV.only = q.get("only") === "1"; } })();
+  const inLevel = v => !LV.b || (LV.only ? v.belt === LV.b : v.belt <= LV.b);
+  const POOL = () => VERBS.filter(inLevel);
+  const byBelt = b => VERBS.filter(v => v.belt === b);
+  const levelName = () => !LV.b ? "All verbs" : LV.only || LV.b === 1 ? BL.get(LV.b).name : `White to ${BL.get(LV.b).short} belt`;
+  function setLevel(b, only) {
+    LV.b = b; LV.only = !!only && b > 0;
+    const q = new URLSearchParams(location.search); q.delete("belt"); q.delete("only");
+    if (LV.b) { q.set("belt", LV.b); if (LV.only) q.set("only", "1"); }
+    const qs = q.toString(); history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+    fc.order = []; fc.done = false;
+    if (current && views[current]) views[current].show();
+  }
+  const bdot = b => `<i class="bdot" style="background:${BL.get(b).color}" title="${BL.get(b).name}"></i>`;
+  function levelBar() {
+    const n = POOL().length;
+    return `<div class="lvbar card">
+      <div class="lv-h"><b>Level</b><span>Study the verbs belt by belt: each belt adds new verbs.</span></div>
+      <div class="lv-belts" role="group" aria-label="Level">
+        <button type="button" data-lv="0" class="${!LV.b ? "on" : ""}">All verbs <small>${VERBS.length}</small></button>
+        ${BELTS.map(b => `<button type="button" data-lv="${b}" class="${LV.b === b ? "on" : ""}">${bdot(b)}${BL.get(b).short} <small>${byBelt(b).length}</small></button>`).join("")}
+      </div>
+      ${LV.b > 1 ? `<div class="lv-mode seg" role="group" aria-label="Which verbs"><button type="button" data-lvonly="0" class="${!LV.only ? "on" : ""}">Up to this belt</button><button type="button" data-lvonly="1" class="${LV.only ? "on" : ""}">Only this belt</button></div>` : ""}
+      <p class="lv-note"><b>${levelName()}</b> · ${n} verb${n === 1 ? "" : "s"}${LV.b > 1 && !LV.only ? ` (${BELTS.filter(b => b <= LV.b).map(b => BL.get(b).short).join(" + ")})` : ""}</p>
+    </div>`;
+  }
+  document.addEventListener("click", e => {
+    const a = e.target.closest("[data-lv]"), o = e.target.closest("[data-lvonly]");
+    if (a) { e.preventDefault(); setLevel(+a.dataset.lv, a.dataset.only !== undefined ? a.dataset.only === "1" : LV.only); if (a.dataset.goto) go(a.dataset.goto); }
+    else if (o) { e.preventDefault(); setLevel(LV.b, o.dataset.lvonly === "1"); }
+  });
+  // example sentences: the verb form is written in [square brackets]
+  const exHTML = (en, it) => `<span class="exs-en">${esc(en).replace(/\[([^\]]+)\]/g, "<b>$1</b>")}</span>${it ? `<span class="exs-it">${esc(it)}</span>` : ""}`;
+  const examples = (v, cls = "") => v.ex.length ? `<ul class="exs ${cls}">${v.ex.map(([en, it]) => `<li>${exHTML(en, it)}</li>`).join("")}</ul>` : "";
 
   /* ---------- icons ---------- */
   const I = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
@@ -129,7 +168,7 @@
       const n = learnt().length, t = tricky().length;
       const day = Math.floor((Date.now() - new Date().getTimezoneOffset() * 60000) / 86400000);
       const v = VERBS[(day * 37) % VERBS.length];
-      const steps = [["list", ICON.list, "Verb Lists", `All ${VERBS.length} verbs with audio`], ["cards", ICON.cards, "Flashcards", "Flip, check, repeat"], ["practice", ICON.practice, "Practice and Progress", "Five exercise types"]];
+      const steps = [["list", ICON.list, "Verb Lists", `All ${VERBS.length} verbs with audio`], ["cards", ICON.cards, "Flashcards", "Flip, check, repeat"], ["practice", ICON.practice, "Practice and Progress", "Six exercise types"]];
       $("#view-overview").innerHTML = `
         <div class="ov">
           <div class="card steps">${steps.map(s => `<a class="step" href="#${s[0]}"><span class="num">${s[1]}</span><div><h3>${s[2]}</h3><p>${s[3]}</p></div><span class="go">${ICON.arrow}</span></a>`).join("")}</div>
@@ -139,25 +178,32 @@
               ${t ? `<p>${t} to review</p>` : ""}
               <div class="bar"><span style="width:${n / VERBS.length * 100}%;background:var(--ok)"></span><span style="width:${t / VERBS.length * 100}%;background:var(--kincha)"></span></div>
             </a>
-            <div class="card votd"><small>Verb of the day</small><div class="forms">${esc(v.base)} <i>·</i> ${esc(v.past)} <i>·</i> ${esc(v.pp)} ${spkAll(v)}</div><div class="m">${esc(v.it)}</div></div>
-        </div>`;
+            <div class="card votd"><small>Verb of the day</small><div class="forms">${esc(v.base)} <i>·</i> ${esc(v.past)} <i>·</i> ${esc(v.pp)} ${spkAll(v)}</div><div class="m">${esc(v.it)}</div>${v.ex[0] ? `<div class="votd-ex">${exHTML(v.ex[0][0])}</div>` : ""}</div>
+        </div>
+        <div class="vhead" style="margin-top:40px"><h2>Study belt by belt</h2><p>The ${VERBS.length} verbs are divided into six belts, from the most common verbs (White) to the rarest (Black). Start with the White belt, then add one belt at a time.</p></div>
+        <div class="belt-grid">${BELTS.map(b => { const L = byBelt(b), k = L.filter(x => statusOf(x) === "known").length, cum = VERBS.filter(x => x.belt <= b).length;
+          return `<button type="button" class="card belt-card" data-lv="${b}" data-only="0" data-goto="list" style="--bc:${BL.get(b).color}">
+            <span class="bc-top">${bdot(b)}<b>${BL.get(b).name}</b><span class="bc-n">${L.length} verbs</span></span>
+            <span class="bc-ex">${L.slice().sort((x, y) => x.base.localeCompare(y.base)).slice(0, 6).map(x => esc(x.base)).join(", ")}…</span>
+            <span class="bc-f">${b > 1 ? `With the previous belts: ${cum} verbs` : "The starting point"}${k ? ` · ${k} learnt` : ""}</span></button>`; }).join("")}</div>`;
     }
   };
 
   /* ================= VERB LIST ================= */
-  const vl = { q: "", filter: "all", key: "base", dir: 1 };
+  const vl = { q: "", filter: "all", key: "base", dir: 1, ex: false, open: new Set() };
   views.list = {
     init() {
       const root = $("#view-list");
       root.innerHTML = `
         <div class="vhead"><h2>Verb Lists</h2></div>
+        <div id="lvList"></div>
         <div class="tools">
           <label class="search">${ICON.search}<input id="vq" type="search" placeholder="Search in English or Italian" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search verbs"></label>
           <div class="seg" id="vf" role="group" aria-label="Show"></div>
           <label class="sort-m"><span class="sr-only">Sort</span><select id="vsort" class="sortsel" aria-label="Sort verbs">
-            <option value="base:1">Base form A–Z</option><option value="base:-1">Base form Z–A</option><option value="past:1">Past simple A–Z</option><option value="pp:1">Past participle A–Z</option><option value="it:1">Italian A–Z</option></select></label>
+            <option value="belt:1">Level: White → Black</option><option value="base:1">Base form A–Z</option><option value="base:-1">Base form Z–A</option><option value="past:1">Past simple A–Z</option><option value="pp:1">Past participle A–Z</option><option value="it:1">Italian A–Z</option></select></label>
         </div>
-        <div class="count" id="vcount"></div>
+        <div class="count-row"><div class="count" id="vcount"></div><label class="exs-tg"><input type="checkbox" id="vex"> Show the example sentences</label></div>
         <div class="card" style="overflow:hidden"><table class="vtable"><thead><tr>
           <th data-k="base"><button type="button">Base form <span class="ar"></span></button></th>
           <th data-k="past"><button type="button">Past simple <span class="ar"></span></button></th>
@@ -167,20 +213,25 @@
       $("#vq").addEventListener("input", e => { vl.q = e.target.value; this.render(); });
       $("#vsort").addEventListener("change", e => { const [k, d] = e.target.value.split(":"); vl.key = k; vl.dir = +d; this.render(); });
       $("#vf").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { vl.filter = b.dataset.f; this.render(); } });
+      $("#vex").addEventListener("change", e => { vl.ex = e.target.checked; vl.open = new Set(); this.render(); });
+      $("#vbody").addEventListener("click", e => { const b = e.target.closest("[data-exv]"); if (!b) return; const id = +b.dataset.exv; vl.open.has(id) ? vl.open.delete(id) : vl.open.add(id); this.render(); });
       $$(".vtable th button", root).forEach(b => b.addEventListener("click", () => { const k = b.parentElement.dataset.k; if (vl.key === k) vl.dir *= -1; else { vl.key = k; vl.dir = 1; } this.render(); }));
     },
     show() { this.render(); },
     render() {
+      $("#lvList").innerHTML = levelBar();
       $("#vf").innerHTML = [["all", "All"], ["known", `Learnt (${learnt().length})`], ["practise", `To review (${tricky().length})`]].map(([k, l]) => `<button type="button" data-f="${k}" class="${vl.filter === k ? "on" : ""}">${l}</button>`).join("");
       const q = deaccent(norm(vl.q));
-      const val = (v, k) => k === "it" ? v.it : v.alt[k][0];
-      const rows = VERBS.filter(v => (vl.filter === "all" || statusOf(v) === vl.filter) && (!q || deaccent(norm([v.base, v.past, v.pp, v.it].join(" "))).includes(q)))
+      const val = (v, k) => k === "it" ? v.it : k === "belt" ? String(v.belt) : v.alt[k][0];
+      const pool = POOL();
+      const rows = pool.filter(v => (vl.filter === "all" || statusOf(v) === vl.filter) && (!q || deaccent(norm([v.base, v.past, v.pp, v.it].join(" "))).includes(q)))
         .sort((a, b) => val(a, vl.key).localeCompare(val(b, vl.key), "en") * vl.dir || a.base.localeCompare(b.base));
       $$(".vtable th").forEach(th => { const on = th.dataset.k === vl.key; th.querySelector(".ar").textContent = on ? (vl.dir === 1 ? "A–Z" : "Z–A") : ""; th.setAttribute("aria-sort", on ? (vl.dir === 1 ? "ascending" : "descending") : "none"); });
       const vs = $("#vsort"); if (vs) { const v = `${vl.key}:${vl.dir}`; if ([...vs.options].some(o => o.value === v)) vs.value = v; }
-      $("#vcount").textContent = rows.length === VERBS.length ? `${VERBS.length} verbs` : `${rows.length} of ${VERBS.length} verbs`;
-      const cell = f => v => `<td class="c-${f}" data-label="${LABEL[f]}"><div class="vcell">${f === "base" ? `<span class="sdot ${statusOf(v)}" title="${statusOf(v) === "known" ? "Learnt" : statusOf(v) === "practise" ? "To review" : ""}"></span>` : ""}<span class="w">${esc(v[f])}${v.ipa && v.ipa[f] ? `<span class="ipa">${esc(v.ipa[f])}</span>` : ""}</span>${spkForm(v, f, "sm")}</div></td>`;
-      $("#vbody").innerHTML = rows.length ? rows.map(v => `<tr>${cell("base")(v)}${cell("past")(v)}${cell("pp")(v)}<td class="c-it" data-label="Italian">${esc(v.it)}</td></tr>`).join("")
+      $("#vcount").textContent = rows.length === pool.length ? `${pool.length} verbs` : `${rows.length} of ${pool.length} verbs`;
+      const cell = f => v => `<td class="c-${f}" data-label="${LABEL[f]}"><div class="vcell">${f === "base" ? `<span class="sdot ${statusOf(v)}" title="${statusOf(v) === "known" ? "Learnt" : statusOf(v) === "practise" ? "To review" : ""}"></span>${bdot(v.belt)}` : ""}<span class="w">${esc(v[f])}${v.ipa && v.ipa[f] ? `<span class="ipa">${esc(v.ipa[f])}</span>` : ""}</span>${spkForm(v, f, "sm")}</div></td>`;
+      const open = v => vl.ex || vl.open.has(v.id);
+      $("#vbody").innerHTML = rows.length ? rows.map(v => `<tr class="${open(v) ? "has-ex" : ""}">${cell("base")(v)}${cell("past")(v)}${cell("pp")(v)}<td class="c-it" data-label="Italian"><div class="it-cell"><span>${esc(v.it)}</span>${v.ex.length && !vl.ex ? `<button type="button" class="exv ${open(v) ? "on" : ""}" data-exv="${v.id}" aria-expanded="${open(v)}">${window.Dojo.t("Examples")}</button>` : ""}</div></td></tr>${open(v) ? `<tr class="ex-row"><td colspan="4">${examples(v)}</td></tr>` : ""}`).join("")
         : `<tr><td colspan="4"><div class="empty"><h3>No verbs found</h3>Try a different word.</div></td></tr>`;
     }
   };
@@ -210,7 +261,7 @@
       });
     },
     show(p) { if (p && p.deck) { this.build(p.deck); return; } if (!fc.order.length && !fc.done) this.build(fc.deck); else this.render(); },
-    build(deck) { fc.deck = deck; fc.order = shuffle((deck === "practise" ? tricky() : VERBS).map(v => v.id)); fc.i = 0; fc.flipped = false; fc.done = false; fc.known = 0; fc.learning = 0; this.render(); },
+    build(deck) { fc.deck = deck; fc.order = shuffle((deck === "practise" ? tricky() : POOL()).map(v => v.id)); fc.i = 0; fc.flipped = false; fc.done = false; fc.known = 0; fc.learning = 0; this.render(); },
     flip() {
       if (fc.done || !fc.order.length) return;
       fc.flipped = !fc.flipped; $(".flashcard").classList.toggle("flipped", fc.flipped); this.actions();
@@ -234,7 +285,7 @@
     render() {
       const root = $("#view-cards"), nt = tricky().length;
       const head = `<div class="vhead" style="text-align:center"><span class="q-kind">${EX.TYPE.flashcards}</span><h2 style="margin-top:8px">Irregular Verbs</h2><p style="margin:8px auto 0">Say the past simple and the past participle of each verb, then turn the card to check.</p></div>
-        <div class="fc-head"><div class="seg"><button type="button" data-fc="deck" data-d="all" class="${fc.deck === "all" ? "on" : ""}">All verbs</button><button type="button" data-fc="deck" data-d="practise" class="${fc.deck === "practise" ? "on" : ""}">Tricky verbs (${nt})</button></div>
+        ${levelBar()}<div class="fc-head"><div class="seg"><button type="button" data-fc="deck" data-d="all" class="${fc.deck === "all" ? "on" : ""}">${levelName()} (${POOL().length})</button><button type="button" data-fc="deck" data-d="practise" class="${fc.deck === "practise" ? "on" : ""}">Tricky verbs (${nt})</button></div>
         <button class="icon-btn" type="button" data-fc="shuffle" title="Shuffle" aria-label="Shuffle cards">${ICON.shuffle}</button></div>`;
       if (!fc.order.length) {
         root.innerHTML = `<div class="fc">${head}<div class="card empty"><h3>No tricky verbs yet</h3><p>Verbs you mark as “Still learning” or get wrong in Practice will appear here.</p><div class="actions"><button class="btn ink" type="button" data-fc="deck" data-d="all">Train with all verbs</button></div></div></div>`;
@@ -255,6 +306,7 @@
           <div class="flashcard ${fc.flipped ? "flipped" : ""}" role="button" tabindex="0" aria-label="Card: ${esc(v.base)}. Tap to flip.">
             <div class="face front">${mark("ring")}
               ${s ? `<span class="pill ${s}">${s === "known" ? "Learnt" : "Tricky"}</span>` : ""}
+              <span class="fc-belt">${bdot(v.belt)}${BL.get(v.belt).name}</span>
               <small>Base form</small><div class="word">${esc(v.base)}</div>
               ${v.ipa && v.ipa.base ? `<div class="ipa">${esc(v.ipa.base)}</div>` : ""}
               ${spkForm(v, "base", "lg")}
@@ -263,6 +315,7 @@
             <div class="face back">
               <div class="forms">${FORMS.map(f => `<div class="f"><div><small>${LABEL[f]}</small><b>${esc(v[f])}</b>${v.ipa && v.ipa[f] ? `<span class="ipa">${esc(v.ipa[f])}</span>` : ""}</div>${spkForm(v, f)}</div>`).join("")}</div>
               <div class="m">Italian: ${esc(v.it)}</div>
+              ${examples(v, "fc-ex")}
             </div>
           </div>
         </div>
@@ -279,16 +332,17 @@
     mc: { letter: "A", kind: EX.TYPE.mc, desc: "Choose the correct past simple or past participle of each verb.", ex: "go → went · goed · gone · goes" },
     gap: { letter: "B", kind: EX.TYPE.gaps, desc: "Write the missing form of each verb.", ex: "go – ______ – gone" },
     three: { letter: "C", kind: EX.TYPE.gaps, desc: "Write the two missing forms of each verb.", ex: "______ – went – ______" },
-    ita: { letter: "D", kind: EX.TYPE.translation, desc: "Translate each Italian verb into English and write its three forms.", ex: "andare → go – went – gone" }
+    ita: { letter: "D", kind: EX.TYPE.translation, desc: "Translate each Italian verb into English and write its three forms.", ex: "andare → go – went – gone" },
+    ctx: { letter: "F", kind: EX.TYPE.gaps, desc: "Complete each sentence with the past simple or the past participle of the verb in brackets.", ex: "We ______ (go) to the beach last Sunday." }
   };
   // "Irregular Verbs – 1" … in the order in which the exercises are listed
   EX.numberAll(Object.values(MODES), () => "Irregular Verbs", (m, t) => { m.name = t; });
-  const NO_REGULAR = new Set(["be", "burn", "dream", "learn", "smell", "broadcast", "hang", "kneel", "light", "quit", "bet", "shine", "forecast", "show", "dig"]);
+  const NO_REGULAR = new Set(["be", "burn", "dream", "learn", "smell", "broadcast", "hang", "kneel", "light", "quit", "bet", "shine", "forecast", "show", "dig", "wind", "string", "wake", "speed", "cast"]);
   const regularize = b => /e$/.test(b) ? b + "d" : /[^aeiou]y$/.test(b) ? b.slice(0, -1) + "ied" : /^[^aeiou]*[aeiou][bdgklmnprt]$/.test(b) ? b + b.slice(-1) + "ed" : b + "ed";
   function buildOptions(v, target) {
     const correct = new Set(v.alt[target]); const okD = s => alts(s).every(a => !correct.has(a));
     const other = target === "past" ? "pp" : "past";
-    const prio = [v[other]]; if (!NO_REGULAR.has(v.alt.base[0])) prio.push(regularize(v.alt.base[0])); if (Math.random() < .5) prio.push(v.base);
+    const prio = [v[other]]; const reg = regularize(v.alt.base[0]); if (!NO_REGULAR.has(v.alt.base[0]) && !v.alt.past.includes(reg) && !v.alt.pp.includes(reg)) prio.push(regularize(v.alt.base[0])); if (Math.random() < .5) prio.push(v.base);
     const sim = x => (x.base[0] === v.base[0] ? 2 : 0) + Math.random() * 1.5;
     const rest = shuffle(VERBS.filter(x => x !== v).map(x => [sim(x), x]).sort((a, b) => b[0] - a[0]).slice(0, 10).flatMap(p => [p[1][target], p[1][other]]));
     const out = [], seen = new Set();
@@ -304,6 +358,7 @@
   function makeQ(v, type) {
     if (type === "mc") { const target = pick(["past", "pp"]); return { type, v, target, options: buildOptions(v, target) }; }
     if (type === "gap") return { type, v, missing: pick(FORMS) };
+    if (type === "ctx") { const k = pick(v.ex.map((_, i) => i)); const [en, it] = v.ex[k]; return { type, v, form: k ? "pp" : "past", en, it }; }
     if (type === "three") return { type, v, given: pick(FORMS) };
     return { type: "ita", v };
   }
@@ -311,7 +366,7 @@
     if (!src.length) return [];
     const list = [];
     while (list.length < n) for (const v of shuffle(src)) { if (src.length > 1 && list.length && list[list.length - 1] === v) continue; list.push(v); if (list.length >= n) break; }
-    return list.map(v => makeQ(v, mode === "mix" ? pick(["mc", "gap", "three", "ita"]) : mode));
+    return list.map(v => makeQ(v, mode === "mix" ? pick(v.ex.length ? ["mc", "gap", "three", "ita", "ctx"] : ["mc", "gap", "three", "ita"]) : mode === "ctx" && !v.ex.length ? "gap" : mode));
   }
   const qz = { phase: "menu", mode: "mix", src: "all", ids: null, qs: [], i: 0, score: 0, answered: false, results: [] };
   views.practice = {
@@ -347,8 +402,8 @@
     show(p) { if (p && p.mode) { this.start(p.mode, p.src || "all"); return; } this.render(); },
     start(mode, src, ids) {
       qz.mode = mode; qz.src = src; qz.ids = ids || null;
-      const pool = src === "ids" ? ids.map(i => VERBS[i]) : src === "practise" ? tricky() : VERBS;
-      const n = src === "all" ? Store.data.len : Math.min(Store.data.len, Math.max(pool.length * 2, 5));
+      const pool = src === "ids" ? ids.map(i => VERBS[i]) : src === "practise" ? tricky() : POOL();
+      const n = src === "all" ? Math.min(Store.data.len, Math.max(pool.length * 2, 5)) : Math.min(Store.data.len, Math.max(pool.length * 2, 5));
       qz.qs = buildQs(mode, pool, n);
       if (!qz.qs.length) { toast("There are no tricky verbs to practise yet."); qz.phase = "menu"; qz.src = "all"; this.render(); return; }
       qz.i = 0; qz.score = 0; qz.answered = false; qz.results = []; qz.phase = "q"; this.render();
@@ -375,7 +430,7 @@
       $$(".slot input").forEach(el => ins[el.dataset.f] = skip ? "" : el.value);
       const fields = Object.keys(ins);
       // other verbs that fit the same clue are accepted too (e.g. "portare" → bring, take or wear)
-      const cands = q.type === "gap" ? VERBS.filter(x => FORMS.filter(f => f !== q.missing).every(f => x[f] === v[f]))
+      const cands = q.type === "ctx" ? [v] : q.type === "gap" ? VERBS.filter(x => FORMS.filter(f => f !== q.missing).every(f => x[f] === v[f]))
         : q.type === "three" ? VERBS.filter(x => x[q.given] === v[q.given])
         : [v, ...VERBS.filter(x => x !== v && v.meanings.every(m => x.meanings.includes(m)))];
       if (!cands.includes(v)) cands.unshift(v);
@@ -392,6 +447,7 @@
       $("#qfb").innerHTML = `<div class="fb ${ok ? "good" : "bad"}"><span class="ic">${ok ? ICON.check : ICON.x}</span><div>
         <h3>${ok ? pick(["Correct.", "Well done.", "Exactly right.", "Correct — keep going."]) : "Not quite. The correct answer is:"}</h3>
         <div class="ans">${esc(v.base)} – ${esc(v.past)} – ${esc(v.pp)} ${spkAll(v, "sm")}</div>
+        ${q.type === "ctx" ? `<div class="fb-ex">${exHTML(q.en, q.it)}</div>` : v.ex[0] ? `<div class="fb-ex"><small>In context</small>${exHTML(v.ex[0][0], v.ex[0][1])}</div>` : ""}
         ${alt ? `<div class="note">“${esc(alt.base)}” also fits this translation. The verb we had in mind was “${esc(q.v.base)} – ${esc(q.v.past)} – ${esc(q.v.pp)}”.</div>` : ""}</div></div>`;
       $("#qfoot").innerHTML = `<button class="btn soft sm" type="button" data-q="menu">Quit</button><button class="btn ink lg" type="button" data-q="next">${qz.i < qz.qs.length - 1 ? "Next question" : "See results"} ${ICON.arrow}</button>`;
       $("#qscore").textContent = qz.score;
@@ -403,9 +459,10 @@
       if (qz.phase === "menu") {
         const L = Store.data.len, nt = tricky().length; if (!nt && qz.src === "practise") qz.src = "all";
         root.innerHTML = `<div class="vhead"><h2>Practice</h2></div>
+          ${levelBar()}
           <div class="pset">
             <div>Questions <span class="seg">${[10, 20].map(n => `<button type="button" data-q="len" data-n="${n}" class="${L === n ? "on" : ""}">${n}</button>`).join("")}</span></div>
-            <div>Verbs <span class="seg"><button type="button" data-q="src" data-s="all" class="${qz.src !== "practise" ? "on" : ""}">All verbs</button><button type="button" data-q="src" data-s="practise" class="${qz.src === "practise" ? "on" : ""}" ${nt ? "" : "disabled"}>Tricky verbs (${nt})</button></span></div>
+            <div>Verbs <span class="seg"><button type="button" data-q="src" data-s="all" class="${qz.src !== "practise" ? "on" : ""}">${levelName()} (${POOL().length})</button><button type="button" data-q="src" data-s="practise" class="${qz.src === "practise" ? "on" : ""}" ${nt ? "" : "disabled"}>Tricky verbs (${nt})</button></span></div>
           </div>
           <div class="modes">${Object.entries(MODES).map(([k, m]) => `<button type="button" class="mode ${k === "mix" ? "feat" : ""}" data-q="start" data-mode="${k}"><span><span class="kind">${m.kind}</span><b>${m.name}</b><p>${m.desc}</p><span class="ex">${m.ex}</span></span></button>`).join("")}</div>
           <div id="progressBox"></div>`;
@@ -419,7 +476,7 @@
         const wrong = qz.results.filter(r => !r.ok);
         root.innerHTML = `<div class="q"><div class="card results">
           <div class="score">${qz.score}<span> / ${n}</span></div>
-          <h3>${msg}</h3><p>${pct}% correct · ${MODES[qz.mode].name}</p>
+          <h3>${msg}</h3><p>${pct}% correct · ${MODES[qz.mode].name}${qz.src === "all" && LV.b ? " · " + levelName() : ""}</p>
           <div class="bar" style="max-width:340px;margin:20px auto 0"><span style="width:${pct}%;background:${pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--kincha)" : "var(--shu)"}"></span></div>
           <div class="actions"><button class="btn ink" type="button" data-q="again">${ICON.restart} Repeat</button>${wrong.length ? `<button class="btn primary" type="button" data-q="mistakes">Practise my mistakes</button>` : ""}<button class="btn soft" type="button" data-q="menu">Choose another exercise</button></div>
           ${wrong.length ? `<div class="review"><h4>Verbs to remember</h4>${wrong.map(r => `<div class="rv"><div><b>${esc(r.v.base)} – ${esc(r.v.past)} – ${esc(r.v.pp)}</b><br><span class="you">${esc(r.given || "—")}</span></div>${spkAll(r.v, "sm")}</div>`).join("")}</div>` : ""}
@@ -434,11 +491,17 @@
         <div class="opts">${q.options.map((o, i) => `<button type="button" class="opt" data-q="opt" data-i="${i}">${esc(o)}</button>`).join("")}</div>`;
       else if (q.type === "gap") body = `<p class="q-ask">Write the <b>missing form</b>.</p><div class="slots">${FORMS.map(f => slot(f, f !== q.missing)).join("")}</div>`;
       else if (q.type === "three") body = `<p class="q-ask">Here is the <b>${LABEL[q.given].toLowerCase()}</b>. Write the other two forms.</p><div class="slots">${FORMS.map(f => slot(f, f === q.given)).join("")}</div>`;
+      else if (q.type === "ctx") {
+        const [pre, post] = q.en.split(/\[[^\]]+\]/);
+        body = `<p class="q-ask">Write the <b>past simple</b> or the <b>past participle</b> of the verb in brackets.</p>
+          <div class="ctx-s">${esc(pre)}<span class="slot inline"><input type="text" data-f="${q.form}" ${inp} aria-label="Missing verb form"></span><span class="ctx-b">(${esc(v.base)})</span>${esc(post)}</div>
+          <p class="ctx-it">${esc(q.it)}</p>`;
+      }
       else body = `<p class="q-ask">Write the <b>three English forms</b> of this verb.</p><div class="q-big it">${esc(v.it)}</div><div class="slots" style="margin-top:0">${FORMS.map(f => slot(f, false)).join("")}</div>`;
       root.innerHTML = `<div class="q">
         <div class="q-top"><span class="sc">${qz.i + 1} / ${n}</span><div class="bar"><span style="width:${qz.i / n * 100}%;background:var(--shu)"></span></div><span class="sc">Score <b id="qscore">${qz.score}</b></span></div>
         <div class="card q-card">
-          <div class="ex-head"><span class="q-kind">${m.kind}</span><h3 class="ex-title">${MODES[qz.mode].name}</h3><p class="ex-instr">${m.desc}</p></div>
+          <div class="ex-head"><span class="q-kind">${m.kind}</span><h3 class="ex-title">${MODES[qz.mode].name}</h3><p class="ex-instr">${m.desc}</p>${qz.src === "all" && LV.b ? `<span class="q-lv">${bdot(LV.b)}${levelName()}</span>` : ""}</div>
           ${body}
           <div id="qfb" aria-live="polite"></div>
           <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-q="menu">Quit</button>${q.type === "mc" ? "" : `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" data-q="skip">I don't know</button><button class="btn ink lg" type="button" data-q="check">${ICON.check} Check</button></div>`}</div>
@@ -468,6 +531,9 @@
           <div class="card stat"><small>Learnt</small><b style="color:var(--ok)">${n}</b></div>
           <div class="card stat"><small>To review</small><b style="color:var(--kincha)">${t.length}</b></div>
           <div class="card stat"><small>Practice accuracy</small><b>${acc}</b></div>
+        </div>
+        <div class="card bprog"><h3>Learnt verbs by belt</h3>
+          ${BELTS.map(b => { const L = byBelt(b), k = L.filter(x => statusOf(x) === "known").length; return `<div class="bp-row"><span class="bp-l">${bdot(b)}${BL.get(b).short}</span><div class="bar"><span style="width:${k / L.length * 100}%;background:var(--ok)"></span></div><span class="bp-n">${k} / ${L.length}</span></div>`; }).join("")}
         </div>
         <div class="card tricky">
           <h3>Your tricky verbs</h3>
