@@ -179,10 +179,11 @@
               <div class="bar"><span style="width:${n / VERBS.length * 100}%;background:var(--ok)"></span><span style="width:${t / VERBS.length * 100}%;background:var(--kincha)"></span></div>
             </a>
             <div class="card votd"><small>Verb of the day</small><div class="forms">${esc(v.base)} <i>·</i> ${esc(v.past)} <i>·</i> ${esc(v.pp)} ${spkAll(v)}</div><div class="m">${esc(v.it)}</div>${v.ex[0] ? `<div class="votd-ex">${exHTML(v.ex[0][0])}</div>` : ""}</div>
+          </div>
         </div>
         <div class="vhead" style="margin-top:40px"><h2>Study belt by belt</h2><p>The ${VERBS.length} verbs are divided into six belts, from the most common verbs (White) to the rarest (Black). Start with the White belt, then add one belt at a time.</p></div>
         <div class="belt-grid">${BELTS.map(b => { const L = byBelt(b), k = L.filter(x => statusOf(x) === "known").length, cum = VERBS.filter(x => x.belt <= b).length;
-          return `<button type="button" class="card belt-card" data-lv="${b}" data-only="0" data-goto="list" style="--bc:${BL.get(b).color}">
+          return `<button type="button" class="card belt-card" data-lv="${b}" data-only="0" data-goto="list" style="--bc:${BL.get(b).stroke || BL.get(b).color}">
             <span class="bc-top">${bdot(b)}<b>${BL.get(b).name}</b><span class="bc-n">${L.length} verbs</span></span>
             <span class="bc-ex">${L.slice().sort((x, y) => x.base.localeCompare(y.base)).slice(0, 6).map(x => esc(x.base)).join(", ")}…</span>
             <span class="bc-f">${b > 1 ? `With the previous belts: ${cum} verbs` : "The starting point"}${k ? ` · ${k} learnt` : ""}</span></button>`; }).join("")}</div>`;
@@ -265,7 +266,7 @@
     flip() {
       if (fc.done || !fc.order.length) return;
       fc.flipped = !fc.flipped; $(".flashcard").classList.toggle("flipped", fc.flipped); this.actions();
-      if (fc.flipped) { const v = VERBS[fc.order[fc.i]]; setTimeout(() => { if (fc.flipped && current === "cards") play(FORMS.map(f => sayKey(v, f)), null); }, 380); } else stopAudio();
+      if (!fc.flipped) stopAudio(); // the forms are read only when the learner presses a sound button
     },
     move(d) {
       if (!fc.order.length) return;
