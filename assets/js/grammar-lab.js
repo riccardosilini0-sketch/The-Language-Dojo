@@ -33,8 +33,8 @@
   };
 
   /* ---------------- exercise headers ---------------- */
-  const KEY = { mc: "mc", gap: "gaps", correct: "errors", transform: "transform", rewrite: "transform", text: "gapText", dialogue: "gapDialogue", halves: "matching" };
-  const TYPE_ORDER = ["mc", "gaps", "transform", "errors", "matching", "gapDialogue", "gapText"];
+  const KEY = { wf: "wordForm", wftext: "useWF", mc: "mc", gap: "gaps", correct: "errors", transform: "transform", rewrite: "transform", text: "gapText", dialogue: "gapDialogue", halves: "matching" };
+  const TYPE_ORDER = ["wordForm", "useWF", "mc", "gaps", "transform", "errors", "matching", "gapDialogue", "gapText"];
   const DEFAULT_INSTR = {
     mc: "Choose the correct option to complete each sentence.",
     gap: "Complete the sentences with the correct form.",
@@ -43,13 +43,17 @@
     rewrite: "Rewrite each sentence as shown in the instruction.",
     text: "Read the whole text first, then complete the gaps.",
     dialogue: "Read the whole dialogue first, then complete the gaps.",
-    halves: "Match the beginnings of the sentences with the correct endings."
+    halves: "Match the beginnings of the sentences with the correct endings.",
+    wf: "Use the word given in capitals at the end of each sentence to form a word that fits in the gap.",
+    wftext: "Read the text. Use the word given in capitals to form a word that fits in each gap."
   };
+  // batteries built on a text: the count is in gaps, and the title is the title of the text
+  const isText = b => b.type === "text" || b.type === "dialogue" || b.type === "wftext";
   BATS.forEach(b => {
     if (b.type === "text" && b.parts.some(p => p[0] && p[0] !== "#")) b.type = "dialogue";
     b.typeKey = KEY[b.type];
     b.instr = b.instr || CFG.instr && CFG.instr[b.type] || DEFAULT_INSTR[b.type];
-    b.n = b.type === "text" || b.type === "dialogue" ? b.gaps.length : b.type === "halves" ? b.left.length : b.items.length;
+    b.n = isText(b) ? b.gaps.length : b.type === "halves" ? b.left.length : b.items.length;
   });
   const topicOf = b => b.lesson === "review" ? CFG.reviewTitle : (lessonById[b.lesson] || {}).title;
   // the order of the batteries on each lesson page and in the practice list: by level, then as written
@@ -148,8 +152,8 @@
   /* ---------------- PRACTICE list ---------------- */
   const pf = { lesson: "all", belt: "all", type: "all" };
   function batCard(b) {
-    return `<a class="card card-link bat-card" href="#b-${b.id}"><span class="bt-type">${EX.TYPE[b.typeKey]}</span><h4${b.type === "text" || b.type === "dialogue" ? ' translate="no"' : ""}>${esc(b.title)}</h4><p>${b.instr}</p>
-      <div class="bt-meta"><span>${bdot(b.belt)} ${B.get(b.belt).short} · ${CEFR[b.belt]}</span><span>${b.n} ${b.type === "text" || b.type === "dialogue" ? "gaps" : "questions"}</span></div></a>`;
+    return `<a class="card card-link bat-card" href="#b-${b.id}"><span class="bt-type">${EX.TYPE[b.typeKey]}</span><h4${isText(b) ? ' translate="no"' : ""}>${esc(b.title)}</h4><p>${b.instr}</p>
+      <div class="bt-meta"><span>${bdot(b.belt)} ${B.get(b.belt).short} · ${CEFR[b.belt]}</span><span>${b.n} ${isText(b) ? "gaps" : "questions"}</span></div></a>`;
   }
   function renderPractice() {
     view().innerHTML = `<div class="vhead"><h2>Practice</h2><p>Every battery has 10–15 questions or a text with many gaps. Answer everything, then check: you will see your score, the correct answers and an explanation for each one.</p></div>
@@ -175,10 +179,10 @@
     cur = { b, checked: false };
     const les = lessonById[b.lesson];
     view().innerHTML = `<a class="back" href="${les ? "#l-" + les.id : "#practice"}">${ICON.back} ${les ? esc(les.title) : "Practice"}</a>
-      <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${EX.TYPE[b.typeKey]}</span><span class="bt-n">${b.n} ${b.type === "text" || b.type === "dialogue" ? "gaps" : "questions"}</span></div>
-        <h2${b.type === "text" || b.type === "dialogue" ? ' translate="no"' : ""}>${esc(b.title)}</h2><p class="bt-goal">${b.instr}</p></div>
+      <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${EX.TYPE[b.typeKey]}</span><span class="bt-n">${b.n} ${isText(b) ? "gaps" : "questions"}</span></div>
+        <h2${isText(b) ? ' translate="no"' : ""}>${esc(b.title)}</h2><p class="bt-goal">${b.instr}</p></div>
       <div id="btBody"></div><div class="bt-foot" id="btFoot"></div><div id="btResult" aria-live="polite"></div>`;
-    ({ mc: buildMC, gap: buildGap, correct: buildCorrect, transform: buildTransform, rewrite: buildRewrite, text: buildText, dialogue: buildText, halves: buildHalves })[b.type](b, $("#btBody"));
+    ({ wf: buildWF, wftext: buildWFText, mc: buildMC, gap: buildGap, correct: buildCorrect, transform: buildTransform, rewrite: buildRewrite, text: buildText, dialogue: buildText, halves: buildHalves })[b.type](b, $("#btBody"));
     drawFoot();
   }
   const nextBat = b => { const i = ORDERED.indexOf(b); return ORDERED.slice(i + 1).find(x => x.lesson === b.lesson); };
@@ -199,6 +203,41 @@
   const input = (attrs, size) => `<input type="text" ${attrs} size="${Math.min(size, 34)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">`;
   const qn = i => `<span class="qn">${i + 1}</span>`;
   const fillGaps = (s, gaps) => { let k = 0; return esc(s).replace(/___( \([^)]*\))?/g, () => `<b>${esc(gaps[k++][0])}</b>`); };
+
+  /* word formation (Cambridge Use of English, Part 3): the stem word in capitals is changed to fit the gap.
+     wf items: [sentence with ___, STEM, [accepted answers], word class, explanation]
+     wftext gaps: [[accepted answers], STEM, word class, explanation] */
+  const stem = w => `<span class="wf-stem" translate="no">${esc(w)}</span>`;
+  const wfNote = (cls, why) => `${cls ? `<span class="wf-cls">${esc(cls)}</span> ` : ""}${why ? hl(why) : ""}`;
+  const also = acc => acc.length > 1 ? `<br><span class="why">Also accepted: ${acc.slice(1).map(esc).join(" / ")}</span>` : "";
+  function buildWF(b, box) {
+    box.innerHTML = `<ol class="qlist wf-list">${b.items.map(([s, w, acc], i) => `<li class="qi" data-q="${i}"><div class="wf-row"><p class="qs" translate="no">${qn(i)}${esc(s).replace("___", input(`aria-label="Answer ${i + 1}: form a word from ${esc(w)}"`, Math.max(10, Math.max(...acc.map(a => a.length)) + 3)))}</p>${stem(w)}</div><div class="fbx"></div></li>`).join("")}</ol>`;
+    cur.check = () => {
+      if ($$("input", box).some(x => !x.value.trim()) && incomplete()) return false;
+      let ok = 0;
+      b.items.forEach(([s, w, acc, cls, why], i) => {
+        const li = $(`.qi[data-q="${i}"]`, box), x = $("input", li), good = accepts(acc, x.value); if (good) ok++;
+        x.disabled = true; x.classList.add(good ? "right" : "wrong");
+        $(".fbx", li).innerHTML = `<div class="fbk ${good ? "good" : "bad"}"><b>${good ? "Correct." : "Not quite."}</b> <span class="ans" translate="no">${esc(s).replace("___", `<b>${esc(acc[0])}</b>`)} <span class="wf-from">${esc(w)} → ${esc(acc[0])}</span>${also(acc)}</span> <span class="why" translate="no">${wfNote(cls, why)}</span></div>`;
+      });
+      showResult(ok, b.items.length); return true;
+    };
+  }
+  function buildWFText(b, box) {
+    const sizeOf = n => Math.max(10, Math.max(...b.gaps[n - 1][0].map(a => a.length)) + 3);
+    const fill = s => esc(s).replace(/\{(\d+)\}/g, (m, n) => `<span class="tg"><span class="gn">${n}</span>${input(`data-g="${n}" aria-label="Gap ${n}: form a word from ${esc(b.gaps[n - 1][1])}"`, sizeOf(+n))}${stem(b.gaps[n - 1][1])}</span>`);
+    box.innerHTML = `<div class="card textbox wf-text" translate="no">${b.parts.map(([sp, line]) => sp === "#" ? `<h4 class="dh">${esc(line)}</h4>` : `<p class="pl">${fill(line)}</p>`).join("")}</div><ol class="gexp" id="gexp"></ol>`;
+    cur.check = () => {
+      if ($$("input", box).some(x => !x.value.trim()) && incomplete()) return false;
+      let ok = 0;
+      $("#gexp").innerHTML = b.gaps.map(([acc, w, cls, why], i) => {
+        const x = $(`input[data-g="${i + 1}"]`, box), good = accepts(acc, x.value); if (good) ok++;
+        x.disabled = true; x.classList.add(good ? "right" : "wrong");
+        return `<li><div class="fbk ${good ? "good" : "bad"}"><b>${good ? "Correct." : "Not quite."}</b> <span class="ans" translate="no">${i + 1} · ${esc(w)} → <b>${esc(acc.join(" / "))}</b></span> <span class="why" translate="no">${wfNote(cls, why)}</span></div></li>`;
+      }).join("");
+      showResult(ok, b.gaps.length); return true;
+    };
+  }
 
   function buildMC(b, box) {
     const orders = b.items.map(it => shuffle(it[1].map((_, j) => j)));

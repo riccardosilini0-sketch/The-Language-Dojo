@@ -52,14 +52,16 @@ Each row of `english/irregular-verbs/verbs-data.js` is `[base, past simple, past
 - The example sentences appear in the list, on the back of the flashcards, in the feedback and in the exercise *Irregular Verbs in context*; the PDF Worksheet Builder makes forms, translation and in-context worksheets per belt.
 - New verbs get their recordings from the Audio workflow when `verbs-data.js` changes.
 
-## Grammar sections (Modal Verbs, The Passive Voice)
+## Grammar sections (Modal Verbs, The Passive Voice, Word Formation)
 
-Both sections use the shared engine `assets/js/grammar-lab.js` and `assets/css/grammar-lab.css`; each section has only its colours (`app.css`) and its data:
+These sections use the shared engine `assets/js/grammar-lab.js` and `assets/css/grammar-lab.css`; each section has only its colours (`app.css`) and its data:
 
 - `data/lessons.js`: configuration and lessons (form and structure, main uses with examples and Italian translations, common mistakes, comparisons). The format is described at the top of `english/modal-verbs/data/lessons.js`.
-- `data/practice-*.js`: batteries of 10–15 questions or a text with gaps (types: mc, gap, correct, transform, rewrite, text, halves). Each battery belongs to a lesson (or to `review`) and to a belt. Titles are numbered automatically per topic.
+- `data/practice-*.js`: batteries of 10–15 questions or a text with gaps (types: mc, gap, correct, transform, rewrite, text, halves, and for word formation wf and wftext). Each battery belongs to a lesson (or to `review`) and to a belt. Titles are numbered automatically per topic.
 
-To add a new grammar section, copy one of the two folders, change `index.html`, `app.css` and the data, and add the section to `assets/js/catalog.js`.
+- **Word Formation** (`english/word-formation/`) follows Cambridge Use of English, Part 3. `wf` items are `[sentence with ___, WORD IN CAPITALS, [accepted answers], word class, explanation]`; `wftext` batteries are a text with `{1}…{8}` and `gaps: [[accepted answers], WORD, word class, explanation]`. List every accepted spelling (organise / organize); the word in capitals is never accepted as it is. The exam batteries (`lesson: "review"`) go from B1 (orange belt) to C2 (black belt).
+
+To add a new grammar section, copy one of the folders, change `index.html`, `app.css` and the data, and add the section to `assets/js/catalog.js`.
 
 ## Exercise headers
 

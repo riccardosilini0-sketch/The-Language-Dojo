@@ -92,8 +92,11 @@
       const paras = b.parts.filter(p => p[0] !== "#").map(([sp, line]) => (sp ? sp + ":  " : "") + line), heading = b.parts.find(p => p[0] === "#");
       parts.push({ k: "passage", title: heading ? heading[1] : "", numbered: true, keyed: true, paras, answers: b.gaps.map(g => g[0].join(" / ")), whys: b.gaps.map(g => strip(g[1])) });
     }
+    // word formation: the word in capitals is printed after the gap
+    if (b.type === "wf") parts.push({ k: "q", items: b.items.map(it => ({ t: "gap", text: `${strip(it[0]).replace(/_{3,}/g, "___")}   (${it[1]})`, ans: [it[2][0]], key: it[2].join(" / "), why: strip(`${it[3]}: ${it[4]}`) })) });
+    if (b.type === "wftext") parts.push({ k: "passage", title: (b.parts.find(p => p[0] === "#") || [])[1] || "", numbered: true, keyed: true, paras: b.parts.filter(p => p[0] !== "#").map(p => p[1].replace(/\{(\d+)\}/g, (m, n) => `{${n}} (${b.gaps[n - 1][1]})`)), answers: b.gaps.map(g => g[0].join(" / ")), whys: b.gaps.map(g => strip(`${g[2]}: ${g[3]}`)) });
     if (b.type === "halves") parts.push({ k: "match", left: b.left.map(x => x + " …"), right: b.right, ans: b.answers, whys: (b.why || []).map(strip) });
-    return { uid, section: meta.section, sectionTitle: meta.title, area: "English · Grammar", group: meta.groupOf(b), topic: meta.topicOf(b), belt: b.belt, beltLabel: beltName(B, b.belt), type: EX.TYPE[b.typeKey], title: b.title, instr: strip(b.instr), parts };
+    return { uid, section: meta.section, sectionTitle: meta.title, area: meta.area || "English · Grammar", group: meta.groupOf(b), topic: meta.topicOf(b), belt: b.belt, beltLabel: beltName(B, b.belt), type: EX.TYPE[b.typeKey], title: b.title, instr: strip(b.instr), parts };
   }
   function depPrep(w) {
     const D = w.__depprep, EX = w.DojoEx, B = w.DojoBelts;
@@ -104,7 +107,7 @@
     return w => {
       const G = w.__grammar, EX = w.DojoEx, B = w.DojoBelts, CFG = w.GL.config;
       const les = Object.fromEntries(G.LESSONS.map(l => [l.id, l])), grp = Object.fromEntries(CFG.groups);
-      return G.ORDERED.map(b => battery(b, EX, B, { prefix: sectionId.slice(0, 2) + ":", section: sectionId, title, shuffle: true,
+      return G.ORDERED.map(b => battery(b, EX, B, { prefix: sectionId.slice(0, 2) + ":", section: sectionId, title, shuffle: true, area: sectionId === "word-formation" ? "English · Vocabulary" : null,
         groupOf: b => b.lesson === "review" ? "Review" : grp[les[b.lesson].group], topicOf: b => b.lesson === "review" ? CFG.reviewTitle : les[b.lesson].title }));
     };
   }
@@ -269,6 +272,7 @@
     { id: "dependent-prepositions", title: "Dependent Prepositions", area: "Grammar", url: "english/dependent-prepositions/index.html", ready: w => w.__depprep, extract: depPrep },
     { id: "modal-verbs", title: "Modal Verbs", area: "Grammar", url: "english/modal-verbs/index.html", ready: w => w.__grammar, extract: grammar("modal-verbs", "Modal Verbs") },
     { id: "passive-voice", title: "The Passive Voice", area: "Grammar", url: "english/passive-voice/index.html", ready: w => w.__grammar, extract: grammar("passive-voice", "The Passive Voice") },
+    { id: "word-formation", title: "Word Formation", area: "Vocabulary", url: "english/word-formation/index.html", ready: w => w.__grammar && w.DojoEx, extract: grammar("word-formation", "Word Formation") },
     { id: "irregular-verbs", title: "Irregular Verbs", area: "Verbs", url: "english/irregular-verbs/index.html", ready: w => w.VERB_DATA && w.DojoEx && w.DojoBelts, extract: irregular },
     { id: "skills", title: "Skill Development", area: "Skills", url: "english/skills/index.html", ready: w => w.__skills, extract: skills },
     { id: "phonetics", title: "Sounds of English", area: "Pronunciation", url: "english/phonetics/index.html", ready: w => w.__phon, extract: phonetics },

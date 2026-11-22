@@ -185,3 +185,16 @@ input.wrong{border-color:var(--bad)!important;background:var(--bad-bg)!important
 .pr-tools .seg{flex-wrap:wrap;width:fit-content;max-width:100%}
 .pr-tools .seg button{display:inline-flex;align-items:center;gap:6px}
 .pr-tools .seg.types button{white-space:normal;text-align:left;max-width:100%}
+
+/* word formation (Use of English, Part 3) */
+.wf-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.wf-row .qs{flex:1;min-width:0}
+.wf-stem{display:inline-block;font:700 13px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--sumi);background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:6px 9px;white-space:nowrap}
+.wf-row>.wf-stem{flex:none;margin-top:2px}
+.wf-text .wf-stem{margin-left:6px;padding:4px 7px;font-size:11.5px;vertical-align:2px}
+.wf-cls{display:inline-block;font:600 11px/1.3 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--app);background:var(--app-bg);border-radius:5px;padding:2px 7px;margin-right:2px}
+.wf-from{display:inline-block;margin-left:6px;font:600 12.5px/1.4 var(--sans);color:var(--stone)}
+@media (max-width:640px){
+  .wf-row{flex-direction:column-reverse;gap:6px}
+  .wf-row>.wf-stem{margin:0 0 0 30px}
+}

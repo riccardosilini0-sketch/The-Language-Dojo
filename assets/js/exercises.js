@@ -36,6 +36,7 @@ window.DojoEx = (function () {
     useMCC: "Use of English – multiple-choice cloze",
     useOpen: "Use of English – open cloze",
     useWF: "Use of English – word formation",
+    wordForm: "Word formation",
     useKWT: "Use of English – key word transformation",
     listeningMC: "Listening – multiple choice",
     listeningTF: "Listening – true or false",
