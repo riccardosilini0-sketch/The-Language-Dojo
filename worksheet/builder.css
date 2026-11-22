@@ -95,3 +95,4 @@
   .ws-form{padding:20px}
 }
 .ws-cat,.ws-side{min-width:0}
+.ws-mob-hint{margin:10px 0 0;font-size:13.5px;color:var(--stone);line-height:1.45}

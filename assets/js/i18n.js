@@ -754,6 +754,9 @@ window.DOJO_I18N = {
       "All verbs ({0})": "Tutti i verbi ({0})",
       "Verbs in context": "Verbi in contesto",
       // PDF Worksheet Builder
+      "Save or share the PDF": "Salva o condividi il PDF",
+      "Choose “Save to Files” to keep the PDF, or “Print” to print it.": "Scegli “Salva su File” per conservare il PDF, oppure “Stampa” per stamparlo.",
+      "On iPhone and iPad the PDF is saved in the Files app (Downloads folder). If nothing happens, open this page in Safari or Chrome rather than inside another app, or use “Open in a new tab”.": "Su iPhone e iPad il PDF viene salvato nell'app File (cartella Download). Se non succede nulla, apri questa pagina in Safari o Chrome invece che dentro un'altra app, oppure usa “Apri in una nuova scheda”.",
       "Exercises": "Esercizi",
       "Create a PDF Worksheet": "Crea una scheda PDF",
       "PDF Worksheet Builder": "Creazione schede PDF",

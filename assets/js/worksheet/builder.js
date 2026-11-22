@@ -216,7 +216,7 @@
       fetch(ROOT + "assets/img/logo-mark.png").then(r => r.arrayBuffer()).catch(() => null)]);
     const out = await window.DojoPDF.build({ exercises: st.items, meta: { title, name: m.name, klass: m.klass, date: m.date, duration: m.duration, version: m.version, explanations: m.explanations, area: areas.length === 1 ? areas[0] : "English" + (jp ? " · Japanese" : "") }, fonts: { sans, bold, serif, fallback, jp: japanese }, logo });
     const blob = new Blob([out.bytes], { type: "application/pdf" });
-    return { url: URL.createObjectURL(blob), pages: out.pages, size: out.bytes.length, name: (title.toLowerCase().normalize("NFD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-") || "worksheet") + (m.version === "teacher" ? "-teacher" : "") + ".pdf", title };
+    return { blob, url: URL.createObjectURL(blob), pages: out.pages, size: out.bytes.length, name: (title.toLowerCase().normalize("NFD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-") || "worksheet") + (m.version === "teacher" ? "-teacher" : "") + ".pdf", title };
   }
   async function renderPreview() {
     const m = st.meta, title = m.title || suggestTitle();
@@ -228,6 +228,7 @@
           <dl class="ws-dl"><div><dt>Exercises</dt><dd>${st.items.length}</dd></div><div><dt>Pages</dt><dd id="pgs">…</dd></div><div><dt>Student fields</dt><dd>Name, class, date${m.duration ? " · duration " + esc(m.duration) : ""}</dd></div><div><dt>Answer key</dt><dd>${m.version === "teacher" ? (m.explanations ? "Yes, with explanations" : "Yes") : "No"}</dd></div></dl>
           <ol class="ws-order">${st.items.map(ex => `<li><span class="bt-type">${esc(ex.type)}</span> <b translate="no">${esc(ex.title)}</b> <small>${esc(ex.sectionTitle)}</small></li>`).join("")}</ol>
           <div class="ws-dl-btns"><a class="btn primary lg disabled" id="dl" aria-disabled="true">${ICON.dl} Generate PDF</a><a class="btn soft" id="open" target="_blank" rel="noopener" hidden>${ICON.file} Open in a new tab</a></div>
+          <p class="ws-mob-hint" id="mobHint" hidden></p>
           <div class="ws-prev-f"><button type="button" class="btn soft sm" data-go="choose">${ICON.back} Change the exercises</button><button type="button" class="btn soft sm" data-go="customise">Change the settings</button></div>
         </div>
         <div class="ws-frame-box card" id="pv"><div class="ws-loading">Preparing the preview…</div></div>
@@ -241,6 +242,20 @@
       const dl = $("#dl"); dl.href = pdf.url; dl.download = pdf.name; dl.classList.remove("disabled"); dl.removeAttribute("aria-disabled"); dl.innerHTML = `${ICON.dl} Generate PDF`;
       const op = $("#open"); op.href = pdf.url; op.hidden = false;
       const small = matchMedia("(max-width: 820px)").matches;
+      // phones and tablets: the system share sheet (Save to Files, Print, Mail…) is the reliable way to keep a file;
+      // a plain download is silent on iPhone and is ignored by the browsers inside apps
+      const touch = matchMedia("(pointer: coarse)").matches;
+      let file = null; try { file = new File([pdf.blob], pdf.name, { type: "application/pdf" }); } catch (e) {}
+      const canShare = !!(touch && file && navigator.canShare && navigator.share && (() => { try { return navigator.canShare({ files: [file] }); } catch (e) { return false; } })());
+      if (canShare) {
+        dl.innerHTML = `${ICON.dl} Save or share the PDF`;
+        dl.addEventListener("click", e => { e.preventDefault(); navigator.share({ files: [file], title: pdf.title }).catch(err => { if (err && err.name !== "AbortError") { const a = document.createElement("a"); a.href = pdf.url; a.download = pdf.name; document.body.appendChild(a); a.click(); a.remove(); } }); });
+        $("#mobHint").textContent = "Choose “Save to Files” to keep the PDF, or “Print” to print it.";
+        $("#mobHint").hidden = false;
+      } else if (touch) {
+        $("#mobHint").textContent = "On iPhone and iPad the PDF is saved in the Files app (Downloads folder). If nothing happens, open this page in Safari or Chrome rather than inside another app, or use “Open in a new tab”.";
+        $("#mobHint").hidden = false;
+      }
       $("#pv").innerHTML = small ? `<div class="ws-loading">The preview opens in your device's PDF viewer: use “Open in a new tab”.</div>` : `<iframe title="Worksheet preview" src="${pdf.url}#view=FitH"></iframe>`;
     } catch (e) {
       console.error(e);
