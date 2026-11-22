@@ -43,7 +43,7 @@ P({ id: "nouns-wf1", lesson: "nouns", type: "wf", belt: 3, items: [
   ["We had a long ___ about the future.", "DISCUSS", ["discussion"], "noun", "A long + noun: discuss → [discussion]."],
   ["I spent my ___ in a small village.", "CHILD", ["childhood"], "noun", "The period of being a child: [childhood]."],
   ["Good ___ between teachers and parents is essential.", "COMMUNICATE", ["communication"], "noun", "Adjective good + noun: [communication]."],
-  ["The ___ of the hotel welcomed us at the door.", "MANAGE", ["manager"], "noun (person)", "The person who manages: [manager]."],
+  ["The ___ of the hotel, a tall woman called Sara, welcomed us at the door.", "MANAGE", ["manager"], "noun (person)", "The person who manages: [manager]."],
   ["Their ___ has lasted since primary school.", "FRIEND", ["friendship"], "noun", "Their + abstract noun for the relationship: [friendship]."],
   ["The new park is a great ___ for the town.", "IMPROVE", ["improvement"], "noun", "A great + noun: improve → [improvement]."]
 ] });
@@ -91,7 +91,7 @@ P({ id: "nouns-correct", lesson: "nouns", type: "correct", belt: 4, items: [
 /* ---------- adjective suffixes ---------- */
 P({ id: "adj-wf", lesson: "adjectives", type: "wf", belt: 3, items: [
   ["Be ___ with that knife: it's very sharp.", "CARE", ["careful"], "adjective", "Be + adjective; the context asks for attention: [careful] (one l)."],
-  ["This map is ___: it's twenty years old.", "USE", ["useless"], "adjective", "A map twenty years old has no use: [useless]."],
+  ["This map is ___: it's twenty years old.", "USE", ["useless", "unusable"], "adjective", "A map twenty years old has no use: [useless]. Unusable (it cannot be used) is also accepted."],
   ["Swimming here is ___ because of the currents.", "DANGER", ["dangerous"], "adjective", "Is + adjective: danger → [dangerous]."],
   ["We had a really ___ evening at the theatre.", "ENJOY", ["enjoyable"], "adjective", "Before a noun: enjoy → [enjoyable]."],
   ["It's a ___ day: take an umbrella.", "RAIN", ["rainy"], "adjective", "Weather adjective with -y: [rainy]."],

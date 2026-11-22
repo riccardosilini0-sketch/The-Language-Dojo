@@ -3,7 +3,7 @@
 
 /* ---------- sentences, by level ---------- */
 P({ id: "exam-b1", lesson: "review", type: "wf", belt: 3, title: "Word Formation – B1 Preliminary", items: [
-  ["The ___ to the museum is free on Sundays.", "ENTER", ["entrance"], "noun", "After the we need a noun: enter → [entrance] (the e of enter disappears)."],
+  ["The ___ to the museum is free on Sundays.", "ENTER", ["entrance", "entry"], "noun", "After the we need a noun: enter → [entrance] (the e of enter disappears). Entry is also correct."],
   ["We had a ___ time at the party.", "WONDER", ["wonderful"], "adjective", "Between a and the noun time: wonder → [wonderful]."],
   ["Please speak ___: the baby is sleeping.", "QUIET", ["quietly"], "adverb", "How to speak: adverb [quietly]."],
   ["It's ___ to swim in the river: the water is too fast.", "SAFE", ["unsafe"], "adjective (negative)", "The water is too fast, so the meaning is negative: [unsafe]."],
@@ -31,11 +31,11 @@ P({ id: "exam-b2", lesson: "review", type: "wf", belt: 4, title: "Word Formation
 P({ id: "exam-c1", lesson: "review", type: "wf", belt: 5, title: "Word Formation – C1 Advanced", items: [
   ["At first the changes were almost ___.", "PERCEIVE", ["imperceptible"], "adjective (negative)", "Almost + adjective; so small that nobody noticed. Three changes and a spelling change: perceive → percept- + -ible → [imperceptible]."],
   ["The ___ of troops from the region began in May.", "WITHDRAW", ["withdrawal"], "noun", "The + noun: withdraw → [withdrawal] (-al, as in arrival, refusal)."],
-  ["Her ___ to detail makes her an excellent editor.", "ATTEND", ["attention"], "noun", "Collocation [attention to detail]; attend → attention."],
+  ["Her ___ to detail makes her an excellent editor.", "ATTEND", ["attention", "attentiveness"], "noun", "Collocation [attention to detail]; attend → attention (attentiveness is also accepted)."],
   ["The report highlights the growing ___ between rich and poor.", "EQUAL", ["inequality"], "noun (negative)", "The growing + noun with a negative meaning (rich v poor): in- + equal + -ity = [inequality]."],
   ["Applicants must demonstrate ___ in at least two languages.", "PROFICIENT", ["proficiency"], "noun", "Demonstrate + noun: -ent → [-ency]: proficiency."],
   ["The decision was ___ criticised by environmental groups.", "WIDE", ["widely"], "adverb", "Before the participle criticised: [widely] (= by many people)."],
-  ["There is a clear ___ between stress and poor sleep.", "RELATE", ["relationship", "relation"], "noun", "A clear + noun: relate → [relationship] (relation is also accepted)."],
+  ["There is a clear ___ between stress and poor sleep.", "RELATE", ["relationship", "correlation", "relation"], "noun", "A clear + noun + between: relate → [relationship]. [correlation] (cor- + relate + -ion: a statistical link) is also correct and very natural here; relation is accepted too."],
   ["The new policy has had a ___ effect on small businesses.", "BENEFIT", ["beneficial"], "adjective", "A + adjective + effect; spelling change: benefit → [beneficial] (t → c)."],
   ["His ___ to compromise led to the collapse of the talks.", "WILLING", ["unwillingness"], "noun (negative)", "His + noun; the talks collapsed: negative. un- + willing + -ness = [unwillingness]."],
   ["A ceremony of ___ is held every November for the soldiers who died.", "REMEMBER", ["remembrance"], "noun", "Of + noun: the formal noun is [remembrance] (Remembrance Day)."],
@@ -63,7 +63,7 @@ P({ id: "text-b1", lesson: "review", type: "wftext", belt: 3, title: "A day at t
   ["", "Last Saturday my class visited the new science museum in the city centre. The {1} was free for students, so we didn't have to pay anything. The first room was really {2}: there were robots that could talk and even play football! Next to each machine there was a screen with {3} about how it worked."],
   ["", "In the afternoon we met two young {4} who work in the museum's laboratory. They explained their experiments so clearly that we could {5} understand everything, and they were very {6} when we asked questions. {7}, the rain stopped just before we left, so we had a picnic in the park. It was a really {8} day and we can't wait to go back."]
 ], gaps: [
-  [["entrance"], "ENTER", "noun", "The + noun: enter → [entrance]."],
+  [["entrance", "entry"], "ENTER", "noun", "The + noun: enter → [entrance] (entry is also correct)."],
   [["exciting"], "EXCITE", "adjective (-ing)", "The room caused the feeling: [exciting]."],
   [["information"], "INFORM", "noun (uncountable)", "A screen with + uncountable noun: [information]."],
   [["scientists"], "SCIENCE", "noun (person, plural)", "Two young + plural people: [scientists]."],
@@ -92,7 +92,7 @@ P({ id: "text-c1", lesson: "review", type: "wftext", belt: 5, title: "The four-d
   ["", "The results of early trials have nonetheless been {7} encouraging, with most participating companies reporting no {8} in the quality of their output and many choosing to keep the new schedule permanently."]
 ], gaps: [
   [["considerable"], "CONSIDER", "adjective", "Brings + adjective + benefits; meaning large: consider → [considerable]."],
-  [["absenteeism"], "ABSENT", "noun", "Reduced + noun; the habit of staying away from work: absent → absence → [absenteeism]."],
+  [["absenteeism", "absence", "absences"], "ABSENT", "noun", "Reduced + noun; the habit of staying away from work: absent → absence → [absenteeism]. Absence / absences is also correct."],
   [["unconvinced"], "CONVINCE", "adjective (negative)", "Remain + adjective; however shows the opposite view: un- + convinced = [unconvinced]."],
   [["unsuitable"], "SUIT", "adjective (negative)", "The critics' point: not right for healthcare: un- + suit + -able = [unsuitable]."],
   [["availability"], "AVAILABLE", "noun", "Round-the-clock + noun as the subject of is: available → [availability]."],
@@ -108,7 +108,7 @@ P({ id: "text-c2", lesson: "review", type: "wftext", belt: 6, title: "In praise 
   [["incurably"], "CURE", "adverb (negative)", "Before the adjective homesick; a disease that cannot be cured: in- + cur- + -ably = [incurably]."],
   [["forgiving"], "FORGIVE", "adjective", "A far more + adjective + view: tolerant, lenient: [forgiving]."],
   [["continuity"], "CONTINUE", "noun", "A sense of + noun: the link between past and present: [continuity]."],
-  [["reassurance"], "ASSURE", "noun", "Provide + uncountable noun; comfort in difficult times: re- + assure + -ance = [reassurance]."],
+  [["reassurance", "assurance"], "ASSURE", "noun", "Provide + uncountable noun; comfort in difficult times: re- + assure + -ance = [reassurance]. Assurance is also accepted."],
   [["drawbacks"], "DRAW", "noun (plural)", "Not without its + noun (disadvantages): the compound [drawbacks]."],
   [["increasingly"], "INCREASE", "adverb", "Before the adjective adept: increase → increasing → [increasingly]."],
   [["saleable", "salable", "sellable"], "SELL", "adjective", "An eminently + adjective + commodity: easy to sell, [saleable] (spelling change sell → sale-)."],

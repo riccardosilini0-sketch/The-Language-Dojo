@@ -2,7 +2,7 @@
 
 /* ---------- verb suffixes ---------- */
 P({ id: "verbs-wf", lesson: "verbs", type: "wf", belt: 4, items: [
-  ["The council plans to ___ the old station into a museum.", "MODERN", ["modernise", "modernize"], "verb", "After plans to we need a verb: modern → [modernise] / modernize (make modern)."],
+  ["The council plans to ___ the old railway station.", "MODERN", ["modernise", "modernize"], "verb", "After plans to we need a verb: modern → [modernise] / modernize (make modern)."],
   ["Could you ___ what you mean? I'm a bit confused.", "CLEAR", ["clarify"], "verb", "Make clear: spelling change clear → [clarify]."],
   ["They're going to ___ the road to reduce traffic jams.", "WIDE", ["widen"], "verb", "Make wider: wide → [widen]."],
   ["My teacher always ___ me to ask questions.", "COURAGE", ["encourages"], "verb (3rd person)", "en- + courage = [encourage]; the subject my teacher needs -s."],
@@ -19,7 +19,7 @@ P({ id: "verbs-mc", lesson: "verbs", type: "mc", belt: 4, items: [
   ["We should ___ the meeting: it's far too long.", ["shorten", "short", "shortage"], 0, "Make shorter: [shorten]."],
   ["Scientists ___ animals into groups.", ["classify", "classise", "classen"], 0, "Class → [classify]."],
   ["The photographer will ___ the photo for the exhibition.", ["enlarge", "largen", "largify"], 0, "Make larger: [enlarge] (prefix en-)."],
-  ["The company ___ its products on TV and online.", ["advertises", "advertizes", "advertifies"], 0, "Advertise is always spelt [-ise]."],
+  ["The company ___ its products on TV and online.", ["advertises", "advertisizes", "advertifies"], 0, "Advertise is always spelt [-ise]."],
   ["Pollution ___ many species of birds.", ["endangers", "dangerises", "dangerifies"], 0, "Put in danger: [endanger]."],
   ["Please ___ us if you change your address.", ["notify", "notise", "noten"], 0, "Note → [notify] (inform officially)."],
   ["The new law aims to ___ women in the workplace.", ["empower", "powerise", "enpower"], 0, "Before p the prefix is [em-]: empower."],
@@ -51,10 +51,10 @@ P({ id: "adv-wf", lesson: "adverbs", type: "wf", belt: 3, items: [
   ["Prices have risen ___ this year.", "DRAMATIC", ["dramatically"], "adverb", "-ic → [-ically]."],
   ["___, nobody was hurt in the accident.", "LUCK", ["luckily"], "adverb (comment)", "Comment adverb at the start: luck → lucky → [luckily]."],
   ["I'm ___ sorry for what I said.", "TRUE", ["truly"], "adverb", "True drops the e: [truly]."],
-  ["The project was ___ successful.", "SURPRISE", ["surprisingly"], "adverb", "Before an adjective: surprise → surprising → [surprisingly]."],
+  ["Despite all the problems, the project was ___ successful.", "SURPRISE", ["surprisingly"], "adverb", "Before an adjective: surprise → surprising → [surprisingly]. Despite all the problems shows the success was not expected, so not unsurprisingly."],
   ["He ___ forgot his keys again!", "PROBABLE", ["probably"], "adverb", "-le → -ly: [probably]."],
   ["I'm not ___ sure what happened.", "COMPLETE", ["completely"], "adverb", "Keep the e: [completely]."],
-  ["She answered the questions ___.", "CORRECT", ["correctly"], "adverb", "How she answered: [correctly]."],
+  ["She answered all the questions ___ and got full marks.", "CORRECT", ["correctly"], "adverb", "How she answered; full marks shows the answers were right: [correctly]."],
   ["We ___ believe that everyone deserves a second chance.", "STRONG", ["strongly"], "adverb", "Adverb before believe: [strongly]."]
 ] });
 P({ id: "adv-mc", lesson: "adverbs", type: "mc", belt: 4, items: [
@@ -92,7 +92,7 @@ P({ id: "neg-wf", lesson: "negative", type: "wf", belt: 3, items: [
   ["The waiter was so ___ that we left without paying the tip.", "POLITE", ["impolite"], "adjective (negative)", "We left without a tip: [impolite]."],
   ["This is an ___ verb: the past is went.", "REGULAR", ["irregular"], "adjective (negative)", "Before r: [ir-]."],
   ["I think you ___ me: I said Tuesday, not Thursday.", "UNDERSTAND", ["misunderstood"], "verb (past)", "Understood wrongly: [mis-]; past tense."],
-  ["The ___ rate is going down.", "EMPLOY", ["unemployment"], "noun (negative)", "Two changes: un- + employ + -ment = [unemployment]."],
+  ["___ is a serious problem here: one young person in four has no job.", "EMPLOY", ["unemployment"], "noun (negative)", "Having no job: two changes, un- + employ + -ment = [unemployment]."],
   ["Take the chicken out of the freezer to ___ it.", "FROST", ["defrost"], "verb", "Remove the ice: [de-]."],
   ["Don't be so ___! The bus will be here soon.", "PATIENT", ["impatient"], "adjective (negative)", "Before p: [im-]."],
   ["It was ___ of him to take the money.", "HONEST", ["dishonest"], "adjective (negative)", "Taking money is not honest: [dishonest]."],
@@ -133,7 +133,7 @@ P({ id: "deg-wf", lesson: "degree", type: "wf", belt: 4, items: [
   ["Nurses are often ___ for the work they do.", "PAY", ["underpaid"], "adjective (participle)", "Not paid enough: [under-] + paid (irregular)."],
   ["The film is in French with English ___.", "TITLE", ["subtitles"], "noun (plural)", "Text under the picture: [sub-]; plural."],
   ["We should never ___ the power of a good team.", "ESTIMATE", ["underestimate"], "verb", "Think something is smaller than it is: [under-]."],
-  ["She lived in Germany in the ___ years.", "WAR", ["post-war", "postwar"], "adjective", "After the war: [post-]."],
+  ["She was born in 1946 and grew up in the ___ years.", "WAR", ["post-war", "postwar"], "adjective", "Born in 1946, after the Second World War: [post-]."],
   ["The museum is famous for its ___ cave paintings.", "HISTORY", ["prehistoric"], "adjective", "Two changes: pre- + history + -ic = [prehistoric]."],
   ["The ___ conference brought together experts from 40 countries.", "NATION", ["international"], "adjective", "Between nations: inter- + nation + -al = [international]."],
   ["Thanks for your ___: we couldn't have done it without you.", "OPERATE", ["cooperation", "co-operation"], "noun", "Working together: co- + operate + -ion = [cooperation]."],
