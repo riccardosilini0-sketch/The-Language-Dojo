@@ -76,6 +76,9 @@
     if (/'d\b/.test(s)) out = out.flatMap(x => [x.replace(/'d\b/g, " had"), x.replace(/'d\b/g, " would")]);
     return out.map(x => x.replace(/\s+/g, " ").trim());
   }
+  // exact: true on a battery (e.g. the possessive 's) compares the words as written, without reading 's as is / has
+  const exactNorm = x => String(x || "").toLowerCase().replace(/[’‘`´]/g, "'").replace(/\s+/g, " ").trim().replace(/[.!?,;:]+$/g, "").trim();
+  const acceptsExact = (list, given) => !!String(given || "").trim() && list.some(a => exactNorm(a) === exactNorm(given));
   const accepts = (list, given) => { if (!String(given || "").trim()) return false; const g = variants(given); return list.some(a => variants(a).some(v => g.includes(v))); };
   const sentNorm = x => variants(String(x || "").replace(/[.,!?;:–—"“”]/g, " ").replace(/\s-\s/g, " "));
   // a contraction at the end of a clause (‘Yes, I'm.’) is kept as it is, so it never matches the full form:
@@ -295,7 +298,7 @@
       let ok = 0;
       b.items.forEach(([s, gaps, why], i) => {
         const li = $(`.qi[data-q="${i}"]`, box), ins = $$("input", li);
-        const res = ins.map((x, k) => accepts(gaps[k], x.value)); const good = res.every(Boolean); if (good) ok++;
+        const res = ins.map((x, k) => (b.exact ? acceptsExact : accepts)(gaps[k], x.value)); const good = res.every(Boolean); if (good) ok++;
         ins.forEach((x, k) => { x.disabled = true; x.classList.add(res[k] ? "right" : "wrong"); });
         const also = gaps.some(g => g.length > 1) ? `<br><span class="why">Also accepted: ${gaps.filter(g => g.length > 1).map(g => g.slice(1).map(esc).join(" / ")).join(" · ")}</span>` : "";
         $(".fbx", li).innerHTML = fb(good, fillGaps(s, gaps) + also, why);
@@ -432,5 +435,5 @@
   view().addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("#btBody input") && !cur?.checked) { e.preventDefault(); const ins = $$("#btBody input:not([disabled])"); const i = ins.indexOf(e.target); if (ins[i + 1]) ins[i + 1].focus(); } });
 
   route();
-  window.__grammar = { variants, accepts, sameSentence, BATS, LESSONS, ORDERED }; // used by automated tests
+  window.__grammar = { variants, accepts, acceptsExact, sameSentence, BATS, LESSONS, ORDERED }; // used by automated tests
 })();
