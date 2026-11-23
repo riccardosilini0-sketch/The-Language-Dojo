@@ -876,7 +876,7 @@ window.DOJO_I18N = {
       "Your tricky phrasal verbs": "I tuoi phrasal verbs difficili",
       "Phrasal verbs you got wrong or marked {0}. Answer one correctly {1} times in a row and it moves to Learnt.": "I phrasal verbs che hai sbagliato o segnato come “Lo sto ancora imparando”. Rispondi correttamente {1} volte di fila e passeranno tra gli imparati.",
       "Meanings": "Significati",
-      "124 phrasal verbs in six belts": "124 phrasal verbs in sei cinture",
+      "183 phrasal verbs in six belts": "183 phrasal verbs in sei cinture",
       "Separable or not": "Separabili o no",
       "This deletes your learnt phrasal verbs, tricky phrasal verbs and practice results.": "Così cancelli i phrasal verbs imparati, quelli difficili e i risultati degli esercizi.",
       /* Phrasal Verbs: browse */

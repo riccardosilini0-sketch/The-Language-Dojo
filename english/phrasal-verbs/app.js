@@ -375,7 +375,10 @@
     ita: { kind: EX.TYPE.translation, desc: "Write the English phrasal verb for each Italian meaning.", ex: "sbrigarsi → hurry up" }
   };
   EX.numberAll(Object.values(MODES), () => "Phrasal Verbs", (m, t) => { m.name = t; });
-  const sameMeaning = (a, b) => a.it === b.it || a.meanings.some(m => b.meanings.includes(m));
+  // two meanings are "the same" when one starts with the other (tornare / tornare (indietro), scendere / scendere (da un mezzo pubblico)):
+  // such phrasal verbs never appear together as options, and either is accepted in the translation exercise
+  const closeTo = (m, n) => m === n || m.startsWith(n + " ") || n.startsWith(m + " ");
+  const sameMeaning = (a, b) => a.it === b.it || a.meanings.some(m => b.meanings.some(n => closeTo(m, n)));
   function meaningOptions(v) {
     const others = shuffle(PV.filter(x => x !== v && !sameMeaning(x, v) && x.pv !== v.pv));
     const near = others.filter(x => x.verb === v.verb || x.particle === v.particle), rest = others.filter(x => !near.includes(x));
@@ -579,5 +582,5 @@
   };
 
   Store.load(); refreshCount(); route();
-  window.__phrasal = { PV, makeQ, particleOptions, meaningOptions, oneBlock, state: () => qz }; // used by automated tests
+  window.__phrasal = { PV, sameMeaning, makeQ, particleOptions, meaningOptions, oneBlock, state: () => qz }; // used by automated tests
 })();

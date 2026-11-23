@@ -83,7 +83,7 @@ window.DOJO_CATALOG = {
     { id: "phrasal-verbs", lang: "english", area: "lexis", level: "A1–C2", skill: "verbs", status: "available",
       title: "Phrasal Verbs", topic: "Verbs", accent: "#5b5fa8", art: ["give up", "look after", "put off"],
       url: "english/phrasal-verbs/index.html",
-      items: ["124 phrasal verbs in six belts", "Separable or not", "Flashcards", "Practice"] },
+      items: ["183 phrasal verbs in six belts", "Separable or not", "Flashcards", "Practice"] },
     { id: "dependent-prepositions", lang: "english", area: "lexis", level: "A1–B1", skill: "grammar", status: "available",
       title: "Dependent Prepositions", topic: "Grammar", accent: "#7a3b5c", art: ["depend on", "good at", "reason for"],
       url: "english/dependent-prepositions/index.html",

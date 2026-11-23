@@ -45,7 +45,7 @@ japanese/writing-system/        Writing System (hiragana, katakana, kanji)
 assets/css/resource.css         Shared shell for learning resources
 assets/js/belts.js              The belt system shared by all resources
 english/phrasal-verbs/          Phrasal Verbs (same pattern as Irregular Verbs: belt selector, list, flashcards, practice)
-  phrasal-data.js               124 phrasal verbs in six belts: [phrasal verb, Italian, {b, t: "s" separable / "i" not separable / "n" no object, ex}]
+  phrasal-data.js               183 phrasal verbs in six belts: [phrasal verb, Italian, {b, t: "s" separable / "i" not separable / "n" no object, ex}]
                                 Examples mark the verb in [brackets]; a separated verb has two parts: [turn] it [off]
   app.js, app.css               The app (app.css adapted from irregular-verbs; pronunciation uses the browser voice)
 english/irregular-verbs/        First learning app
