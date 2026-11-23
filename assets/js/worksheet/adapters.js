@@ -110,7 +110,7 @@
       const G = w.__grammar, EX = w.DojoEx, B = w.DojoBelts, CFG = w.GL.config;
       const les = Object.fromEntries(G.LESSONS.map(l => [l.id, l])), grp = Object.fromEntries(CFG.groups);
       // batteries built on a picture (img) are practised on the site only
-      return G.ORDERED.filter(b => !b.img).map(b => battery(b, EX, B, { prefix: sectionId.slice(0, 2) + ":", section: sectionId, title, shuffle: true, area: sectionId === "word-formation" ? "English · Vocabulary" : null,
+      return G.ORDERED.filter(b => !b.img).map(b => battery(b, EX, B, { prefix: (["modal-verbs", "passive-voice", "word-formation", "english-basics"].includes(sectionId) ? sectionId.slice(0, 2) : sectionId) + ":", section: sectionId, title, shuffle: true, area: sectionId === "word-formation" ? "English · Vocabulary" : null,
         groupOf: b => b.lesson === "review" ? "Review" : grp[les[b.lesson].group], topicOf: b => b.lesson === "review" ? CFG.reviewTitle : les[b.lesson].title }));
     };
   }
@@ -274,6 +274,7 @@
     { id: "verb-tenses", title: "Verb Tenses", area: "Grammar", url: "english/verb-tenses/index.html", ready: w => w.__tenseDojo, extract: verbTenses },
     { id: "dependent-prepositions", title: "Dependent Prepositions", area: "Grammar", url: "english/dependent-prepositions/index.html", ready: w => w.__depprep, extract: depPrep },
     { id: "english-basics", title: "English Basics", area: "Grammar", url: "english/basics/index.html", ready: w => w.__grammar, extract: grammar("english-basics", "English Basics") },
+    { id: "comparison", title: "Comparatives and Quantifiers", area: "Grammar", url: "english/comparison/index.html", ready: w => w.__grammar, extract: grammar("comparison", "Comparatives and Quantifiers") },
     { id: "modal-verbs", title: "Modal Verbs", area: "Grammar", url: "english/modal-verbs/index.html", ready: w => w.__grammar, extract: grammar("modal-verbs", "Modal Verbs") },
     { id: "passive-voice", title: "The Passive Voice", area: "Grammar", url: "english/passive-voice/index.html", ready: w => w.__grammar, extract: grammar("passive-voice", "The Passive Voice") },
     { id: "word-formation", title: "Word Formation", area: "Vocabulary", url: "english/word-formation/index.html", ready: w => w.__grammar && w.DojoEx, extract: grammar("word-formation", "Word Formation") },
