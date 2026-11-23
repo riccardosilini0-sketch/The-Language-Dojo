@@ -17,6 +17,11 @@ assets/img/                     Logo files: logo-horizontal.svg, logo-square.svg
 english/index.html              English language page
 english/verb-tenses/            Verb Tenses Dojo
 english/phonetics/              Sounds of English — phonetics & phonology (data/, img/, audio/)
+english/comparison/             Comparatives and Quantifiers (A1–B1)   ┐
+english/conditionals/           Conditionals (A2–B2)                    │ grammar engine sections:
+english/verb-patterns/          Verb Patterns (A2–B2)                   │ data/lessons.js + data/practice-1.js
+english/relative-clauses/       Relative Clauses (A2–B2)                │
+english/reported-speech/        Reported Speech (B1–B2)                 ┘
 english/basics/                 English Basics — A1–A2 grammar foundations (grammar engine: data/lessons.js, data/practice-*.js)
 english/dependent-prepositions/ Dependent Prepositions — reference and practice tests
   data/reference.js             Verbs, adjectives, nouns + prepositions (example + Italian translation, belt)
@@ -62,7 +67,7 @@ These sections use the shared engine `assets/js/grammar-lab.js` and `assets/css/
 
 - **Word Formation** (`english/word-formation/`) follows Cambridge Use of English, Part 3. `wf` items are `[sentence with ___, WORD IN CAPITALS, [accepted answers], word class, explanation]`; `wftext` batteries are a text with `{1}…{8}` and `gaps: [[accepted answers], WORD, word class, explanation]`. List every accepted spelling (organise / organize); the word in capitals is never accepted as it is. The exam batteries (`lesson: "review"`) go from B1 (orange belt) to C2 (black belt).
 
-To add a new grammar section, copy one of the folders, change `index.html`, `app.css` and the data, and add the section to `assets/js/catalog.js`.
+New grammar sections use the full section id in the Worksheet Builder ids (older sections keep their two-letter prefix). To add a new grammar section, copy one of the folders, change `index.html`, `app.css` and the data, and add the section to `assets/js/catalog.js`.
 
 ## English Basics
 

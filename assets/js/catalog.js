@@ -65,7 +65,7 @@ window.DOJO_CATALOG = {
       url: "english/conditionals/index.html",
       items: ["Zero and first conditional", "Second conditional", "Third and mixed conditionals", "Unless, in case, I wish"] },
     { id: "verb-patterns", lang: "english", area: "grammar", level: "A2–B2", skill: "grammar", status: "available",
-      title: "Verb Patterns", topic: "Grammar", accent: "#2a7a6b", art: ["enjoy doing", "want to do", "make me do"],
+      title: "Verb Patterns", topic: "Grammar", accent: "#2a7a6b", art: ["doing", "to do", "let me"],
       url: "english/verb-patterns/index.html",
       items: ["Verb + -ing or to-infinitive", "Verb + object + infinitive", "Remember, stop, try, forget", "Prepositions + -ing, used to"] },
     { id: "relative-clauses", lang: "english", area: "grammar", level: "A2–B2", skill: "grammar", status: "available",
