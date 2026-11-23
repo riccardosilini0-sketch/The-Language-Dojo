@@ -71,6 +71,12 @@ To add a new grammar section, copy one of the folders, change `index.html`, `app
 - `order` (Sentence building): `[words separated by " / ", [accepted sentences], explanation]`. The words are buttons that build the answer; the answer can also be typed.
 - `translate` (Translation): `[Italian sentence, hint or "", [accepted English sentences], model answer, explanation]`, the same shape as in Dependent Prepositions.
 
+- `sort` (Sorting): `{ cats: [groups], items: [[word or expression, index of the group, explanation]] }`.
+
+Further battery options of the grammar engine: `img: [path, description]` shows a picture above the questions (such batteries are left out of the PDF Worksheet Builder); `test: true` adds the score out of 100 and the mark out of 10 (pass mark 60) to the result; `exact: true` makes a gap battery compare answers as written (used for the possessive 's, which otherwise would be read as is / has).
+
+Contents: 16 lessons in five groups (subject pronouns, be · articles, plurals, this/that, there is · object pronouns, possessives, 's · have got, can, question words, imperative · prepositions of place and time), each with a Check yourself battery, plus mixed review batteries and a 25-question final test. Data files: `data/lessons*.js` and `data/practice-1.js` … `practice-6.js`; the picture for prepositions of place is `img/room.svg`.
+
 The sentence checker rejects `amn't` and a contraction at the end of a clause (`Yes, I'm.`), so affirmative short answers must use the full form.
 
 ## Exercise headers

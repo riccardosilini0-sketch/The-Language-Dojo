@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" font-family="Inter, Arial, sans-serif">
+  <title>A living room: a door with a clock above it and a plant next to it, two chairs with a ball between them, a table with a lamp and a box of books on it and a cat under it, an armchair with a picture above it, a bag behind it and a dog in front of it.</title>
+  <!-- wall and floor -->
+  <rect width="640" height="300" fill="#f6efe2"/>
+  <rect y="300" width="640" height="60" fill="#d9c3a0"/>
+  <line x1="0" y1="300" x2="640" y2="300" stroke="#b89d74" stroke-width="2"/>
+  <!-- door -->
+  <rect x="24" y="96" width="86" height="204" fill="#a06a3c" stroke="#6d4524" stroke-width="2"/>
+  <rect x="36" y="110" width="62" height="74" fill="none" stroke="#6d4524" stroke-width="1.5"/>
+  <rect x="36" y="200" width="62" height="86" fill="none" stroke="#6d4524" stroke-width="1.5"/>
+  <circle cx="98" cy="200" r="4" fill="#e3b93c"/>
+  <!-- clock above the door -->
+  <circle cx="67" cy="56" r="24" fill="#fff" stroke="#3a3631" stroke-width="3"/>
+  <line x1="67" y1="56" x2="67" y2="40" stroke="#3a3631" stroke-width="3" stroke-linecap="round"/>
+  <line x1="67" y1="56" x2="79" y2="62" stroke="#3a3631" stroke-width="3" stroke-linecap="round"/>
+  <!-- plant next to the door -->
+  <path d="M122 300 l4 -34 h28 l4 34 z" fill="#c0643a" stroke="#8a4425" stroke-width="2"/>
+  <path d="M140 266 C130 240 112 236 108 220 C126 222 136 236 140 256 C140 232 132 214 140 196 C148 214 142 232 141 256 C146 236 156 222 172 220 C168 236 150 240 140 266 z" fill="#4f8f5c" stroke="#2f6a3c" stroke-width="1.5"/>
+  <!-- chair 1 -->
+  <g fill="#6b4f1d" stroke="#4a3613" stroke-width="2">
+    <rect x="186" y="196" width="8" height="104"/>
+    <rect x="186" y="244" width="52" height="8"/>
+    <rect x="230" y="252" width="8" height="48"/>
+    <rect x="190" y="252" width="6" height="48"/>
+  </g>
+  <!-- ball between the chairs -->
+  <circle cx="270" cy="287" r="13" fill="#dc4b3c" stroke="#9c2c20" stroke-width="2"/>
+  <path d="M258 283 q12 8 24 0" fill="none" stroke="#fff" stroke-width="2"/>
+  <!-- chair 2 -->
+  <g fill="#6b4f1d" stroke="#4a3613" stroke-width="2">
+    <rect x="346" y="196" width="8" height="104"/>
+    <rect x="302" y="244" width="52" height="8"/>
+    <rect x="302" y="252" width="8" height="48"/>
+    <rect x="344" y="252" width="6" height="48"/>
+  </g>
+  <!-- table -->
+  <g fill="#8c5a2f" stroke="#5c3a1c" stroke-width="2">
+    <rect x="372" y="214" width="138" height="12"/>
+    <rect x="380" y="226" width="9" height="74"/>
+    <rect x="493" y="226" width="9" height="74"/>
+  </g>
+  <!-- lamp on the table -->
+  <rect x="396" y="208" width="26" height="6" fill="#3a3631"/>
+  <rect x="406" y="168" width="6" height="40" fill="#3a3631"/>
+  <path d="M390 170 l10 -32 h18 l10 32 z" fill="#e3b93c" stroke="#a9801a" stroke-width="2"/>
+  <!-- box of books on the table, next to the lamp -->
+  <rect x="446" y="182" width="50" height="32" fill="#c9a46a" stroke="#8a6a35" stroke-width="2"/>
+  <rect x="452" y="166" width="10" height="18" fill="#3a5f9e"/>
+  <rect x="464" y="170" width="10" height="14" fill="#dc4b3c"/>
+  <rect x="476" y="164" width="10" height="20" fill="#4f8f5c"/>
+  <!-- cat under the table -->
+  <g fill="#3a3631">
+    <ellipse cx="444" cy="288" rx="24" ry="12"/>
+    <circle cx="420" cy="276" r="11"/>
+    <path d="M412 268 l2 -12 l7 9 z M424 266 l6 -10 l1 12 z"/>
+    <path d="M466 286 q18 -4 14 -24" fill="none" stroke="#3a3631" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <circle cx="416" cy="275" r="2" fill="#e3b93c"/>
+  <circle cx="424" cy="275" r="2" fill="#e3b93c"/>
+  <!-- picture above the armchair -->
+  <rect x="540" y="70" width="80" height="58" fill="#fff" stroke="#6b4f1d" stroke-width="5"/>
+  <path d="M546 122 l20 -26 l14 16 l10 -10 l26 20 z" fill="#4f8f5c"/>
+  <circle cx="602" cy="86" r="7" fill="#e3b93c"/>
+  <!-- bag behind the armchair (only the top shows) -->
+  <path d="M600 186 q0 -22 16 -22 q16 0 16 22" fill="none" stroke="#2c4f7c" stroke-width="5"/>
+  <rect x="594" y="184" width="44" height="30" rx="4" fill="#3a5f9e" stroke="#2c4f7c" stroke-width="2"/>
+  <!-- armchair -->
+  <g stroke="#5c2f3e" stroke-width="2">
+    <rect x="528" y="196" width="112" height="52" rx="10" fill="#7a3b5c"/>
+    <rect x="520" y="238" width="120" height="40" rx="8" fill="#8f4a6d"/>
+    <rect x="514" y="222" width="22" height="58" rx="8" fill="#7a3b5c"/>
+    <rect x="530" y="278" width="8" height="22" fill="#5c2f3e"/>
+    <rect x="626" y="278" width="8" height="22" fill="#5c2f3e"/>
+  </g>
+  <!-- dog in front of the armchair -->
+  <g fill="#c98a4b" stroke="#8a5a2a" stroke-width="2">
+    <rect x="556" y="284" width="58" height="26" rx="12"/>
+    <rect x="562" y="306" width="9" height="22" rx="3"/>
+    <rect x="600" y="306" width="9" height="22" rx="3"/>
+    <circle cx="550" cy="284" r="16"/>
+  </g>
+  <path d="M540 276 q-8 10 -2 20" fill="#8a5a2a"/>
+  <circle cx="546" cy="281" r="2.2" fill="#1d1b18"/>
+  <circle cx="536" cy="289" r="3" fill="#1d1b18"/>
+  <path d="M614 292 q14 -6 12 -18" fill="none" stroke="#8a5a2a" stroke-width="4" stroke-linecap="round"/>
+</svg>
