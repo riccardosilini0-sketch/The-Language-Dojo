@@ -33,10 +33,18 @@
   const LV = { b: 0, only: false };
   (() => { const q = new URLSearchParams(location.search), b = +q.get("belt"); if (BELTS.includes(b)) { LV.b = b; LV.only = q.get("only") === "1"; } })();
   const inLevel = v => !LV.b || (LV.only ? v.belt === LV.b : v.belt <= LV.b);
-  const POOL = () => PV.filter(inLevel);
+  /* ---------- browse by verb or by particle (combined with the belt) ---------- */
+  // ?by=verb&v=turn → only turn …; ?by=particle&v=off → every phrasal verb that contains the particle "off" (also in two-particle verbs)
+  const FO = { by: "", val: "" };
+  (() => { const q = new URLSearchParams(location.search), by = q.get("by"), v = q.get("v"); if (by === "verb" || by === "particle") { FO.by = by; if (v && PV.some(x => by === "verb" ? x.verb === v : x.particle.split(" ").includes(v))) FO.val = v; } })();
+  const inFocus = v => !FO.val || (FO.by === "verb" ? v.verb === FO.val : v.particle.split(" ").includes(FO.val));
+  const LEVEL_POOL = () => PV.filter(inLevel);
+  const POOL = () => PV.filter(v => inLevel(v) && inFocus(v));
+  const focusName = () => !FO.val ? "" : FO.by === "verb" ? `${FO.val} …` : `… ${FO.val}`;
   const byBelt = b => PV.filter(v => v.belt === b);
   const CEFR = { 1: "A1–A2", 2: "A2", 3: "B1", 4: "B1–B2", 5: "B2–C1", 6: "C1–C2" };
   const levelName = () => !LV.b ? "All phrasal verbs" : LV.only || LV.b === 1 ? BL.get(LV.b).name : `White to ${BL.get(LV.b).short} belt`;
+  const deckName = () => FO.val ? (LV.b ? `${levelName()} · ${focusName()}` : focusName()) : levelName();
   function setLevel(b, only) {
     LV.b = b; LV.only = !!only && b > 0;
     const q = new URLSearchParams(location.search); q.delete("belt"); q.delete("only");
@@ -45,6 +53,36 @@
     fc.order = []; fc.done = false;
     if (current && views[current]) views[current].show();
   }
+  function setFocus(by, val) {
+    FO.by = by || ""; FO.val = FO.by ? val || "" : "";
+    if (typeof vl !== "undefined") { vl.key = FO.by === "verb" ? "verb" : FO.by === "particle" ? "particle" : "belt"; vl.dir = 1; } // the list follows the chosen grouping
+    const q = new URLSearchParams(location.search); q.delete("by"); q.delete("v");
+    if (FO.by) { q.set("by", FO.by); if (FO.val) q.set("v", FO.val); }
+    const qs = q.toString(); history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash);
+    fc.order = []; fc.done = false;
+    if (current && views[current]) views[current].show();
+  }
+  // verbs or particles with their number of phrasal verbs, in alphabetical order (counted within the chosen belts)
+  function groupsOf(by, pool) {
+    const m = new Map();
+    pool.forEach(v => (by === "verb" ? [v.verb] : [...new Set(v.particle.split(" "))]).forEach(k => m.set(k, (m.get(k) || 0) + 1)));
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], "en"));
+  }
+  function focusBar() {
+    const pool = LEVEL_POOL(), groups = FO.by ? groupsOf(FO.by, pool) : [], n = POOL().length;
+    return `<div class="fobar card">
+      <div class="lv-h"><b>Browse</b><span>Show all the phrasal verbs, or only those with the same verb or the same particle.</span></div>
+      <div class="seg" role="group" aria-label="Browse"><button type="button" data-fby="" class="${!FO.by ? "on" : ""}">All</button><button type="button" data-fby="verb" class="${FO.by === "verb" ? "on" : ""}">By verb</button><button type="button" data-fby="particle" class="${FO.by === "particle" ? "on" : ""}">By particle</button></div>
+      ${FO.by ? `<div class="fchips" role="group" aria-label="${FO.by === "verb" ? "Verbs" : "Particles"}" translate="no">${groups.map(([k, c]) => `<button type="button" class="fchip ${FO.val === k ? "on" : ""}" data-fval="${esc(k)}">${esc(k)} <small>${c}</small></button>`).join("") || `<span class="lv-note">No phrasal verbs at this level.</span>`}</div>` : ""}
+      ${FO.val ? `<p class="lv-note"><b translate="no">${esc(focusName())}</b> · ${n} phrasal verb${n === 1 ? "" : "s"} <button type="button" class="linkbtn" data-fval="">Show all</button></p>` : FO.by ? `<p class="lv-note">${FO.by === "verb" ? "Choose a verb to see all its phrasal verbs." : "Choose a particle to see all the phrasal verbs that contain it."}</p>` : ""}
+    </div>`;
+  }
+  document.addEventListener("click", e => {
+    const a = e.target.closest("[data-fby]"), c = e.target.closest("[data-fval]"), g = e.target.closest("[data-fgo]");
+    if (g) { e.preventDefault(); const [by, val] = g.dataset.fgo.split(":"); setFocus(by, val); go("list"); }
+    else if (a) { e.preventDefault(); setFocus(a.dataset.fby, a.dataset.fby === FO.by ? FO.val : ""); }
+    else if (c) { e.preventDefault(); setFocus(FO.by, c.dataset.fval === FO.val ? "" : c.dataset.fval); }
+  });
   const bdot = b => `<i class="bdot" style="background:${BL.get(b).color}" title="${BL.get(b).name}"></i>`;
   function levelBar() {
     const n = POOL().length;
@@ -173,6 +211,12 @@
           </div>
           <p class="how-note">Phrasal verbs with two particles (look forward to, put up with, run out of) are never separated. After a preposition the verb takes -ing: I'm looking forward to seeing you.</p>
         </div>
+        <div class="card how">
+          <h2>Browse by verb or by particle</h2>
+          <p>Many phrasal verbs share the same verb (get up, get on, get over…) or the same particle (turn off, put off, call off…). Choose one to see them all together, in the list, in the flashcards and in practice.</p>
+          <div class="fchips" translate="no"><b class="fch-l">Verbs</b>${groupsOf("verb", PV).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 10).map(([k, c]) => `<button type="button" class="fchip" data-fgo="verb:${esc(k)}">${esc(k)} … <small>${c}</small></button>`).join("")}</div>
+          <div class="fchips" translate="no"><b class="fch-l">Particles</b>${groupsOf("particle", PV).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 10).map(([k, c]) => `<button type="button" class="fchip" data-fgo="particle:${esc(k)}">… ${esc(k)} <small>${c}</small></button>`).join("")}</div>
+        </div>
         <div class="vhead" style="margin-top:40px"><h2>Study belt by belt</h2><p>The ${PV.length} phrasal verbs are divided into six belts, from the most common, used every day (White), to the most idiomatic (Black). Start with the White belt, then add one belt at a time.</p></div>
         <div class="belt-grid">${BELTS.map(b => { const L = byBelt(b), k = L.filter(x => statusOf(x) === "known").length, cum = PV.filter(x => x.belt <= b).length;
           return `<button type="button" class="card belt-card" data-lv="${b}" data-only="0" data-goto="list" style="--bc:${BL.get(b).stroke || BL.get(b).color}">
@@ -183,7 +227,7 @@
   };
 
   /* ================= LIST ================= */
-  const vl = { q: "", filter: "all", key: "belt", dir: 1, ex: false, open: new Set() };
+  const vl = { q: "", filter: "all", key: FO.by === "verb" ? "verb" : FO.by === "particle" ? "particle" : "belt", dir: 1, ex: false, open: new Set() };
   views.list = {
     init() {
       const root = $("#view-list");
@@ -194,7 +238,7 @@
           <label class="search">${ICON.search}<input id="vq" type="search" placeholder="Search in English or Italian" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Search phrasal verbs"></label>
           <div class="seg" id="vf" role="group" aria-label="Show"></div>
           <label class="sort-m"><span class="sr-only">Sort</span><select id="vsort" class="sortsel" aria-label="Sort phrasal verbs">
-            <option value="belt:1">Level: White → Black</option><option value="pv:1">Phrasal verb A–Z</option><option value="pv:-1">Phrasal verb Z–A</option><option value="particle:1">Particle A–Z</option><option value="it:1">Italian A–Z</option></select></label>
+            <option value="belt:1">Level: White → Black</option><option value="verb:1">Grouped by verb</option><option value="particle:1">Grouped by particle</option><option value="pv:1">Phrasal verb A–Z</option><option value="pv:-1">Phrasal verb Z–A</option><option value="it:1">Italian A–Z</option></select></label>
         </div>
         <div class="count-row"><div class="count" id="vcount"></div><label class="exs-tg"><input type="checkbox" id="vex"> Show the example sentences</label></div>
         <div class="card" style="overflow:hidden"><table class="vtable"><thead><tr>
@@ -211,10 +255,10 @@
     },
     show() { this.render(); },
     render() {
-      $("#lvList").innerHTML = levelBar();
+      $("#lvList").innerHTML = levelBar() + focusBar();
       $("#vf").innerHTML = [["all", "All"], ["known", `Learnt (${learnt().length})`], ["practise", `To review (${tricky().length})`]].map(([k, l]) => `<button type="button" data-f="${k}" class="${vl.filter === k ? "on" : ""}">${l}</button>`).join("");
       const q = deaccent(norm(vl.q));
-      const val = (v, k) => k === "belt" ? String(v.belt) : k === "t" ? TYPE[v.t] : String(v[k]);
+      const val = (v, k) => k === "belt" ? String(v.belt) : k === "t" ? TYPE[v.t] : k === "verb" ? v.verb + " " + v.particle : k === "particle" ? v.particle + " " + v.verb : String(v[k]);
       const pool = POOL();
       const rows = pool.filter(v => (vl.filter === "all" || statusOf(v) === vl.filter) && (!q || deaccent(norm(v.pv + " " + v.it)).includes(q)))
         .sort((a, b) => val(a, vl.key).localeCompare(val(b, vl.key), "en") * vl.dir || a.pv.localeCompare(b.pv));
@@ -222,12 +266,15 @@
       const vs = $("#vsort"); if (vs) { const v = `${vl.key}:${vl.dir}`; if ([...vs.options].some(o => o.value === v)) vs.value = v; }
       $("#vcount").textContent = rows.length === pool.length ? `${pool.length} phrasal verbs` : `${rows.length} of ${pool.length} phrasal verbs`;
       const open = v => vl.ex || vl.open.has(v.id);
-      $("#vbody").innerHTML = rows.length ? rows.map(v => `<tr class="${open(v) ? "has-ex" : ""}">
+      // grouped views: a heading row each time the verb (or the particle) changes
+      const gkey = vl.key === "verb" ? v => v.verb : vl.key === "particle" ? v => v.particle : null;
+      const gcount = k => rows.filter(x => gkey(x) === k).length;
+      $("#vbody").innerHTML = rows.length ? rows.map((v, i) => `${gkey && (i === 0 || gkey(rows[i - 1]) !== gkey(v)) ? `<tr class="grp-row"><td colspan="3"><span translate="no">${esc(vl.key === "verb" ? gkey(v) + " …" : "… " + gkey(v))}</span> <small>${gcount(gkey(v))}</small></td></tr>` : ""}<tr class="${open(v) ? "has-ex" : ""}">
           <td class="c-base" data-label="Phrasal verb"><div class="vcell"><span class="sdot ${statusOf(v)}" title="${statusOf(v) === "known" ? "Learnt" : statusOf(v) === "practise" ? "To review" : ""}"></span>${bdot(v.belt)}<span class="w">${esc(v.pv)}</span>${spk(v.pv, "sm")}</div></td>
           <td class="c-past" data-label="Type">${ptype(v.t)}</td>
           <td class="c-it" data-label="Italian"><div class="it-cell"><span>${esc(v.it)}</span>${v.ex.length && !vl.ex ? `<button type="button" class="exv ${open(v) ? "on" : ""}" data-exv="${v.id}" aria-expanded="${open(v)}">${window.Dojo.t("Examples")}</button>` : ""}</div></td></tr>
           ${open(v) ? `<tr class="ex-row"><td colspan="3">${examples(v)}</td></tr>` : ""}`).join("")
-        : `<tr><td colspan="3"><div class="empty"><h3>No phrasal verbs found</h3>Try a different word.</div></td></tr>`;
+        : `<tr><td colspan="3"><div class="empty"><h3>No phrasal verbs found</h3>${pool.length ? "Try a different word." : "Try another belt, verb or particle."}</div></td></tr>`;
     }
   };
 
@@ -277,9 +324,10 @@
     render() {
       const root = $("#view-cards"), nt = tricky().length;
       const head = `<div class="vhead" style="text-align:center"><span class="q-kind">${EX.TYPE.flashcards}</span><h2 style="margin-top:8px">Phrasal Verbs</h2><p style="margin:8px auto 0">${fc.dir === "en" ? "Say what each phrasal verb means, then turn the card to check." : "Say the English phrasal verb for each meaning, then turn the card to check."}</p></div>
-        ${levelBar()}<div class="fc-head"><div class="seg"><button type="button" data-fc="deck" data-d="all" class="${fc.deck === "all" ? "on" : ""}">${levelName()} (${POOL().length})</button><button type="button" data-fc="deck" data-d="practise" class="${fc.deck === "practise" ? "on" : ""}">Tricky (${nt})</button></div>
+        ${levelBar()}${focusBar()}<div class="fc-head"><div class="seg"><button type="button" data-fc="deck" data-d="all" class="${fc.deck === "all" ? "on" : ""}">${esc(deckName())} (${POOL().length})</button><button type="button" data-fc="deck" data-d="practise" class="${fc.deck === "practise" ? "on" : ""}">Tricky (${nt})</button></div>
         <div class="seg"><button type="button" data-fc="dir" data-d="en" class="${fc.dir === "en" ? "on" : ""}">English → Italian</button><button type="button" data-fc="dir" data-d="it" class="${fc.dir === "it" ? "on" : ""}">Italian → English</button></div>
         <button class="icon-btn" type="button" data-fc="shuffle" title="Shuffle" aria-label="Shuffle cards">${ICON.shuffle}</button></div>`;
+      if (!fc.order.length && fc.deck === "all") { root.innerHTML = `<div class="fc">${head}<div class="card empty"><h3>No phrasal verbs with these settings</h3><p>Try another belt, verb or particle.</p></div></div>`; return; }
       if (!fc.order.length) {
         root.innerHTML = `<div class="fc">${head}<div class="card empty"><h3>No tricky phrasal verbs yet</h3><p>Phrasal verbs you mark as “Still learning” or get wrong in Practice will appear here.</p><div class="actions"><button class="btn ink" type="button" data-fc="deck" data-d="all">Train with all phrasal verbs</button></div></div></div>`;
         return;
@@ -391,7 +439,7 @@
       qz.mode = mode; qz.src = src; qz.ids = ids || null;
       const pool = src === "ids" ? ids.map(i => PV[i]) : src === "practise" ? tricky() : POOL();
       qz.qs = buildQs(mode, pool, Math.min(Store.data.len, Math.max(pool.length * 2, 5)));
-      if (!qz.qs.length) { toast("There are no tricky phrasal verbs to practise yet."); qz.phase = "menu"; qz.src = "all"; this.render(); return; }
+      if (!qz.qs.length) { toast(src === "practise" ? "There are no tricky phrasal verbs to practise yet." : "No phrasal verbs with these settings."); qz.phase = "menu"; qz.src = "all"; this.render(); return; }
       qz.i = 0; qz.score = 0; qz.answered = false; qz.results = []; qz.phase = "q"; this.render();
     },
     next() { if (!qz.answered) return; if (qz.i < qz.qs.length - 1) { qz.i++; qz.answered = false; this.render(); } else this.finish(); },
@@ -435,10 +483,10 @@
       if (qz.phase === "menu") {
         const L = Store.data.len, nt = tricky().length; if (!nt && qz.src === "practise") qz.src = "all";
         root.innerHTML = `<div class="vhead"><h2>Practice</h2></div>
-          ${levelBar()}
+          ${levelBar()}${focusBar()}
           <div class="pset">
             <div>Questions <span class="seg">${[10, 20].map(n => `<button type="button" data-q="len" data-n="${n}" class="${L === n ? "on" : ""}">${n}</button>`).join("")}</span></div>
-            <div>Phrasal verbs <span class="seg"><button type="button" data-q="src" data-s="all" class="${qz.src !== "practise" ? "on" : ""}">${levelName()} (${POOL().length})</button><button type="button" data-q="src" data-s="practise" class="${qz.src === "practise" ? "on" : ""}" ${nt ? "" : "disabled"}>Tricky (${nt})</button></span></div>
+            <div>Phrasal verbs <span class="seg"><button type="button" data-q="src" data-s="all" class="${qz.src !== "practise" ? "on" : ""}">${esc(deckName())} (${POOL().length})</button><button type="button" data-q="src" data-s="practise" class="${qz.src === "practise" ? "on" : ""}" ${nt ? "" : "disabled"}>Tricky (${nt})</button></span></div>
           </div>
           <div class="modes">${Object.entries(MODES).map(([k, m]) => `<button type="button" class="mode ${k === "mix" ? "feat" : ""}" data-q="start" data-mode="${k}"><span><span class="kind">${m.kind}</span><b>${m.name}</b><p>${m.desc}</p><span class="ex">${esc(m.ex)}</span></span></button>`).join("")}</div>
           <div id="progressBox"></div>`;
@@ -452,7 +500,7 @@
         const wrong = qz.results.filter(r => !r.ok);
         root.innerHTML = `<div class="q"><div class="card results">
           <div class="score">${qz.score}<span> / ${n}</span></div>
-          <h3>${msg}</h3><p>${pct}% correct · ${MODES[qz.mode].name}${qz.src === "all" && LV.b ? " · " + levelName() : ""}</p>
+          <h3>${msg}</h3><p>${pct}% correct · ${MODES[qz.mode].name}${qz.src === "all" && (LV.b || FO.val) ? " · " + esc(deckName()) : ""}</p>
           <div class="bar" style="max-width:340px;margin:20px auto 0"><span style="width:${pct}%;background:${pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--kincha)" : "var(--shu)"}"></span></div>
           <div class="actions"><button class="btn ink" type="button" data-q="again">${ICON.restart} Repeat</button>${wrong.length ? `<button class="btn primary" type="button" data-q="mistakes">Practise my mistakes</button>` : ""}<button class="btn soft" type="button" data-q="menu">Choose another exercise</button></div>
           ${wrong.length ? `<div class="review"><h4>Phrasal verbs to remember</h4>${wrong.map(r => `<div class="rv"><div><b>${esc(r.v.pv)}</b> = ${esc(r.v.it)}<br><span class="you">${esc(r.given || "—")}</span></div>${spk(r.v.pv, "sm")}</div>`).join("")}</div>` : ""}
@@ -480,7 +528,7 @@
       root.innerHTML = `<div class="q">
         <div class="q-top"><span class="sc">${qz.i + 1} / ${n}</span><div class="bar"><span style="width:${qz.i / n * 100}%;background:var(--shu)"></span></div><span class="sc">Score <b id="qscore">${qz.score}</b></span></div>
         <div class="card q-card">
-          <div class="ex-head"><span class="q-kind">${m.kind}</span><h3 class="ex-title">${MODES[qz.mode].name}</h3><p class="ex-instr">${m.desc}</p>${qz.src === "all" && LV.b ? `<span class="q-lv">${bdot(LV.b)}${levelName()}</span>` : ""}</div>
+          <div class="ex-head"><span class="q-kind">${m.kind}</span><h3 class="ex-title">${MODES[qz.mode].name}</h3><p class="ex-instr">${m.desc}</p>${qz.src === "all" && (LV.b || FO.val) ? `<span class="q-lv">${LV.b ? bdot(LV.b) : ""}${esc(deckName())}</span>` : ""}</div>
           ${body}
           <div id="qfb" aria-live="polite"></div>
           <div class="q-foot" id="qfoot"><button class="btn soft sm" type="button" data-q="menu">Quit</button>${written ? `<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn soft" type="button" data-q="skip">I don't know</button><button class="btn ink lg" type="button" data-q="check">${ICON.check} Check</button></div>` : ""}</div>
