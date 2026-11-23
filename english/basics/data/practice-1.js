@@ -1,4 +1,4 @@
-/* English Basics — practice batteries (1): the verb be.
+/* English Basics — practice batteries (1): subject pronouns and the verb be.
    mc:        [sentence with ___, [options], index of the correct option, explanation]
    gap:       [sentence with ___ (hint), [[accepted answers for gap 1], …], explanation]
    correct:   [sentence with a mistake, [accepted corrections], explanation]
@@ -11,6 +11,63 @@
    A battery with a title keeps it; the others are numbered per lesson (The verb be – 1, – 2 …). */
 const P = x => GL.batteries.push(x);
 const T = (it, hint, acc, why) => [it, hint, acc, acc[0], why];
+
+/* ---------- subject pronouns ---------- */
+P({ id: "pron-gap", lesson: "pronouns", type: "gap", belt: 1, instr: "Complete the sentences with a subject pronoun: I, you, he, she, it, we or they.", items: [
+  ["My sister is twenty. ___ is at university.", [["She"]], "My sister → [she]."],
+  ["Mr Brown is our neighbour. ___ is from Scotland.", [["He"]], "Mr Brown → [he]."],
+  ["Where is my bag? – ___ is on the chair.", [["It"]], "A thing → [it]."],
+  ["Paolo and I are cousins. ___ are the same age.", [["We"]], "Paolo and I → [we]."],
+  ["Look at that dog! ___ is huge.", [["It"]], "An animal without a name → [it]."],
+  ["My parents are teachers. ___ are at school all day.", [["They"]], "My parents → [they]."],
+  ["Are ___ OK, Sara? You look tired.", [["you"]], "The person you speak to → [you]."],
+  ["Rome is beautiful, but ___ is very hot in summer.", [["it"]], "A city → [it]."],
+  ["Emma and Giorgia are my friends. ___ are very nice.", [["They"]], "Two people → [they]."],
+  ["My grandfather is eighty-five, but ___ is very fit.", [["he"]], "My grandfather → [he]."],
+  ["You and your brother are very tall! Are ___ twins?", [["you"]], "You and your brother → [you] (plural)."],
+  ["___ am from Naples, and my best friend is from Bari.", [["I"]], "[I], always with a capital letter."]
+] });
+P({ id: "pron-mc", lesson: "pronouns", type: "mc", belt: 1, items: [
+  ["This is my aunt Lucia. ___ is a vet.", ["She", "He", "It"], 0, "A woman → [she]."],
+  ["I like this film. ___ is very funny.", ["It", "He", "She"], 0, "A thing → [it]."],
+  ["Marco and I are in 2A. ___ are classmates.", ["We", "They", "You"], 0, "Marco and I → [we]."],
+  ["Where are the keys? – ___ are on the table.", ["They", "It", "We"], 0, "Keys is plural → [they]."],
+  ["___ is cold today. Take a jacket.", ["It", "He", "There"], 0, "The weather → [It]'s cold."],
+  ["Mum and Dad are at home. ___ are in the garden.", ["They", "We", "He"], 0, "Two people → [they]."],
+  ["___ am Italian, and my best friend is Spanish.", ["I", "Me", "My"], 0, "Subject: [I]."],
+  ["Is Rosa your teacher? – Yes, ___ is.", ["she", "he", "it"], 0, "Rosa → [she]."],
+  ["The pizza is great. ___ is from a restaurant near my house.", ["It", "She", "He"], 0, "‘La pizza’ is feminine in Italian, but in English a thing is [it]."],
+  ["Look at the stars! ___ are beautiful tonight.", ["They", "It", "We"], 0, "Stars is plural → [they]."]
+] });
+P({ id: "pron-match", lesson: "pronouns", type: "halves", belt: 1, instr: "Match each sentence with the sentence that follows it.",
+  left: ["My brother is seventeen.", "My grandmother is very old.", "Our house is very old too.", "Look at that cat!", "My friends and I love music.", "The twins are only six.", "Excuse me, sir.", "Hello, everybody!", "My name's Tom."],
+  right: ["Are you the manager?", "We're in a band.", "It's on the roof!", "He's in his last year at school.", "I'm from Leeds.", "It's two hundred years old.", "They're in their first year of primary school.", "Are you all here?", "She's ninety-two."],
+  answers: ["d", "i", "f", "c", "b", "g", "a", "h", "e"],
+  why: ["My brother → [he].", "My grandmother → [she].", "A house → [it].", "A cat → [it]; a house can't be on the roof.", "My friends and I → [we].", "The twins → [they].", "Speaking to one person → [you].", "Speaking to a group → [you] (all).", "Speaking about yourself → [I]."] });
+P({ id: "pron-errors", lesson: "pronouns", type: "correct", belt: 1, items: [
+  ["i am fourteen.", ["I am fourteen.", "I'm fourteen."], "[I] is always a capital letter."],
+  ["My dad is a cook. Is very good.", ["My dad is a cook. He's very good.", "My dad is a cook. He is very good."], "The subject is necessary: [He]'s very good."],
+  ["Where is the station? – She is on the left.", ["Where is the station? – It is on the left.", "Where is the station? – It's on the left."], "Places are [it]."],
+  ["Luca and Matteo are here. He is in the kitchen.", ["Luca and Matteo are here. They are in the kitchen.", "Luca and Matteo are here. They're in the kitchen."], "Two people → [they]."],
+  ["My sister is fifteen. It is very tall.", ["My sister is fifteen. She is very tall.", "My sister is fifteen. She's very tall."], "People are never it: [she]."],
+  ["Is very windy today.", ["It is very windy today.", "It's very windy today."], "Weather: [It]'s windy."],
+  ["Me am from Milan.", ["I am from Milan.", "I'm from Milan."], "Subject: [I]."],
+  ["Chiara and I are sisters. They are twins.", ["Chiara and I are sisters. We are twins.", "Chiara and I are sisters. We're twins."], "Chiara and I → [we]."],
+  ["Where is your mum? – He is at work.", ["Where is your mum? – She is at work.", "Where is your mum? – She's at work."], "Mum → [she]."],
+  ["This book is great. He is about a young detective.", ["This book is great. It is about a young detective.", "This book is great. It's about a young detective."], "A book → [it]."]
+] });
+P({ id: "pron-check", lesson: "pronouns", type: "mc", belt: 2, title: "Subject pronouns – Check yourself", instr: "Choose the correct option. Then read the explanations of the answers you got wrong.", items: [
+  ["My uncle is a farmer. ___ is from Sicily.", ["He", "She", "It"], 0, "My uncle → [he]."],
+  ["___ is ten o'clock. Time for bed!", ["It", "He", "There"], 0, "The time: [It]'s ten o'clock."],
+  ["Where are my socks? – ___ are on your bed.", ["They", "It", "She"], 0, "Socks is plural → [they]."],
+  ["Hi, Mum! ___ am at the station.", ["I", "Me", "My"], 0, "Subject: [I]."],
+  ["This exercise is easy. ___ is about pronouns.", ["It", "She", "He"], 0, "A thing → [it]."],
+  ["Are ___ and your sister twins?", ["you", "she", "they"], 0, "Speaking to the person: [you] and your sister."],
+  ["Luca and I are in the same class. ___ are friends.", ["We", "They", "You"], 0, "Luca and I → [we]."],
+  ["Ms Bassi is our teacher. ___ is very kind.", ["She", "He", "It"], 0, "Ms = a woman → [she]."],
+  ["The new bridge is beautiful. ___ is three hundred metres long.", ["It", "He", "She"], 0, "‘Il ponte’ is masculine in Italian, but a thing is [it]."],
+  ["Look! The children are in the pool. ___ are very happy.", ["They", "We", "It"], 0, "The children → [they]."]
+] });
 
 /* ---------- the verb be ---------- */
 P({ id: "be-gap", lesson: "to-be", type: "gap", belt: 1, instr: "Complete the sentences with am, is or are.", items: [

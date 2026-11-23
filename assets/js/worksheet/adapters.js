@@ -87,6 +87,7 @@
     if (b.type === "correct") parts.push({ k: "q", items: b.items.map(it => ({ t: "write", text: it[0], lines: 1, key: it[1][0], why: strip(it[2]) })) });
     if (b.type === "transform") parts.push({ k: "q", items: b.items.map(it => ({ t: "transform", first: it[0], kw: it[1], start: it[2], end: it[3], ans: it[4][0], key: `${it[2]} ${it[4][0]} ${it[3]}`.replace(/\s+/g, " ").trim(), why: strip(it[5]) })) });
     if (b.type === "rewrite") parts.push({ k: "q", items: b.items.map(it => ({ t: "write", text: it[0], cue: it[3] || "", lines: 1, key: it[1][0], why: strip(it[2]) })) });
+    if (b.type === "sort") parts.push({ k: "q", items: b.items.map(it => mc(it[0], b.cats, it[1], it[2], null)) });
     if (b.type === "order") parts.push({ k: "q", items: b.items.map(it => ({ t: "write", text: it[0], lines: 1, key: it[1][0], why: strip(it[2]) })) });
     if (b.type === "translate") parts.push({ k: "q", items: b.items.map(it => ({ t: "write", text: `${it[0]}  (${it[1]})`, lines: 1, key: it[3], why: strip(it[4]) })) });
     if (b.type === "text" || b.type === "dialogue") {
@@ -108,7 +109,8 @@
     return w => {
       const G = w.__grammar, EX = w.DojoEx, B = w.DojoBelts, CFG = w.GL.config;
       const les = Object.fromEntries(G.LESSONS.map(l => [l.id, l])), grp = Object.fromEntries(CFG.groups);
-      return G.ORDERED.map(b => battery(b, EX, B, { prefix: sectionId.slice(0, 2) + ":", section: sectionId, title, shuffle: true, area: sectionId === "word-formation" ? "English · Vocabulary" : null,
+      // batteries built on a picture (img) are practised on the site only
+      return G.ORDERED.filter(b => !b.img).map(b => battery(b, EX, B, { prefix: sectionId.slice(0, 2) + ":", section: sectionId, title, shuffle: true, area: sectionId === "word-formation" ? "English · Vocabulary" : null,
         groupOf: b => b.lesson === "review" ? "Review" : grp[les[b.lesson].group], topicOf: b => b.lesson === "review" ? CFG.reviewTitle : les[b.lesson].title }));
     };
   }

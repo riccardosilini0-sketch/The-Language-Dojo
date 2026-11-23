@@ -33,8 +33,8 @@
   };
 
   /* ---------------- exercise headers ---------------- */
-  const KEY = { wf: "wordForm", wftext: "useWF", mc: "mc", gap: "gaps", correct: "errors", transform: "transform", rewrite: "transform", text: "gapText", dialogue: "gapDialogue", halves: "matching", order: "building", translate: "translation" };
-  const TYPE_ORDER = ["wordForm", "useWF", "mc", "gaps", "transform", "errors", "building", "translation", "matching", "gapDialogue", "gapText"];
+  const KEY = { wf: "wordForm", wftext: "useWF", mc: "mc", gap: "gaps", correct: "errors", transform: "transform", rewrite: "transform", text: "gapText", dialogue: "gapDialogue", halves: "matching", order: "building", translate: "translation", sort: "sorting" };
+  const TYPE_ORDER = ["wordForm", "useWF", "mc", "gaps", "transform", "errors", "building", "translation", "sorting", "matching", "gapDialogue", "gapText"];
   const DEFAULT_INSTR = {
     mc: "Choose the correct option to complete each sentence.",
     gap: "Complete the sentences with the correct form.",
@@ -46,6 +46,7 @@
     halves: "Match the beginnings of the sentences with the correct endings.",
     order: "Put the words in the correct order to make sentences. Click the words or type the sentence.",
     translate: "Translate the sentences into English.",
+    sort: "Choose the correct group for each word or expression.",
     wf: "Use the word given in capitals at the end of each sentence to form a word that fits in the gap.",
     wftext: "Read the text. Use the word given in capitals to form a word that fits in each gap."
   };
@@ -189,8 +190,8 @@
     view().innerHTML = `<a class="back" href="${les ? "#l-" + les.id : "#practice"}">${ICON.back} ${les ? esc(les.title) : "Practice"}</a>
       <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${EX.TYPE[b.typeKey]}</span><span class="bt-n">${b.n} ${isText(b) ? "gaps" : "questions"}</span></div>
         <h2${isText(b) ? ' translate="no"' : ""}>${esc(b.title)}</h2><p class="bt-goal">${b.instr}</p></div>
-      <div id="btBody"></div><div class="bt-foot" id="btFoot"></div><div id="btResult" aria-live="polite"></div>`;
-    ({ wf: buildWF, wftext: buildWFText, mc: buildMC, gap: buildGap, correct: buildCorrect, transform: buildTransform, rewrite: buildRewrite, order: buildOrder, translate: buildTranslate, text: buildText, dialogue: buildText, halves: buildHalves })[b.type](b, $("#btBody"));
+      ${b.img ? `<figure class="bt-img card"><img src="${esc(b.img[0])}" alt="${esc(b.img[1])}"></figure>` : ""}<div id="btBody"></div><div class="bt-foot" id="btFoot"></div><div id="btResult" aria-live="polite"></div>`;
+    ({ wf: buildWF, wftext: buildWFText, mc: buildMC, gap: buildGap, correct: buildCorrect, transform: buildTransform, rewrite: buildRewrite, order: buildOrder, translate: buildTranslate, sort: buildSort, text: buildText, dialogue: buildText, halves: buildHalves })[b.type](b, $("#btBody"));
     drawFoot();
   }
   const nextBat = b => { const i = ORDERED.indexOf(b); return ORDERED.slice(i + 1).find(x => x.lesson === b.lesson); };
@@ -204,8 +205,13 @@
   function showResult(ok, n) {
     const pct = Math.round(ok / n * 100);
     $("#btResult").innerHTML = `<div class="card bt-result"><div class="score">${ok}<span> / ${n}</span></div><p><b>${pct >= 80 ? "Excellent work." : pct >= 60 ? "Good progress." : "Keep training."}</b> <span>Read the explanations under each answer, then try again or move on.</span></p>
-      <div class="bar"><span style="width:${pct}%;background:${pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--kincha)" : "var(--shu)"}"></span></div></div>`;
+      <div class="bar"><span style="width:${pct}%;background:${pct >= 80 ? "var(--ok)" : pct >= 60 ? "var(--kincha)" : "var(--shu)"}"></span></div>${cur && cur.b.test ? testGrade(ok, n) : ""}</div>`;
     $("#btResult").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  // final tests (test: true): score out of 100 and the mark out of 10 (pass mark 60/100 = 6); the mark is rounded to the nearest half
+  function testGrade(ok, n) {
+    const pts = Math.round(ok / n * 100), mark = Math.max(3, Math.round(pts / 5) / 2);
+    return `<p class="test-grade"><span>Score: <b>${pts} / 100</b></span><span>Mark: <b>${String(mark).replace(".", ",")} / 10</b></span><span>${pts >= 60 ? "Pass" : "Below the pass mark (60 / 100)"}</span></p>`;
   }
   function incomplete() { if (cur.warned) return false; cur.warned = true; toast("Some answers are missing. Press Check answers again to check anyway."); return true; }
   const input = (attrs, size) => `<input type="text" ${attrs} size="${Math.min(size, 34)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">`;
@@ -261,6 +267,23 @@
         $$(".ob", li).forEach(x => { x.disabled = true; const o = +x.dataset.o; if (o === ans) x.classList.add("right"); else if (o === sel[i]) x.classList.add("wrong"); });
         const bits = String(opts[ans]).split(/\s*…\s*/);
         let k = 0; $(".fbx", li).innerHTML = fb(good, esc(plain(s)).replace(/___/g, () => `<b>${esc(bits[k++] || bits[0])}</b>`), why);
+      });
+      showResult(ok, b.items.length); return true;
+    };
+  }
+  /* sorting: each item goes into one of the groups in b.cats; items are [word or expression, index of the group, explanation] */
+  function buildSort(b, box) {
+    box.innerHTML = `<ol class="qlist sort-list">${b.items.map(([w], i) => `<li class="qi" data-q="${i}"><p class="qs" translate="no">${qn(i)}<b>${esc(w)}</b></p>
+      <div class="opts-row" translate="no">${b.cats.map((c, j) => `<button type="button" class="ob" data-o="${j}">${esc(c)}</button>`).join("")}</div><div class="fbx"></div></li>`).join("")}</ol>`;
+    const sel = {};
+    box.addEventListener("click", e => { const o = e.target.closest(".ob"); if (!o || cur.checked) return; const li = o.closest(".qi"); sel[li.dataset.q] = +o.dataset.o; $$(".ob", li).forEach(x => x.classList.toggle("on", x === o)); });
+    cur.check = () => {
+      if (Object.keys(sel).length < b.items.length && incomplete()) return false;
+      let ok = 0;
+      b.items.forEach(([w, ans, why], i) => {
+        const li = $(`.qi[data-q="${i}"]`, box), good = sel[i] === ans; if (good) ok++;
+        $$(".ob", li).forEach(x => { x.disabled = true; const o = +x.dataset.o; if (o === ans) x.classList.add("right"); else if (o === sel[i]) x.classList.add("wrong"); });
+        $(".fbx", li).innerHTML = fb(good, `${esc(w)} → <b>${esc(b.cats[ans])}</b>`, why);
       });
       showResult(ok, b.items.length); return true;
     };

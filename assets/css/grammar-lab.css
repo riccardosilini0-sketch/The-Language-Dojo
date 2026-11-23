@@ -211,3 +211,8 @@ input.wrong{border-color:var(--bad)!important;background:var(--bad-bg)!important
 .tr-hint{font-weight:400;font-size:.92em;color:var(--stone)}
 /* Your turn: guided production */
 .task h4{margin-top:14px}
+/* a picture for the whole battery (e.g. prepositions of place) */
+.bt-img{margin:0 0 18px;padding:12px;display:flex;justify-content:center}
+.bt-img img{width:100%;max-width:640px;height:auto}
+/* final tests: score out of 100 and mark */
+.test-grade{display:flex;flex-wrap:wrap;gap:8px 22px;margin:12px 0 0;font-size:15px}
