@@ -27,3 +27,11 @@
 .res-card .lines span{white-space:nowrap}
 .lang-page .res-grid{margin-top:28px}
 @media (max-width:520px){ .res-card .lines{font-size:24px;gap:10px} }
+
+/* areas and the suggested path */
+.lang-page .area-block{margin-bottom:46px}
+.lang-page .area-block .res-grid{margin-top:18px}
+.area-intro{margin:-6px 0 0;color:var(--stone);max-width:640px}
+.res-meta{display:flex;align-items:center;gap:8px;margin-bottom:8px;min-height:22px}
+.res-step{font:700 11.5px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--shu)}
+.res-level{font:600 12px/1 var(--sans);color:var(--sumi-2);border:1px solid var(--line);border-radius:999px;padding:4px 9px}

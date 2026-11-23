@@ -616,6 +616,16 @@ window.DOJO_I18N = {
       "Modal verbs in the past: must have, could have, should have": "Verbi modali al passato: must have, could have, should have",
       "Fine distinctions: needn't have, was able to, be supposed to, formal uses": "Distinzioni sottili: needn't have, was able to, be supposed to, usi formali",
       "Mixed Modal Verbs": "Verbi modali misti",
+      /* language pages: areas */
+      "Verbs and vocabulary": "Verbi e lessico",
+      "Writing system": "Sistema di scrittura",
+      "Skills": "Abilità",
+      "Step {0}": "Tappa {0}",
+      "From the foundations to complex sentences. Start from step 1 and move on when the earlier steps feel easy.": "Dalle basi alle frasi complesse. Comincia dalla tappa 1 e vai avanti quando le tappe precedenti ti sembrano facili.",
+      "The words and combinations that grammar alone doesn't give you.": "Le parole e le combinazioni che la grammatica da sola non ti dà.",
+      "The sounds, stress and rhythm of English.": "I suoni, l'accento e il ritmo dell'inglese.",
+      "Reading, use of English, writing and listening tasks on real topics.": "Attività di lettura, use of English, scrittura e ascolto su temi reali.",
+      "The scripts of the language, one character at a time.": "I sistemi di scrittura della lingua, un carattere alla volta.",
       /* English Basics */
       "Subject pronouns and the verb be": "I pronomi soggetto e il verbo be",
       "Nouns, articles, demonstratives, there is": "Nomi, articoli, dimostrativi, there is",
