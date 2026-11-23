@@ -237,6 +237,31 @@
     return out;
   }
 
+  /* ---------------- Phrasal Verbs ---------------- */
+  function phrasal(w) {
+    const V = w.PHRASAL_DATA, EX = w.DojoEx, B = w.DojoBelts, out = [];
+    const base = { section: "phrasal-verbs", sectionTitle: "Phrasal Verbs", area: "English · Verbs", topic: "Phrasal Verbs" };
+    [1, 2, 3, 4, 5, 6].forEach(b => {
+      const L = V.filter(r => r[2].b === b); if (!L.length) return;
+      const bn = B.get(b).name, parts = chunk(L, Math.ceil(L.length / Math.ceil(L.length / 15)));
+      parts.forEach((g, i) => {
+        const tag = parts.length > 1 ? ` (${i + 1})` : "", meta = Object.assign({ belt: b, beltLabel: beltName(B, b) }, base);
+        const m = seeded(g, "pvm" + b + i);
+        out.push(Object.assign({ uid: `pv:mean:${b}:${i}`, group: "Meanings", type: EX.TYPE.translation, title: `Phrasal Verbs: meanings – ${bn}${tag}`,
+          instr: "Write the Italian meaning of each phrasal verb.", parts: [{ k: "table", head: ["Phrasal verb", "Italian"], widths: [1, 1.6], rows: m.map(v => [v[0], null]), keyRows: m.map(v => [v[0], v[1]]) }] }, meta));
+        const t = seeded(g, "pvt" + b + i);
+        out.push(Object.assign({ uid: `pv:ita:${b}:${i}`, group: "Translation", type: EX.TYPE.translation, title: `Phrasal Verbs: translation – ${bn}${tag}`,
+          instr: "Write the English phrasal verb for each Italian meaning.", parts: [{ k: "table", head: ["Italian", "Phrasal verb"], widths: [1.6, 1], rows: t.map(v => [v[1], null]), keyRows: t.map(v => [v[1], v[0]]) }] }, meta));
+        // in context: only examples where verb and particle are together (one bracketed part)
+        const items = seeded(g, "pvc" + b + i).map(v => { const e = v[2].ex.find(x => (x[0].match(/\[/g) || []).length === 1); if (!e) return null; const inside = e[0].match(/\[([^\]]+)\]/)[1];
+          return { t: "gap", text: e[0].replace(/\[[^\]]+\]/, `___ (${v[0]})`), ans: [inside], key: inside }; }).filter(Boolean);
+        if (items.length) out.push(Object.assign({ uid: `pv:ctx:${b}:${i}`, group: "Phrasal verbs in context", type: EX.TYPE.gaps, title: `Phrasal Verbs in context – ${bn}${tag}`,
+          instr: "Complete each sentence with the correct form of the phrasal verb in brackets.", parts: [{ k: "q", items }] }, meta));
+      });
+    });
+    return out;
+  }
+
   /* ---------------- Writing System (Japanese) ---------------- */
   function japanese(w) {
     const J = w.__jpDojo, EX = w.DojoEx, B = w.DojoBelts, KJ = w.DOJO_KANJI, KANA = w.DOJO_KANA;
@@ -282,6 +307,7 @@
     { id: "modal-verbs", title: "Modal Verbs", area: "Grammar", url: "english/modal-verbs/index.html", ready: w => w.__grammar, extract: grammar("modal-verbs", "Modal Verbs") },
     { id: "passive-voice", title: "The Passive Voice", area: "Grammar", url: "english/passive-voice/index.html", ready: w => w.__grammar, extract: grammar("passive-voice", "The Passive Voice") },
     { id: "word-formation", title: "Word Formation", area: "Vocabulary", url: "english/word-formation/index.html", ready: w => w.__grammar && w.DojoEx, extract: grammar("word-formation", "Word Formation") },
+    { id: "phrasal-verbs", title: "Phrasal Verbs", area: "Verbs", url: "english/phrasal-verbs/index.html", ready: w => w.PHRASAL_DATA && w.DojoEx && w.DojoBelts, extract: phrasal },
     { id: "irregular-verbs", title: "Irregular Verbs", area: "Verbs", url: "english/irregular-verbs/index.html", ready: w => w.VERB_DATA && w.DojoEx && w.DojoBelts, extract: irregular },
     { id: "skills", title: "Skill Development", area: "Skills", url: "english/skills/index.html", ready: w => w.__skills, extract: skills },
     { id: "phonetics", title: "Sounds of English", area: "Pronunciation", url: "english/phonetics/index.html", ready: w => w.__phon, extract: phonetics },
