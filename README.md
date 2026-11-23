@@ -17,6 +17,7 @@ assets/img/                     Logo files: logo-horizontal.svg, logo-square.svg
 english/index.html              English language page
 english/verb-tenses/            Verb Tenses Dojo
 english/phonetics/              Sounds of English — phonetics & phonology (data/, img/, audio/)
+english/basics/                 English Basics — A1–A2 grammar foundations (grammar engine: data/lessons.js, data/practice-*.js)
 english/dependent-prepositions/ Dependent Prepositions — reference and practice tests
   data/reference.js             Verbs, adjectives, nouns + prepositions (example + Italian translation, belt)
   data/practice-pack.js         Batteries from the teacher's exercise pack (formats explained at the top)
@@ -62,6 +63,15 @@ These sections use the shared engine `assets/js/grammar-lab.js` and `assets/css/
 - **Word Formation** (`english/word-formation/`) follows Cambridge Use of English, Part 3. `wf` items are `[sentence with ___, WORD IN CAPITALS, [accepted answers], word class, explanation]`; `wftext` batteries are a text with `{1}…{8}` and `gaps: [[accepted answers], WORD, word class, explanation]`. List every accepted spelling (organise / organize); the word in capitals is never accepted as it is. The exam batteries (`lesson: "review"`) go from B1 (orange belt) to C2 (black belt).
 
 To add a new grammar section, copy one of the folders, change `index.html`, `app.css` and the data, and add the section to `assets/js/catalog.js`.
+
+## English Basics
+
+`english/basics/` covers the foundations of English grammar (A1–A2, White and Yellow belts) with the shared grammar engine. Lessons add an optional `task` ("Your turn": an instruction and model sentences). Two exercise types were added to the engine for this section and can be used by every grammar section:
+
+- `order` (Sentence building): `[words separated by " / ", [accepted sentences], explanation]`. The words are buttons that build the answer; the answer can also be typed.
+- `translate` (Translation): `[Italian sentence, hint or "", [accepted English sentences], model answer, explanation]`, the same shape as in Dependent Prepositions.
+
+The sentence checker rejects `amn't` and a contraction at the end of a clause (`Yes, I'm.`), so affirmative short answers must use the full form.
 
 ## Exercise headers
 

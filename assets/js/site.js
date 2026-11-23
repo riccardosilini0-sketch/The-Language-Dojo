@@ -184,7 +184,7 @@
   if (badge) badge.innerHTML = mark("badge-mark");
 
   /* ---------- PDF Worksheet Builder: a discreet entry point in every section that supports it ---------- */
-  const WS_SECTIONS = ["verb-tenses", "dependent-prepositions", "modal-verbs", "passive-voice", "word-formation", "irregular-verbs", "skills", "phonetics", "japanese-dojo"];
+  const WS_SECTIONS = ["english-basics", "verb-tenses", "dependent-prepositions", "modal-verbs", "passive-voice", "word-formation", "irregular-verbs", "skills", "phonetics", "japanese-dojo"];
   const here = C.resources.find(r => r.url && location.pathname.endsWith(r.url.replace(/index\.html$/, "")) || location.pathname.endsWith(r.url));
   const titleRow = document.querySelector(".app-title");
   if (here && titleRow && WS_SECTIONS.includes(here.id) && !new URLSearchParams(location.search).get("ws")) {

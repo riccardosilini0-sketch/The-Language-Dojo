@@ -87,6 +87,7 @@
     if (b.type === "correct") parts.push({ k: "q", items: b.items.map(it => ({ t: "write", text: it[0], lines: 1, key: it[1][0], why: strip(it[2]) })) });
     if (b.type === "transform") parts.push({ k: "q", items: b.items.map(it => ({ t: "transform", first: it[0], kw: it[1], start: it[2], end: it[3], ans: it[4][0], key: `${it[2]} ${it[4][0]} ${it[3]}`.replace(/\s+/g, " ").trim(), why: strip(it[5]) })) });
     if (b.type === "rewrite") parts.push({ k: "q", items: b.items.map(it => ({ t: "write", text: it[0], cue: it[3] || "", lines: 1, key: it[1][0], why: strip(it[2]) })) });
+    if (b.type === "order") parts.push({ k: "q", items: b.items.map(it => ({ t: "write", text: it[0], lines: 1, key: it[1][0], why: strip(it[2]) })) });
     if (b.type === "translate") parts.push({ k: "q", items: b.items.map(it => ({ t: "write", text: `${it[0]}  (${it[1]})`, lines: 1, key: it[3], why: strip(it[4]) })) });
     if (b.type === "text" || b.type === "dialogue") {
       const paras = b.parts.filter(p => p[0] !== "#").map(([sp, line]) => (sp ? sp + ":  " : "") + line), heading = b.parts.find(p => p[0] === "#");
@@ -270,6 +271,7 @@
   const SECTIONS = [
     { id: "verb-tenses", title: "Verb Tenses", area: "Grammar", url: "english/verb-tenses/index.html", ready: w => w.__tenseDojo, extract: verbTenses },
     { id: "dependent-prepositions", title: "Dependent Prepositions", area: "Grammar", url: "english/dependent-prepositions/index.html", ready: w => w.__depprep, extract: depPrep },
+    { id: "english-basics", title: "English Basics", area: "Grammar", url: "english/basics/index.html", ready: w => w.__grammar, extract: grammar("english-basics", "English Basics") },
     { id: "modal-verbs", title: "Modal Verbs", area: "Grammar", url: "english/modal-verbs/index.html", ready: w => w.__grammar, extract: grammar("modal-verbs", "Modal Verbs") },
     { id: "passive-voice", title: "The Passive Voice", area: "Grammar", url: "english/passive-voice/index.html", ready: w => w.__grammar, extract: grammar("passive-voice", "The Passive Voice") },
     { id: "word-formation", title: "Word Formation", area: "Vocabulary", url: "english/word-formation/index.html", ready: w => w.__grammar && w.DojoEx, extract: grammar("word-formation", "Word Formation") },

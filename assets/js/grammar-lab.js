@@ -33,8 +33,8 @@
   };
 
   /* ---------------- exercise headers ---------------- */
-  const KEY = { wf: "wordForm", wftext: "useWF", mc: "mc", gap: "gaps", correct: "errors", transform: "transform", rewrite: "transform", text: "gapText", dialogue: "gapDialogue", halves: "matching" };
-  const TYPE_ORDER = ["wordForm", "useWF", "mc", "gaps", "transform", "errors", "matching", "gapDialogue", "gapText"];
+  const KEY = { wf: "wordForm", wftext: "useWF", mc: "mc", gap: "gaps", correct: "errors", transform: "transform", rewrite: "transform", text: "gapText", dialogue: "gapDialogue", halves: "matching", order: "building", translate: "translation" };
+  const TYPE_ORDER = ["wordForm", "useWF", "mc", "gaps", "transform", "errors", "building", "translation", "matching", "gapDialogue", "gapText"];
   const DEFAULT_INSTR = {
     mc: "Choose the correct option to complete each sentence.",
     gap: "Complete the sentences with the correct form.",
@@ -44,6 +44,8 @@
     text: "Read the whole text first, then complete the gaps.",
     dialogue: "Read the whole dialogue first, then complete the gaps.",
     halves: "Match the beginnings of the sentences with the correct endings.",
+    order: "Put the words in the correct order to make sentences. Click the words or type the sentence.",
+    translate: "Translate the sentences into English.",
     wf: "Use the word given in capitals at the end of each sentence to form a word that fits in the gap.",
     wftext: "Read the text. Use the word given in capitals to form a word that fits in each gap."
   };
@@ -65,6 +67,7 @@
   /* ---------------- answer checking ---------------- */
   function variants(s) {
     s = String(s || "").toLowerCase().replace(/[’‘`´]/g, "'").replace(/[“”]/g, "\"").replace(/\s+/g, " ").trim().replace(/[.!?,;:]+$/g, "").trim();
+    s = s.replace(/\bamn't\b/g, "amn_t"); // ‘amn't’ does not exist: never read it as ‘am not’
     s = s.replace(/\bwon't\b/g, "will not").replace(/\bshan't\b/g, "shall not").replace(/\bcan't\b/g, "cannot").replace(/\bcan not\b/g, "cannot").replace(/n't\b/g, " not")
       .replace(/'m\b/g, " am").replace(/'re\b/g, " are").replace(/'ve\b/g, " have").replace(/'ll\b/g, " will");
     let out = [s];
@@ -74,7 +77,10 @@
   }
   const accepts = (list, given) => { if (!String(given || "").trim()) return false; const g = variants(given); return list.some(a => variants(a).some(v => g.includes(v))); };
   const sentNorm = x => variants(String(x || "").replace(/[.,!?;:–—"“”]/g, " ").replace(/\s-\s/g, " "));
-  const sameSentence = (list, given) => { if (!String(given || "").trim()) return false; const g = sentNorm(given); return list.some(a => sentNorm(a).some(v => g.includes(v))); };
+  // a contraction at the end of a clause (‘Yes, I'm.’) is kept as it is, so it never matches the full form:
+  // affirmative short answers need the full form (Yes, I am). A final possessive (at the doctor's.) is marked the same way on both sides.
+  const clauseEnd = x => String(x || "").replace(/[’‘`´]/g, "'").replace(/([A-Za-z])'(m|re|s|ve|ll|d)(?=\s*(?:[.,!?;:–—)]|$))/g, "$1_$2");
+  const sameSentence = (list, given) => { if (!String(given || "").trim()) return false; const g = sentNorm(clauseEnd(given)); return list.some(a => sentNorm(clauseEnd(a)).some(v => g.includes(v))); };
 
   /* ---------------- router ---------------- */
   $("#tabs").innerHTML = [["home", "Overview"], ["lessons", "Lessons"], ["practice", "Practice"]].map(([k, l]) => `<a class="tab" href="#${k}" data-tab="${k}">${l}</a>`).join("");
@@ -124,7 +130,7 @@
   /* ---------------- LESSON page ---------------- */
   const exList = exs => `<ul class="exs" translate="no">${exs.map(([en, it]) => `<li><span class="en">${hl(en)}</span>${it ? `<span class="it" lang="it">${esc(it)}</span>` : ""}</li>`).join("")}</ul>`;
   function renderLesson(l) {
-    const secs = [["form", "Form and structure"], ["uses", "Main uses"], l.mistakes && l.mistakes.length ? ["mistakes", "Common mistakes"] : null, l.contrasts && l.contrasts.length ? ["contrasts", "Comparisons"] : null].filter(Boolean);
+    const secs = [["form", "Form and structure"], ["uses", "Main uses"], l.mistakes && l.mistakes.length ? ["mistakes", "Common mistakes"] : null, l.contrasts && l.contrasts.length ? ["contrasts", "Comparisons"] : null, l.task ? ["task", "Your turn"] : null].filter(Boolean);
     const i = LESSONS.indexOf(l), prev = LESSONS[i - 1], next = LESSONS[i + 1];
     const bats = batsOf(l.id);
     view().innerHTML = `<a class="back" href="#lessons">${ICON.back} Lessons</a>
@@ -145,6 +151,8 @@
     if (k === "mistakes") return `<div class="mist">${l.mistakes.map(([w, r, why]) => `<div class="mi"><span class="w" translate="no">${esc(w)}</span><span class="r" translate="no">${esc(r)}</span><p>${hl(why)}</p></div>`).join("")}</div>`;
     if (k === "contrasts") return l.contrasts.map(([t, expl, sides]) => `<div class="cmp"><h4>${hl(t)}</h4><p>${hl(expl)}</p>
       <div class="cmp-pair" translate="no">${sides.map(([lab, en, it, note]) => `<div><b class="lab">${esc(lab)}</b><span class="en">${hl(en)}</span>${it ? `<span class="it" lang="it">${esc(it)}</span>` : ""}${note ? `<span class="note">${hl(note)}</span>` : ""}</div>`).join("")}</div></div>`).join("");
+    // guided production: [instruction, [model sentences]]
+    if (k === "task") return `<div class="use task"><p>${hl(l.task[0])}</p><h4>Model answer</h4>${exList(l.task[1].map(x => [x]))}</div>`;
     return "";
   }
   view().addEventListener("click", e => { const j = e.target.closest("[data-jump]"); if (!j) return; e.preventDefault(); const t = $("#sec-" + j.dataset.jump); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
@@ -182,7 +190,7 @@
       <div class="bt-head"><div class="bt-chips">${beltChip(b.belt)}<span class="bt-type">${EX.TYPE[b.typeKey]}</span><span class="bt-n">${b.n} ${isText(b) ? "gaps" : "questions"}</span></div>
         <h2${isText(b) ? ' translate="no"' : ""}>${esc(b.title)}</h2><p class="bt-goal">${b.instr}</p></div>
       <div id="btBody"></div><div class="bt-foot" id="btFoot"></div><div id="btResult" aria-live="polite"></div>`;
-    ({ wf: buildWF, wftext: buildWFText, mc: buildMC, gap: buildGap, correct: buildCorrect, transform: buildTransform, rewrite: buildRewrite, text: buildText, dialogue: buildText, halves: buildHalves })[b.type](b, $("#btBody"));
+    ({ wf: buildWF, wftext: buildWFText, mc: buildMC, gap: buildGap, correct: buildCorrect, transform: buildTransform, rewrite: buildRewrite, order: buildOrder, translate: buildTranslate, text: buildText, dialogue: buildText, halves: buildHalves })[b.type](b, $("#btBody"));
     drawFoot();
   }
   const nextBat = b => { const i = ORDERED.indexOf(b); return ORDERED.slice(i + 1).find(x => x.lesson === b.lesson); };
@@ -315,6 +323,46 @@
         const li = $(`.qi[data-q="${i}"]`, box), x = $("input", li), good = sameSentence(acc, x.value); if (good) ok++;
         x.disabled = true; x.classList.add(good ? "right" : "wrong");
         $(".fbx", li).innerHTML = fb(good, esc(acc[0]) + (acc.length > 1 ? `<br><span class="why">Also accepted: ${acc.slice(1).map(esc).join(" · ")}</span>` : ""), why);
+      });
+      showResult(ok, b.items.length); return true;
+    };
+  }
+  /* sentence building: order items are [words separated by " / ", [accepted sentences], explanation].
+     The words are shown as buttons: a click adds the word to the answer; the answer can also be typed. */
+  function buildOrder(b, box) {
+    const words = s => s.split(/\s*\/\s*/);
+    box.innerHTML = `<ol class="qlist">${b.items.map(([s], i) => `<li class="qi" data-q="${i}"><div class="ord-words" translate="no">${qn(i)}${words(s).map((w, j) => `<button type="button" class="ow" data-w="${j}">${esc(w)}</button>`).join("")}<button type="button" class="ow-reset" aria-label="Start again">${ICON.restart}</button></div>
+      <div class="row-in">${input(`class="sent" data-q="${i}" aria-label="Sentence ${i + 1}" placeholder="Click the words or type the sentence"`, 40)}</div><div class="fbx"></div></li>`).join("")}</ol>`;
+    box.addEventListener("click", e => {
+      if (cur.checked) return;
+      const li = e.target.closest(".qi"); if (!li) return;
+      const x = $("input", li), w = e.target.closest(".ow");
+      if (w && !w.disabled) { x.value = (x.value.trim() + " " + w.textContent).trim(); w.disabled = true; }
+      if (e.target.closest(".ow-reset")) { x.value = ""; $$(".ow", li).forEach(o => { o.disabled = false; }); x.focus(); }
+    });
+    cur.check = () => {
+      if ($$("input", box).some(x => !x.value.trim()) && incomplete()) return false;
+      let ok = 0;
+      b.items.forEach(([s, acc, why], i) => {
+        const li = $(`.qi[data-q="${i}"]`, box), x = $("input", li), good = sameSentence(acc, x.value); if (good) ok++;
+        x.disabled = true; x.classList.add(good ? "right" : "wrong"); $$("button", li).forEach(o => { o.disabled = true; });
+        $(".fbx", li).innerHTML = fb(good, esc(acc[0]) + (acc.length > 1 ? `<br><span class="why">Also accepted: ${acc.slice(1).map(esc).join(" · ")}</span>` : ""), why);
+      });
+      showResult(ok, b.items.length); return true;
+    };
+  }
+  /* translation into English: translate items are [Italian sentence, hint or "", [accepted English sentences], model answer, explanation]
+     (the same shape as the translations of Dependent Prepositions, so the PDF Worksheet Builder reads both) */
+  function buildTranslate(b, box) {
+    box.innerHTML = `<ol class="qlist">${b.items.map(([it, hint], i) => `<li class="qi" data-q="${i}"><p class="qs" lang="it" translate="no">${qn(i)}${esc(it)}${hint ? ` <span class="tr-hint">(${esc(hint)})</span>` : ""}</p><div class="row-in">${input(`class="sent" data-q="${i}" aria-label="Translation ${i + 1}" placeholder="Write the sentence in English"`, 40)}</div><div class="fbx"></div></li>`).join("")}</ol>`;
+    cur.check = () => {
+      if ($$("input", box).some(x => !x.value.trim()) && incomplete()) return false;
+      let ok = 0;
+      b.items.forEach(([it, hint, acc, model, why], i) => {
+        const li = $(`.qi[data-q="${i}"]`, box), x = $("input", li), good = sameSentence(acc, x.value); if (good) ok++;
+        x.disabled = true; x.classList.add(good ? "right" : "wrong");
+        const others = acc.filter(a => a !== model);
+        $(".fbx", li).innerHTML = fb(good, esc(model) + (others.length ? `<br><span class="why">Also accepted: ${others.map(esc).join(" · ")}</span>` : ""), why);
       });
       showResult(ok, b.items.length); return true;
     };

@@ -198,3 +198,16 @@ input.wrong{border-color:var(--bad)!important;background:var(--bad-bg)!important
   .wf-row{flex-direction:column-reverse;gap:6px}
   .wf-row>.wf-stem{margin:0 0 0 30px}
 }
+
+/* sentence building: the words as buttons */
+.ord-words{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ow{border:1.5px solid var(--line);background:var(--paper);border-radius:9px;padding:6px 11px;font:600 15px/1.2 var(--sans);color:var(--sumi);cursor:pointer}
+.ow:hover:not(:disabled){border-color:var(--app);color:var(--app)}
+.ow:disabled{opacity:.35;cursor:default}
+.ow-reset{border:0;background:none;color:var(--stone);padding:4px;cursor:pointer;display:inline-flex}
+.ow-reset svg{width:18px;height:18px}
+.ow-reset:hover:not(:disabled){color:var(--app)}
+/* translation: the hint after the Italian sentence */
+.tr-hint{font-weight:400;font-size:.92em;color:var(--stone)}
+/* Your turn: guided production */
+.task h4{margin-top:14px}
