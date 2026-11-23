@@ -275,6 +275,7 @@
     { id: "dependent-prepositions", title: "Dependent Prepositions", area: "Grammar", url: "english/dependent-prepositions/index.html", ready: w => w.__depprep, extract: depPrep },
     { id: "english-basics", title: "English Basics", area: "Grammar", url: "english/basics/index.html", ready: w => w.__grammar, extract: grammar("english-basics", "English Basics") },
     { id: "comparison", title: "Comparatives and Quantifiers", area: "Grammar", url: "english/comparison/index.html", ready: w => w.__grammar, extract: grammar("comparison", "Comparatives and Quantifiers") },
+    { id: "conditionals", title: "Conditionals", area: "Grammar", url: "english/conditionals/index.html", ready: w => w.__grammar, extract: grammar("conditionals", "Conditionals") },
     { id: "modal-verbs", title: "Modal Verbs", area: "Grammar", url: "english/modal-verbs/index.html", ready: w => w.__grammar, extract: grammar("modal-verbs", "Modal Verbs") },
     { id: "passive-voice", title: "The Passive Voice", area: "Grammar", url: "english/passive-voice/index.html", ready: w => w.__grammar, extract: grammar("passive-voice", "The Passive Voice") },
     { id: "word-formation", title: "Word Formation", area: "Vocabulary", url: "english/word-formation/index.html", ready: w => w.__grammar && w.DojoEx, extract: grammar("word-formation", "Word Formation") },
