@@ -144,15 +144,24 @@
     refreshCount();
   }
 
-  /* ---------- pronunciation: the browser voice (British English) ---------- */
-  let playingBtn = null;
-  function stopAudio() { if (window.speechSynthesis) speechSynthesis.cancel(); if (playingBtn) playingBtn.classList.remove("playing"); playingBtn = null; }
+  /* ---------- pronunciation: recorded clips (Azure neural voice, as for Irregular Verbs); the browser voice only as a fallback ---------- */
+  const AUDIO = window.PHRASAL_AUDIO || {};
+  const player = new Audio(); player.preload = "auto";
+  let playingBtn = null, token = 0;
+  function stopAudio() { token++; try { player.pause(); } catch (e) {} if (window.speechSynthesis) speechSynthesis.cancel(); if (playingBtn) playingBtn.classList.remove("playing"); playingBtn = null; }
   function say(text, btn) {
-    stopAudio(); if (!window.speechSynthesis) { toast("Audio is not available in this browser."); return; }
-    const u = new SpeechSynthesisUtterance(text); u.lang = "en-GB"; u.rate = .9;
+    stopAudio(); const my = token;
     if (btn) { btn.classList.add("playing"); playingBtn = btn; }
-    u.onend = u.onerror = () => { if (btn) btn.classList.remove("playing"); playingBtn = null; };
-    speechSynthesis.speak(u);
+    const done = () => { if (my === token && btn) { btn.classList.remove("playing"); playingBtn = null; } };
+    const fallback = () => {
+      if (my !== token) return;
+      if (!window.speechSynthesis) { done(); toast("Audio is not available in this browser."); return; }
+      const u = new SpeechSynthesisUtterance(text); u.lang = "en-GB"; u.rate = .9; u.onend = u.onerror = done; speechSynthesis.speak(u);
+    };
+    const file = AUDIO[String(text).toLowerCase()];
+    if (!file) { fallback(); return; }
+    player.src = "audio/" + file; player.onended = done; player.onerror = fallback;
+    const p = player.play(); if (p && p.catch) p.catch(fallback);
   }
   const spk = (text, cls = "") => `<button type="button" class="spk ${cls}" data-say="${esc(text)}" aria-label="Listen: ${esc(text)}" title="Listen">${ICON.sound}</button>`;
   document.addEventListener("click", e => { const b = e.target.closest("[data-say]"); if (!b) return; e.preventDefault(); e.stopPropagation(); say(b.dataset.say, b); }, true);

@@ -3,6 +3,7 @@
    always follows the content files. Each job: {set, key, text, accent, ipa?}
    set "phonetics" → english/phonetics/audio + data/audio.js
    set "verbs"     → english/irregular-verbs/audio + audio-data.js
+   set "phrasal"   → english/phrasal-verbs/audio + audio-data.js (one recording per phrasal verb)
    set "skills"    → english/skills/audio + data/audio.js: {set, key, parts: [[voice, text]…], rate} = one track */
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.resolve(__dirname, "../..");
@@ -54,6 +55,11 @@ vctx.window.VERB_DATA.forEach(r => {
   ["base", "past", "pp"].forEach(f => add("verbs", sayKey(v, f)));
 });
 
+/* ---------- Phrasal verbs (key: the phrasal verb in lower case, as in english/phrasal-verbs/app.js) ---------- */
+const pctx = { window: {} }; vm.createContext(pctx);
+vm.runInContext(read("english/phrasal-verbs/phrasal-data.js"), pctx);
+pctx.window.PHRASAL_DATA.forEach(r => add("phrasal", r[0]));
+
 /* ---------- Skill Development: one recording per task (several voices in one track) ---------- */
 const sctx = { window: {} }; vm.createContext(sctx);
 vm.runInContext("var window = this.window;", sctx);
@@ -74,4 +80,4 @@ sctx.window.Skills.tasks.forEach(t => {
 
 const list = [...jobs.values()];
 fs.writeFileSync(path.join(__dirname, "jobs.json"), JSON.stringify(list, null, 0));
-console.log(`jobs: ${list.length} (phonetics ${list.filter(j => j.set === "phonetics").length}, verbs ${list.filter(j => j.set === "verbs").length}, skills ${list.filter(j => j.set === "skills").length})`);
+console.log(`jobs: ${list.length} (phonetics ${list.filter(j => j.set === "phonetics").length}, verbs ${list.filter(j => j.set === "verbs").length}, phrasal ${list.filter(j => j.set === "phrasal").length}, skills ${list.filter(j => j.set === "skills").length})`);

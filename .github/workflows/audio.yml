@@ -16,6 +16,7 @@ on:
       - "english/phonetics/data/lessons.js"
       - "english/phonetics/data/exercises.js"
       - "english/irregular-verbs/verbs-data.js"
+      - "english/phrasal-verbs/phrasal-data.js"
       - "english/skills/data/reading.js"
       - "english/skills/data/reading-2.js"
       - "english/skills/data/listening.js"
@@ -54,5 +55,5 @@ jobs:
         run: |
           git config user.name "Language Dojo audio bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -A english/phonetics/audio english/phonetics/data/audio.js english/irregular-verbs/audio english/irregular-verbs/audio-data.js english/skills/audio english/skills/data/audio.js tools/audio/jobs.json
+          git add -A english/phonetics/audio english/phonetics/data/audio.js english/irregular-verbs/audio english/irregular-verbs/audio-data.js english/phrasal-verbs/audio english/phrasal-verbs/audio-data.js english/skills/audio english/skills/data/audio.js tools/audio/jobs.json
           git diff --cached --quiet || (git commit -m "Audio: regenerate with Azure neural voices" && git pull --rebase origin main && git push)
