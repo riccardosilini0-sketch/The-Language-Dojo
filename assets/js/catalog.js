@@ -29,6 +29,7 @@ window.DOJO_CATALOG = {
   // areas: how each language page groups its resources. Inside an area the resources are shown
   // in the order of this file and numbered as the steps of a suggested path; level is shown on the card.
   areas: [
+    { id: "exams", name: "Mock exams", icon: "check", intro: "Preparation for class tests: training for every part of the test and a complete mock test with marks." },
     { id: "grammar", name: "Grammar", icon: "grammar", intro: "From the foundations to complex sentences. Start from step 1 and move on when the earlier steps feel easy." },
     { id: "lexis", name: "Verbs and vocabulary", icon: "verbs", intro: "The words and combinations that grammar alone doesn't give you." },
     { id: "pronunciation", name: "Pronunciation", icon: "pronunciation", intro: "The sounds, stress and rhythm of English." },
@@ -100,6 +101,10 @@ window.DOJO_CATALOG = {
       title: "Skill Development", topic: "Reading, use of English, writing and listening", accent: "#1f5f73", art: ["read", "write", "listen"],
       url: "english/skills/index.html",
       items: ["Reading", "Use of English", "Writing", "Listening"] },
+    { id: "mock-exams", lang: "english", area: "exams", level: "School tests", skill: "grammar", status: "available",
+      title: "Mock Exams", topic: "Preparation for class tests", accent: "#a3482f", art: ["train", "test", "mark"],
+      url: "english/mock-exams/index.html",
+      items: ["Verifica 2N · Novembre 2026", "Training by part of the test", "Complete mock test with marks"] },
     { id: "japanese-dojo", lang: "japanese", area: "writing-system", skill: "writing", status: "available",
       title: "Writing System", topic: "Hiragana, katakana and kanji", accent: "#8c2f39", art: ["あ", "ア", "字"], artJa: true,
       url: "japanese/writing-system/index.html",
